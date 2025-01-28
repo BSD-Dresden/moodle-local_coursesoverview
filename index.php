@@ -14,6 +14,7 @@ echo $OUTPUT->header();
 
 global $DB;
 
+// Laufende Kurse abrufen
 $time = time();
 $courses = $DB->get_records_sql("
     SELECT c.id, c.fullname, c.startdate, c.enddate
@@ -24,6 +25,7 @@ $courses = $DB->get_records_sql("
 if (!$courses) {
     echo html_writer::tag('p', get_string('nocourses', 'local_coursesoverview'));
 } else {
+    // Tabelle erstellen
     $table = new html_table();
     $table->head = [
         get_string('course', 'local_coursesoverview'),
@@ -31,9 +33,11 @@ if (!$courses) {
         get_string('enddate', 'local_coursesoverview'),
         get_string('completedparticipants', 'local_coursesoverview') . ' / ' . get_string('totalparticipants', 'local_coursesoverview'),
         get_string('courseoverviewlink', 'local_coursesoverview'),
+        get_string('participants', 'local_coursesoverview'), // Neue Spalte für den Teilnehmer-Link
     ];
 
     foreach ($courses as $course) {
+        // Teilnehmerdaten abrufen
         $totalparticipants = $DB->count_records_sql("
             SELECT COUNT(*) 
             FROM {user_enrolments} ue
@@ -46,15 +50,29 @@ if (!$courses) {
             'timecompleted' => NULL,
         ]);
 
+        // Links erstellen
+        $courseviewlink = html_writer::link(
+            new moodle_url('/course/view.php', ['id' => $course->id]),
+            get_string('courseoverviewlink', 'local_coursesoverview')
+        );
+
+        $participantslink = html_writer::link(
+            new moodle_url('/local/coursesoverview/participants.php', ['courseid' => $course->id]),
+            get_string('participants', 'local_coursesoverview')
+        );
+
+        // Zeilen zur Tabelle hinzufügen
         $table->data[] = [
             $course->fullname,
             userdate($course->startdate),
             userdate($course->enddate),
             "{$completedparticipants} / {$totalparticipants}",
-            html_writer::link(new moodle_url('/course/view.php', ['id' => $course->id]), get_string('courseoverviewlink', 'local_coursesoverview')),
+            $courseviewlink,
+            $participantslink,
         ];
     }
 
+    // Tabelle ausgeben
     echo html_writer::table($table);
 }
 
