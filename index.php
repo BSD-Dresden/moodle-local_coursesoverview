@@ -22,6 +22,7 @@ $courses = $DB->get_records_sql("
     SELECT c.id, c.fullname, c.startdate, c.enddate
     FROM {course} c
     WHERE c.id != 1
+    ORDER BY enddate DESC
 ");
 
 if (!$courses) {
