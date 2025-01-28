@@ -35,7 +35,7 @@ if (!$courses) {
         get_string('startdate'),
         get_string('enddate'),
         get_string('completedparticipants', 'local_coursesoverview') . ' / ' . get_string('totalparticipants', 'local_coursesoverview'),
-        get_string('courseoverview', 'local_coursesoverview'),
+        get_string('course'),
         get_string('coursecompletion'),
     ];
 
@@ -65,7 +65,7 @@ if (!$courses) {
         // Create links for course view and participants
         $courseviewlink = html_writer::link(
             new moodle_url('/course/view.php', ['id' => $course->id]),
-            get_string('courseoverview', 'local_coursesoverview')
+            get_string('view')
         );
 
         $participantslink = html_writer::link(
