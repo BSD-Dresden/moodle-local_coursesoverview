@@ -2,32 +2,56 @@
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/completionlib.php'); // Include the completion library
 
-$courseid = required_param('courseid', PARAM_INT); // Get the course ID from the URL
+global $DB;
+
+// Ensure the user is logged in and has the correct capability
+$courseid = required_param('courseid', PARAM_INT);
 $context = context_course::instance($courseid);
 
 require_login();
 require_capability('local/coursesoverview:view', $context);
 
-$PAGE->set_url(new moodle_url('/local/coursesoverview/participants.php', ['courseid' => $courseid]));
-$PAGE->set_context($context);
-$PAGE->set_title(get_string('participants', 'local_coursesoverview'));
-$PAGE->set_heading(get_string('participants', 'local_coursesoverview'));
+/**
+ * Represents the completion progress of a participant in a course.
+ */
+class CompletionProgress {
+    public int $completed;
+    public int $total;
+    public int $percentage;
 
-echo $OUTPUT->header();
+    /**
+     * Constructor for CompletionProgress.
+     *
+     * @param int $completed Number of completed activities.
+     * @param int $total Total number of activities.
+     */
+    public function __construct(int $completed, int $total) {
+        $this->completed = $completed;
+        $this->total = $total;
+        $this->percentage = ($total === 0) ? 0 : (int) round(($completed / $total) * 100);
+    }
 
-global $DB;
+    /**
+     * Returns a formatted string representation of the progress.
+     * Example: "4 / 16 (25%)"
+     *
+     * @return string
+     */
+    public function getFormattedProgress(): string {
+        return "{$this->completed} / {$this->total} ({$this->percentage}%)";
+    }
+}
 
 /**
- * Calculate the completion progress of a participant in the course.
+ * Calculates the completion progress of a participant in a course.
  *
  * @param int $userid The user ID.
  * @param int $courseid The course ID.
- * @return int The completion progress as a percentage.
+ * @return CompletionProgress An object representing the participant's progress.
  */
-function get_completion_progress($userid, $courseid) {
+function get_completion_progress(int $userid, int $courseid): CompletionProgress {
     global $DB;
 
-    // Fetch activities with completion criteria linked to the course
     $sql = "
         SELECT cm.id AS moduleid, cmc.completionstate, cm.instance, m.name AS modulename
         FROM {course_modules} cm
@@ -48,31 +72,29 @@ function get_completion_progress($userid, $courseid) {
     $total = count($activities);
 
     foreach ($activities as $activity) {
-        // Check if the activity is completed
         if (isset($activity->completionstate) && in_array($activity->completionstate, [COMPLETION_COMPLETE, COMPLETION_COMPLETE_PASS])) {
             $completed++;
         }
     }
 
-    // Return 0% progress if no activities exist
-    if ($total === 0) {
-        return 0;
-    }
-
-    // Calculate progress as a percentage
-    return (int) round(($completed / $total) * 100);
+    return new CompletionProgress($completed, $total);
 }
+
+// Moodle page setup
+$PAGE->set_url(new moodle_url('/local/coursesoverview/participants.php', ['courseid' => $courseid]));
+$PAGE->set_context($context);
+$PAGE->set_title(get_string('participants'));
+$PAGE->set_heading(get_string('participants'));
+
+echo $OUTPUT->header();
 
 // Fetch course details
 $course = $DB->get_record('course', ['id' => $courseid], 'fullname, enddate');
 
 // Display course name and end date
 echo "<p><strong>" . get_string('courseinfo') . ":</strong> {$course->fullname}</p>";
-if (!empty($course->enddate)) {
-    echo "<p><strong>" . get_string('enddate') . "</strong> " . date('d.m.Y', $course->enddate) . "</p>";
-} else {
-    echo "<p><strong>Course end date:</strong> -</p>";
-}
+echo "<p><strong>" . get_string('enddate') . ":</strong> " . 
+    (!empty($course->enddate) ? date('d.m.Y', $course->enddate) : '-') . "</p>";
 
 // Fetch participants
 $sql = "
@@ -85,43 +107,54 @@ $sql = "
 ";
 $participants = $DB->get_records_sql($sql, ['courseid' => $courseid]);
 
-// Build the table with inline styles
-$thstyle = '<th style="border: 1px solid #ddd; padding: 8px;">';
+if (empty($participants)) {
+    echo '<p><strong>' . get_string('noparticipants', 'local_coursesoverview') . '</strong></p>';
+    echo $OUTPUT->footer();
+    exit;
+}
+
+// Define table styles
+$cellstyle = 'border: 1px solid #ddd; padding: 8px;';
+$color_none = '#f8d7da'; // Red
+$color_incomplete = '#fff3cd'; // Yellow
+$color_complete = '#d4edda'; // Green
+
+// Build the table
 $html_table = '<table style="border-collapse: collapse; width: 100%; border: 1px solid #ddd;">';
 $html_table .= '<thead>';
 $html_table .= '<tr>';
-$html_table .= $thstyle . get_string('firstname') . '</th>';
-$html_table .= $thstyle . get_string('lastname') . '</th>';
-$html_table .= $thstyle . get_string('email') . '</th>';
-$html_table .= $thstyle . get_string('progress') . '</th>';
-$html_table .= $thstyle . get_string('completed') . '</th>';
+$html_table .= "<th style=\"$cellstyle\">" . get_string('firstname') . '</th>';
+$html_table .= "<th style=\"$cellstyle\">" . get_string('lastname') . '</th>';
+$html_table .= "<th style=\"$cellstyle\">" . get_string('email') . '</th>';
+$html_table .= "<th style=\"$cellstyle\">" . get_string('progressheader', 'local_coursesoverview') . '</th>';
+$html_table .= "<th style=\"$cellstyle\">" . get_string('completed') . '</th>';
 $html_table .= '</tr>';
 $html_table .= '</thead>';
 $html_table .= '<tbody>';
 
-$tdstyle = '<td style="border: 1px solid #ddd; padding: 8px;">';
 foreach ($participants as $participant) {
+    // Get progress object
     $progress = get_completion_progress($participant->id, $courseid);
-    $completiondate = ($progress === 100 && $participant->timecompleted)
+
+    // Format progress display using the class method
+    $progressDisplay = $progress->getFormattedProgress();
+
+    // Show completion date only if progress is 100%
+    $completiondate = ($progress->percentage >= 100 && $participant->timecompleted)
         ? date('d.m.Y', $participant->timecompleted)
         : '-';
 
     // Set row background color based on progress
-    $rowstyle = '';
-    if ($progress == 0) {
-        $rowstyle = 'background-color: #f8d7da;'; // Red
-    } elseif ($progress < 100) {
-        $rowstyle = 'background-color: #fff3cd;'; // Yellow
-    } else {
-        $rowstyle = 'background-color: #d4edda;'; // Green
-    }
+    $rowstyle = $progress->percentage == 0 ? "background-color: $color_none;"
+        : ($progress->percentage < 100 ? "background-color: $color_incomplete;" : "background-color: $color_complete;");
 
-    $html_table .= '<tr style="' . $rowstyle . '">';
-    $html_table .= $tdstyle . $participant->firstname . '</td>';
-    $html_table .= $tdstyle . $participant->lastname . '</td>';
-    $html_table .= $tdstyle . $participant->email . '</td>';
-    $html_table .= $tdstyle . $progress . '%</td>';
-    $html_table .= $tdstyle . $completiondate . '</td>';
+    // Add table row
+    $html_table .= "<tr style=\"$rowstyle\">";
+    $html_table .= "<td style=\"$cellstyle\">{$participant->firstname}</td>";
+    $html_table .= "<td style=\"$cellstyle\">{$participant->lastname}</td>";
+    $html_table .= "<td style=\"$cellstyle\">{$participant->email}</td>";
+    $html_table .= "<td style=\"$cellstyle\">{$progressDisplay}</td>"; // Uses the formatted string
+    $html_table .= "<td style=\"$cellstyle\">$completiondate</td>";
     $html_table .= '</tr>';
 }
 
