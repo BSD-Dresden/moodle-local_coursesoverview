@@ -48,6 +48,11 @@ if (!$courses) {
             JOIN {enrol} e ON ue.enrolid = e.id
             WHERE e.courseid = :courseid
         ", ['courseid' => $course->id]);
+        
+        // Skip courses with no participants
+        if ($totalparticipants < 1) {
+            continue;
+        }
 
         // Get the count of participants who have completed the course
         $completedparticipants = $DB->count_records_sql("
