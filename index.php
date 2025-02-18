@@ -19,7 +19,7 @@ $time = time();
 
 // Query all courses (excluding the site course with id 1)
 $courses = $DB->get_records_sql("
-    SELECT c.id, c.fullname, c.startdate, c.enddate
+    SELECT c.id, c.fullname, c.startdate, c.enddate, c.visible
     FROM {course} c
     WHERE c.id != 1
     ORDER BY enddate DESC
@@ -41,32 +41,27 @@ if (!$courses) {
     ];
 
     foreach ($courses as $course) {
+        // Get criteria for course
+        $completion = new completion_info($course);
         // Get total participants enrolled in the course
-        $totalparticipants = $DB->count_records_sql("
-            SELECT COUNT(*) 
-            FROM {user_enrolments} ue
-            JOIN {enrol} e ON ue.enrolid = e.id
-            WHERE e.courseid = :courseid
-        ", ['courseid' => $course->id]);
+        $totalparticipants = $completion->get_num_tracked_users('', array(), $group);
         
         // Skip courses with no participants
         if ($totalparticipants < 1) {
             continue;
         }
-
-        // Get the count of participants who have completed the course
-        $completedparticipants = $DB->count_records_sql("
-            SELECT COUNT(*)
-            FROM {course_completions} cc
-            JOIN {user_enrolments} ue ON cc.userid = ue.userid
-            JOIN {enrol} e ON ue.enrolid = e.id
-            WHERE cc.course = :completioncourseid
-              AND cc.timecompleted IS NOT NULL
-              AND e.courseid = :enrolcourseid
-        ", [
-            'completioncourseid' => $course->id,
-            'enrolcourseid' => $course->id,
-        ]);
+        
+        // Get progress data for users
+        $progress = $completion->get_progress_all();
+        $completedparticipants = 0;
+        // Count the number of completed users
+        foreach ($progress as $user) {
+            $cinfo = new completion_info($course);
+            $iscomplete = $cinfo->is_course_complete($user->id);
+            if ($iscomplete) {
+                $completedparticipants++;
+            }
+        }
 
         // Create links for course view and participants
         $courseviewlink = html_writer::link(
@@ -79,8 +74,14 @@ if (!$courses) {
             get_string('coursecompletion')
         );
 
-        // Determine if the course is past or ongoing
-        $rowclass = ($course->enddate < $time) ? 'course-past' : 'course-active';
+        // Determine if the course is past, ongoing, or hidden
+        if ($course->visible == 0) {
+            $rowclass = 'course-hidden';
+        } elseif ($course->enddate < $time) {
+            $rowclass = 'course-past';
+        } else {
+            $rowclass = 'course-active';
+        }
 
         // Add a row to the table
         $row = new html_table_row([
@@ -106,6 +107,7 @@ if (!$courses) {
     echo html_writer::tag('style', "
         .course-past td { background-color: #f0f0f0; color: #888; } /* Past courses: greyed out */
         .course-active td { background-color: #ffffff; color: #000; } /* Active courses: normal */
+        .course-hidden td { background-color: #e0e0e0; color: #aaa; } /* Hidden courses: greyed out */
     ");
 }
 
