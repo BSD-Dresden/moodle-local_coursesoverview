@@ -63,11 +63,25 @@ if (!$courses) {
             }
         }
 
-        // Create links for course view and participants
+        // Create links for course view and (optionally) edit
         $courseviewlink = html_writer::link(
             new moodle_url('/course/view.php', ['id' => $course->id]),
             get_string('view')
         );
+        
+        // Start with the view link.
+        $courseactions = $courseviewlink;
+        
+        // Add " / Edit" if the user can edit this course.
+        $coursecontext = context_course::instance($course->id);
+        if (has_capability('moodle/course:update', $coursecontext)) {
+            $editlink = html_writer::link(
+                new moodle_url('/course/edit.php', ['id' => $course->id]),
+                get_string('edit')
+            );
+            $courseactions .= ' / ' . $editlink;
+        }
+
 
         $participantslink = html_writer::link(
             new moodle_url('/local/coursesoverview/participants.php', ['courseid' => $course->id]),
@@ -89,7 +103,7 @@ if (!$courses) {
             userdate($course->startdate),
             userdate($course->enddate),
             "{$completedparticipants} / {$totalparticipants}",
-            $courseviewlink,
+            $courseactions,   // View / Edit
             $participantslink,
         ]);
 
