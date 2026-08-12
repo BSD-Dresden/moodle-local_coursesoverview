@@ -29,7 +29,6 @@ use moodle_url;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class output {
-
     /** @var string Class marking the tables whose row colouring we control. */
     const TABLE_CLASS = 'coursesoverview-table';
 
@@ -76,8 +75,13 @@ class output {
      * @param moodle_url $baseurl page url without sort parameters
      * @return string
      */
-    public static function sort_header(string $label, string $column, string $sort,
-            bool $descending, moodle_url $baseurl): string {
+    public static function sort_header(
+        string $label,
+        string $column,
+        string $sort,
+        bool $descending,
+        moodle_url $baseurl
+    ): string {
         global $OUTPUT;
 
         $isactive = ($sort === $column);
@@ -87,10 +91,9 @@ class output {
         $header = html_writer::link($url, $label);
 
         if ($isactive) {
-            $header .= ' ' . $OUTPUT->pix_icon(
-                $descending ? 't/sort_desc' : 't/sort_asc',
-                get_string($descending ? 'desc' : 'asc')
-            );
+            $icon = $descending ? 't/sort_desc' : 't/sort_asc';
+            $alt = get_string($descending ? 'desc' : 'asc');
+            $header .= ' ' . $OUTPUT->pix_icon($icon, $alt);
         }
 
         return $header;
@@ -107,12 +110,10 @@ class output {
      */
     public static function export_button(moodle_url $baseurl): string {
         $url = new moodle_url($baseurl, ['download' => 'excel']);
+        $label = get_string('exportexcel', 'local_coursesoverview');
+        $link = html_writer::link($url, $label, ['class' => 'btn btn-secondary']);
 
-        return html_writer::div(
-            html_writer::link($url, get_string('exportexcel', 'local_coursesoverview'),
-                ['class' => 'btn btn-secondary']),
-            'coursesoverview-export mb-3'
-        );
+        return html_writer::div($link, 'coursesoverview-export mb-3');
     }
 
     /**
@@ -130,12 +131,11 @@ class output {
                 continue;
             }
 
-            $swatch = html_writer::span('', 'coursesoverview-swatch coursesoverview-swatch-' . $state);
+            $swatchclass = 'coursesoverview-swatch coursesoverview-swatch-' . $state;
+            $swatch = html_writer::span('', $swatchclass);
+            $label = get_string('status' . $state, 'local_coursesoverview');
 
-            $items .= html_writer::span(
-                $swatch . get_string('status' . $state, 'local_coursesoverview'),
-                'd-inline-block mr-3 me-3 mb-1'
-            );
+            $items .= html_writer::span($swatch . $label, 'd-inline-block mr-3 me-3 mb-1');
         }
 
         return html_writer::div($items, 'coursesoverview-legend mb-3');
@@ -154,58 +154,77 @@ class output {
      * @return string
      */
     public static function filters(moodle_url $action, array $current, array $categories): string {
-        $out = html_writer::start_tag('form', [
+        $target = $action->out_omit_querystring();
+
+        $formattributes = [
             'method' => 'get',
-            'action' => $action->out_omit_querystring(),
-            'class'  => 'coursesoverview-filters form-inline mb-3',
-        ]);
+            'action' => $target,
+            'class' => 'coursesoverview-filters form-inline mb-3',
+        ];
+        $out = html_writer::start_tag('form', $formattributes);
 
         // Filtering must not throw away the chosen sorting.
-        $out .= html_writer::empty_tag('input',
-            ['type' => 'hidden', 'name' => 'sort', 'value' => $current['sort']]);
-        $out .= html_writer::empty_tag('input',
-            ['type' => 'hidden', 'name' => 'dir', 'value' => $current['dir']]);
-
-        $out .= html_writer::label(get_string('search'), 'coursesoverview-search',
-            true, ['class' => 'mr-2 mb-2']);
         $out .= html_writer::empty_tag('input', [
-            'type'  => 'text',
-            'name'  => 'search',
-            'id'    => 'coursesoverview-search',
+            'type' => 'hidden',
+            'name' => 'sort',
+            'value' => $current['sort'],
+        ]);
+        $out .= html_writer::empty_tag('input', [
+            'type' => 'hidden',
+            'name' => 'dir',
+            'value' => $current['dir'],
+        ]);
+
+        $out .= html_writer::label(get_string('search'), 'coursesoverview-search', true, [
+            'class' => 'mr-2 mb-2',
+        ]);
+        $out .= html_writer::empty_tag('input', [
+            'type' => 'text',
+            'name' => 'search',
+            'id' => 'coursesoverview-search',
             'value' => $current['search'],
-            'size'  => 25,
+            'size' => 25,
             'class' => 'form-control mr-3 mb-2',
         ]);
 
-        $out .= html_writer::label(get_string('category'), 'coursesoverview-category',
-            true, ['class' => 'mr-2 mb-2']);
-        $out .= html_writer::select($categories, 'category', $current['category'],
+        $out .= html_writer::label(get_string('category'), 'coursesoverview-category', true, [
+            'class' => 'mr-2 mb-2',
+        ]);
+        $out .= html_writer::select(
+            $categories,
+            'category',
+            $current['category'],
             ['0' => get_string('all')],
-            ['id' => 'coursesoverview-category', 'class' => 'custom-select mr-3 mb-2']);
-
-        $out .= html_writer::label(get_string('status'), 'coursesoverview-state',
-            true, ['class' => 'mr-2 mb-2']);
-        $out .= html_writer::select(helper::filter_states(), 'state',
-            $current['state'], ['' => get_string('all')],
-            ['id' => 'coursesoverview-state', 'class' => 'custom-select mr-3 mb-2']);
-
-        $out .= html_writer::div(
-            html_writer::checkbox('withoutparticipants', 1,
-                (bool) $current['withoutparticipants'],
-                get_string('withoutparticipants', 'local_coursesoverview'),
-                ['id' => 'coursesoverview-withoutparticipants', 'class' => 'mr-2']),
-            'mr-3 mb-2'
+            ['id' => 'coursesoverview-category', 'class' => 'custom-select mr-3 mb-2']
         );
 
+        $out .= html_writer::label(get_string('status'), 'coursesoverview-state', true, [
+            'class' => 'mr-2 mb-2',
+        ]);
+        $out .= html_writer::select(
+            helper::filter_states(),
+            'state',
+            $current['state'],
+            ['' => get_string('all')],
+            ['id' => 'coursesoverview-state', 'class' => 'custom-select mr-3 mb-2']
+        );
+
+        $checkbox = html_writer::checkbox(
+            'withoutparticipants',
+            1,
+            (bool) $current['withoutparticipants'],
+            get_string('withoutparticipants', 'local_coursesoverview'),
+            ['id' => 'coursesoverview-withoutparticipants', 'class' => 'mr-2']
+        );
+        $out .= html_writer::div($checkbox, 'mr-3 mb-2');
+
         $out .= html_writer::empty_tag('input', [
-            'type'  => 'submit',
+            'type' => 'submit',
             'value' => get_string('applyfilters', 'local_coursesoverview'),
             'class' => 'btn btn-primary mr-3 mb-2',
         ]);
 
-        $out .= html_writer::link($action->out_omit_querystring(), get_string('reset'),
-            ['class' => 'mb-2']);
-
+        $out .= html_writer::link($target, get_string('reset'), ['class' => 'mb-2']);
         $out .= html_writer::end_tag('form');
 
         return $out;
@@ -221,31 +240,36 @@ class output {
      * @param string $caption table caption, read by screen readers
      * @return string
      */
-    public static function participants_table(array $rows, string $sort, bool $descending,
-            moodle_url $baseurl, string $caption): string {
+    public static function participants_table(
+        array $rows,
+        string $sort,
+        bool $descending,
+        moodle_url $baseurl,
+        string $caption
+    ): string {
         if (empty($rows)) {
             return html_writer::tag('p', get_string('noparticipants', 'local_coursesoverview'));
         }
 
+        $progresslabel = get_string('progressheader', 'local_coursesoverview');
+        $datelabel = get_string('completed_lastseen', 'local_coursesoverview');
+
         $table = new html_table();
-        $table->attributes['class'] = 'generaltable coursesoverview-participants '
-            . self::TABLE_CLASS;
+        $table->attributes['class'] = 'generaltable coursesoverview-participants ' . self::TABLE_CLASS;
         $table->caption = $caption;
         $table->captionhide = true;
         $table->head = [
             self::sort_header(get_string('firstname'), 'firstname', $sort, $descending, $baseurl),
             self::sort_header(get_string('lastname'), 'lastname', $sort, $descending, $baseurl),
             self::sort_header(get_string('email'), 'email', $sort, $descending, $baseurl),
-            self::sort_header(get_string('progressheader', 'local_coursesoverview'),
-                'progress', $sort, $descending, $baseurl),
-            self::sort_header(get_string('completed_lastseen', 'local_coursesoverview'),
-                'date', $sort, $descending, $baseurl),
+            self::sort_header($progresslabel, 'progress', $sort, $descending, $baseurl),
+            self::sort_header($datelabel, 'date', $sort, $descending, $baseurl),
         ];
 
         foreach ($rows as $row) {
             $tablerow = new html_table_row($row['cells']);
 
-            // html_writer::table() rebuilds the <tr> attributes, so an inline
+            // The table renderer rebuilds the tr attributes, so an inline
             // style set here would be dropped. Colour via a class instead.
             $tablerow->attributes['class'] = $row['state']
                 ? 'coursesoverview-' . $row['state']

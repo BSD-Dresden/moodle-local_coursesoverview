@@ -26,7 +26,6 @@ use core_text;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class export {
-
     /**
      * Send the table as a download and stop.
      *
@@ -47,8 +46,14 @@ class export {
      * @param array $preamble lines written above the table, each an array of
      *      cell values whose first entry is rendered bold
      */
-    public static function download(string $dataformat, string $filename, string $sheetname,
-            array $columns, array $rows, array $preamble = []): void {
+    public static function download(
+        string $dataformat,
+        string $filename,
+        string $sheetname,
+        array $columns,
+        array $rows,
+        array $preamble = []
+    ): void {
         // ISO order, so that the files sort chronologically by name.
         $filename = clean_filename($filename . '_' . userdate(time(), '%Y-%m-%d'));
 
@@ -73,21 +78,21 @@ class export {
      * @param array $rows list of ['values' => array, 'bgcolor' => string|null]
      * @param array $preamble lines written above the table
      */
-    protected static function excel(string $filename, string $sheetname, array $columns,
-            array $rows, array $preamble = []): void {
+    protected static function excel(
+        string $filename,
+        string $sheetname,
+        array $columns,
+        array $rows,
+        array $preamble = []
+    ): void {
         global $CFG;
 
         require_once($CFG->libdir . '/excellib.class.php');
 
-        // Excel rejects these characters in sheet titles and caps them at 31
-        // characters; either one triggers the "repair" dialog on open.
-        $sheetname = preg_replace('#[\\\\/?*\[\]:]#u', ' ', $sheetname);
-        $sheetname = trim(core_text::substr($sheetname, 0, 31));
-
         $workbook = new \MoodleExcelWorkbook('-');
         $workbook->send($filename);
 
-        $worksheet = $workbook->add_worksheet($sheetname !== '' ? $sheetname : 'Export');
+        $worksheet = $workbook->add_worksheet(self::sheet_title($sheetname));
 
         $boldformat = $workbook->add_format(['bold' => 1]);
         $rownum = 0;
@@ -95,8 +100,8 @@ class export {
         // Context lines above the table, mirroring what the page shows there.
         foreach ($preamble as $line) {
             foreach (array_values($line) as $col => $value) {
-                $worksheet->write_string($rownum, $col, (string) $value,
-                    $col === 0 ? $boldformat : null);
+                $format = ($col === 0) ? $boldformat : null;
+                $worksheet->write_string($rownum, $col, (string) $value, $format);
             }
             $rownum++;
         }
@@ -106,8 +111,8 @@ class export {
 
         foreach (array_values($columns) as $col => $label) {
             $worksheet->write_string($rownum, $col, (string) $label, $boldformat);
-            $worksheet->set_column($col, $col,
-                min(40, max(12, core_text::strlen((string) $label) + 4)));
+            $width = min(40, max(12, core_text::strlen((string) $label) + 4));
+            $worksheet->set_column($col, $col, $width);
         }
         $rownum++;
 
@@ -124,20 +129,47 @@ class export {
                 $format = $formats[$bgcolor];
             }
 
-            foreach (array_values($row['values']) as $col => $value) {
-                if (is_int($value) || is_float($value)) {
-                    $worksheet->write_number($rownum, $col, $value, $format);
-                } else if ($value === null || $value === '') {
-                    $worksheet->write_blank($rownum, $col, $format);
-                } else {
-                    $worksheet->write_string($rownum, $col, (string) $value, $format);
-                }
-            }
-
+            self::write_row($worksheet, $rownum, $row['values'], $format);
             $rownum++;
         }
 
         $workbook->close();
         exit;
+    }
+
+    /**
+     * Write one data row, picking the cell type per value.
+     *
+     * @param \MoodleExcelWorksheet $worksheet
+     * @param int $rownum
+     * @param array $values
+     * @param \MoodleExcelFormat|null $format
+     */
+    protected static function write_row($worksheet, int $rownum, array $values, $format): void {
+        foreach (array_values($values) as $col => $value) {
+            if (is_int($value) || is_float($value)) {
+                $worksheet->write_number($rownum, $col, $value, $format);
+            } else if ($value === null || $value === '') {
+                $worksheet->write_blank($rownum, $col, $format);
+            } else {
+                $worksheet->write_string($rownum, $col, (string) $value, $format);
+            }
+        }
+    }
+
+    /**
+     * Make a worksheet title Excel will accept.
+     *
+     * Excel rejects a handful of characters in sheet titles and caps them at
+     * 31 characters; either one triggers the "repair" dialog on open.
+     *
+     * @param string $sheetname
+     * @return string
+     */
+    protected static function sheet_title(string $sheetname): string {
+        $sheetname = preg_replace('#[\\\\/?*\[\]:]#u', ' ', $sheetname);
+        $sheetname = trim(core_text::substr($sheetname, 0, 31));
+
+        return ($sheetname !== '') ? $sheetname : 'Export';
     }
 }

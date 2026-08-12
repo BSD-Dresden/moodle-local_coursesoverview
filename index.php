@@ -43,8 +43,8 @@ $category = optional_param('category', 0, PARAM_INT);
 $state = optional_param('state', '', PARAM_ALPHA);
 $withoutparticipants = optional_param('withoutparticipants', 0, PARAM_BOOL);
 
-$sort = helper::validate_sort($sort,
-    ['fullname', 'startdate', 'enddate', 'completed', 'total'], 'enddate');
+$sortcolumns = ['fullname', 'startdate', 'enddate', 'completed', 'total'];
+$sort = helper::validate_sort($sort, $sortcolumns, 'enddate');
 $descending = ($dir !== 'asc');
 $dir = $descending ? 'desc' : 'asc';
 
@@ -86,27 +86,24 @@ if ($hide || $show) {
     }
 
     $targetcourse = get_course($targetid);
-    require_capability('moodle/course:visibility', context_course::instance($targetid));
+    $targetcontext = context_course::instance($targetid);
+    require_capability('moodle/course:visibility', $targetcontext);
 
     course_change_visibility($targetid, (bool) $show);
 
-    redirect(
-        $sorturl,
-        get_string($hide ? 'coursehidden' : 'courseshown', 'local_coursesoverview',
-            format_string($targetcourse->fullname, true,
-                ['context' => context_course::instance($targetid)])),
-        null,
-        \core\output\notification::NOTIFY_SUCCESS
+    $message = get_string(
+        $hide ? 'coursehidden' : 'courseshown',
+        'local_coursesoverview',
+        format_string($targetcourse->fullname, true, ['context' => $targetcontext])
     );
+
+    redirect($sorturl, $message, null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
 $now = time();
 
-// ---------------------------------------------------------------------------
 // Fetch the courses. Name and category are filtered in SQL; the state depends
 // on completion counts and can only be filtered once those are known.
-// ---------------------------------------------------------------------------
-
 $params = ['contextcourse' => CONTEXT_COURSE, 'siteid' => SITEID];
 $where = ['c.id <> :siteid'];
 
@@ -126,13 +123,20 @@ if ($search !== '') {
 // Preload the course contexts so that context_course::instance() below does
 // not hit the database per course.
 $ctxfields = context_helper::get_preload_record_columns_sql('ctx');
-$courses = $DB->get_records_sql("
-        SELECT c.id, c.fullname, c.shortname, c.visible, c.startdate, c.enddate, c.enablecompletion, {$ctxfields}
+$sql = "SELECT c.id, c.fullname, c.shortname, c.visible, c.startdate, c.enddate,
+               c.enablecompletion, {$ctxfields}
           FROM {course} c
           JOIN {context} ctx ON ctx.instanceid = c.id AND ctx.contextlevel = :contextcourse
          WHERE " . implode(' AND ', $where) . "
-      ORDER BY c.fullname ASC", $params);
+      ORDER BY c.fullname ASC";
+$courses = $DB->get_records_sql($sql, $params);
 
+$completedwhere = 'u.id IN (SELECT cc.userid
+                              FROM {course_completions} cc
+                             WHERE cc.course = :covcourseid
+                               AND cc.timecompleted IS NOT NULL)';
+
+$completionstatuslabel = get_string('completionstatus', 'local_coursesoverview');
 $rows = [];
 
 foreach ($courses as $course) {
@@ -152,10 +156,7 @@ foreach ($courses as $course) {
         // Count completed users with a single aggregate query instead of
         // loading every user's activity completion data.
         $completedparticipants = $completion->get_num_tracked_users(
-            'u.id IN (SELECT cc.userid
-                        FROM {course_completions} cc
-                       WHERE cc.course = :covcourseid
-                         AND cc.timecompleted IS NOT NULL)',
+            $completedwhere,
             ['covcourseid' => $course->id]
         );
         $completioncell = "{$completedparticipants} / {$totalparticipants}";
@@ -168,8 +169,7 @@ foreach ($courses as $course) {
         $rate = null;
     }
 
-    $coursestate = helper::course_state($course, $completedparticipants,
-        $totalparticipants, $now);
+    $coursestate = helper::course_state($course, $completedparticipants, $totalparticipants, $now);
 
     if (!helper::state_matches($coursestate, $state)) {
         continue;
@@ -178,37 +178,34 @@ foreach ($courses as $course) {
     $status = get_string('status' . $coursestate, 'local_coursesoverview');
     $coursename = format_string($course->fullname, true, ['context' => $coursecontext]);
 
-    // Course actions: view, plus edit and hide/show where permitted.
-    $courseactions = html_writer::link(
-        new moodle_url('/course/view.php', ['id' => $course->id]),
-        get_string('view')
-    );
+    // Course actions: view, plus edit and hide or show where permitted.
+    $viewurl = new moodle_url('/course/view.php', ['id' => $course->id]);
+    $courseactions = html_writer::link($viewurl, get_string('view'));
+
     if (has_capability('moodle/course:update', $coursecontext)) {
-        $courseactions .= ' / ' . html_writer::link(
-            new moodle_url('/course/edit.php', ['id' => $course->id]),
-            get_string('edit')
-        );
-    }
-    if (has_capability('moodle/course:visibility', $coursecontext)) {
-        $action = $course->visible ? 'hide' : 'show';
-        $courseactions .= ' / ' . html_writer::link(
-            new moodle_url($sorturl, [$action => $course->id, 'sesskey' => sesskey()]),
-            get_string($action)
-        );
+        $editurl = new moodle_url('/course/edit.php', ['id' => $course->id]);
+        $courseactions .= ' / ' . html_writer::link($editurl, get_string('edit'));
     }
 
-    $participantslink = html_writer::link(
-        new moodle_url('/local/coursesoverview/participants.php', ['courseid' => $course->id]),
-        get_string('completionstatus', 'local_coursesoverview')
-    );
+    if (has_capability('moodle/course:visibility', $coursecontext)) {
+        $action = $course->visible ? 'hide' : 'show';
+        $toggleparams = [$action => $course->id, 'sesskey' => sesskey()];
+        $toggleurl = new moodle_url($sorturl, $toggleparams);
+        $courseactions .= ' / ' . html_writer::link($toggleurl, get_string($action));
+    }
+
+    $participantsurl = new moodle_url('/local/coursesoverview/participants.php', [
+        'courseid' => $course->id,
+    ]);
+    $participantslink = html_writer::link($participantsurl, $completionstatuslabel);
 
     $rows[] = [
         'sort' => [
-            'fullname'  => $coursename,
+            'fullname' => $coursename,
             'startdate' => (int) $course->startdate,
-            'enddate'   => (int) $course->enddate,
+            'enddate' => (int) $course->enddate,
             'completed' => (int) $completedparticipants,
-            'total'     => (int) $totalparticipants,
+            'total' => (int) $totalparticipants,
         ],
         'state' => $coursestate,
         'cells' => [
@@ -235,10 +232,10 @@ foreach ($courses as $course) {
 
 $rows = helper::sort_rows($rows, $sort, $descending);
 
-// ---------------------------------------------------------------------------
-// Export. Must run before any output is sent.
-// ---------------------------------------------------------------------------
+$completedlabel = get_string('completedparticipants', 'local_coursesoverview');
+$totallabel = get_string('totalparticipants', 'local_coursesoverview');
 
+// Export. Must run before any output is sent.
 if ($download) {
     $columns = [
         get_string('course'),
@@ -246,8 +243,8 @@ if ($download) {
         get_string('startdate'),
         get_string('enddate'),
         get_string('status'),
-        get_string('completedparticipants', 'local_coursesoverview'),
-        get_string('totalparticipants', 'local_coursesoverview'),
+        $completedlabel,
+        $totallabel,
         get_string('completionrate', 'local_coursesoverview'),
     ];
 
@@ -255,45 +252,47 @@ if ($download) {
     $exportrows = [];
     foreach ($rows as $row) {
         $exportrows[] = [
-            'values'  => $row['export'],
+            'values' => $row['export'],
             'bgcolor' => $colors[$row['state']] ?? null,
         ];
     }
 
+    $pluginname = get_string('pluginname', 'local_coursesoverview');
+
     export::download(
         $download,
-        clean_filename(get_string('pluginname', 'local_coursesoverview')),
-        get_string('pluginname', 'local_coursesoverview'),
+        clean_filename($pluginname),
+        $pluginname,
         $columns,
         $exportrows
     );
 }
 
-// ---------------------------------------------------------------------------
-// Output.
-// ---------------------------------------------------------------------------
-
 echo $OUTPUT->header();
 
-echo output::filters($pageurl, [
-    'sort'                => $sort,
-    'dir'                 => $dir,
-    'search'              => $search,
-    'category'            => $category,
-    'state'               => $state,
+$filtervalues = [
+    'sort' => $sort,
+    'dir' => $dir,
+    'search' => $search,
+    'category' => $category,
+    'state' => $state,
     'withoutparticipants' => $withoutparticipants,
-], core_course_category::make_categories_list());
+];
+echo output::filters($pageurl, $filtervalues, core_course_category::make_categories_list());
 
 if (empty($rows)) {
     $filtered = ($search !== '' || $category || $state !== '');
-    echo html_writer::tag('p', get_string(
-        $filtered ? 'nocoursesmatch' : 'nocourses', 'local_coursesoverview'));
+    $emptykey = $filtered ? 'nocoursesmatch' : 'nocourses';
+    echo html_writer::tag('p', get_string($emptykey, 'local_coursesoverview'));
     echo $OUTPUT->footer();
     exit;
 }
 
 echo output::export_button($sorturl);
 echo output::legend(['overdue', 'endingsoon', 'tosettle', 'hidden']);
+
+$completedheader = output::sort_header($completedlabel, 'completed', $sort, $descending, $baseurl);
+$totalheader = output::sort_header($totallabel, 'total', $sort, $descending, $baseurl);
 
 $table = new html_table();
 $table->attributes['class'] = 'generaltable ' . output::TABLE_CLASS;
@@ -303,13 +302,10 @@ $table->head = [
     output::sort_header(get_string('course'), 'fullname', $sort, $descending, $baseurl),
     output::sort_header(get_string('startdate'), 'startdate', $sort, $descending, $baseurl),
     output::sort_header(get_string('enddate'), 'enddate', $sort, $descending, $baseurl),
-    output::sort_header(get_string('completedparticipants', 'local_coursesoverview'),
-        'completed', $sort, $descending, $baseurl) . ' / ' .
-    output::sort_header(get_string('totalparticipants', 'local_coursesoverview'),
-        'total', $sort, $descending, $baseurl),
+    $completedheader . ' / ' . $totalheader,
     get_string('status'),
     get_string('actions'),
-    get_string('completionstatus', 'local_coursesoverview'),
+    $completionstatuslabel,
 ];
 
 foreach ($rows as $row) {

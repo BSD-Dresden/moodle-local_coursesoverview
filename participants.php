@@ -35,8 +35,8 @@ $download = optional_param('download', '', PARAM_ALPHA);
 $sort = optional_param('sort', 'lastname', PARAM_ALPHA);
 $dir = optional_param('dir', 'asc', PARAM_ALPHA);
 
-$sort = helper::validate_sort($sort,
-    ['firstname', 'lastname', 'email', 'progress', 'date'], 'lastname');
+$sortcolumns = ['firstname', 'lastname', 'email', 'progress', 'date'];
+$sort = helper::validate_sort($sort, $sortcolumns, 'lastname');
 $descending = ($dir === 'desc');
 
 require_login();
@@ -48,21 +48,20 @@ require_capability('local/coursesoverview:view', $context);
 $baseurl = new moodle_url('/local/coursesoverview/participants.php', ['courseid' => $courseid]);
 $sorturl = new moodle_url($baseurl, ['sort' => $sort, 'dir' => $descending ? 'desc' : 'asc']);
 
+$pagetitle = get_string('completionstatus', 'local_coursesoverview');
+
 $PAGE->set_course($course);
 $PAGE->set_url($sorturl);
 $PAGE->set_pagelayout('report');
-$PAGE->set_title(get_string('completionstatus', 'local_coursesoverview'));
+$PAGE->set_title($pagetitle);
 $PAGE->set_heading(format_string($course->fullname, true, ['context' => $context]));
 
 $completion = new completion_info($course);
 $criteria = helper::sorted_criteria($completion);
 $numcriteria = count($criteria);
 
-// ---------------------------------------------------------------------------
 // Gather all completion data up front: a handful of queries for the whole page
 // instead of one query per user and criterion.
-// ---------------------------------------------------------------------------
-
 $userfields = \core_user\fields::for_name()->get_sql('u', false, '', '', false)->selects;
 $participants = get_enrolled_users($context, '', 0, 'u.id, u.email, ' . ltrim($userfields, ' ,'));
 
@@ -73,36 +72,32 @@ if ($numcriteria) {
     foreach ($criteria as $criterion) {
         $criteriaids[] = $criterion->id;
     }
-    list($insql, $inparams) = $DB->get_in_or_equal($criteriaids, SQL_PARAMS_NAMED, 'crit');
-    $numcompletedbyuser = $DB->get_records_sql_menu("
-            SELECT ccc.userid, COUNT(ccc.id) AS numcompleted
+
+    [$insql, $inparams] = $DB->get_in_or_equal($criteriaids, SQL_PARAMS_NAMED, 'crit');
+
+    $sql = "SELECT ccc.userid, COUNT(ccc.id) AS numcompleted
               FROM {course_completion_crit_compl} ccc
              WHERE ccc.course = :courseid
                AND ccc.timecompleted IS NOT NULL
                AND ccc.criteriaid {$insql}
-          GROUP BY ccc.userid",
-        ['courseid' => $courseid] + $inparams);
+          GROUP BY ccc.userid";
+    $numcompletedbyuser = $DB->get_records_sql_menu($sql, ['courseid' => $courseid] + $inparams);
 }
 
 // Actual course completion time per user.
-$coursecompletedbyuser = $DB->get_records_sql_menu("
-        SELECT cc.userid, cc.timecompleted
+$sql = "SELECT cc.userid, cc.timecompleted
           FROM {course_completions} cc
          WHERE cc.course = :courseid
-           AND cc.timecompleted IS NOT NULL",
-    ['courseid' => $courseid]);
+           AND cc.timecompleted IS NOT NULL";
+$coursecompletedbyuser = $DB->get_records_sql_menu($sql, ['courseid' => $courseid]);
 
 // Last access to this course per user.
-$lastaccessbyuser = $DB->get_records_sql_menu("
-        SELECT ul.userid, ul.timeaccess
+$sql = "SELECT ul.userid, ul.timeaccess
           FROM {user_lastaccess} ul
-         WHERE ul.courseid = :courseid",
-    ['courseid' => $courseid]);
+         WHERE ul.courseid = :courseid";
+$lastaccessbyuser = $DB->get_records_sql_menu($sql, ['courseid' => $courseid]);
 
-// ---------------------------------------------------------------------------
 // Build one row per participant.
-// ---------------------------------------------------------------------------
-
 $rowsbyuser = [];
 
 foreach ($participants as $user) {
@@ -133,10 +128,10 @@ foreach ($participants as $user) {
     $rowsbyuser[$user->id] = [
         'sort' => [
             'firstname' => $user->firstname,
-            'lastname'  => $user->lastname,
-            'email'     => $user->email,
-            'progress'  => $numcompleted,
-            'date'      => $date,
+            'lastname' => $user->lastname,
+            'email' => $user->email,
+            'progress' => $numcompleted,
+            'date' => $date,
         ],
         'state' => $state,
         'cells' => [
@@ -157,21 +152,17 @@ foreach ($participants as $user) {
     ];
 }
 
-// ---------------------------------------------------------------------------
 // Split into groups, if the course uses any.
-// ---------------------------------------------------------------------------
-
 $groups = groups_get_all_groups($courseid);
 $sections = [];
 
 if (!empty($groups)) {
     // Group memberships for the whole course in one query.
-    $memberships = $DB->get_records_sql("
-            SELECT gm.id, gm.groupid, gm.userid
+    $sql = "SELECT gm.id, gm.groupid, gm.userid
               FROM {groups_members} gm
               JOIN {groups} g ON g.id = gm.groupid
-             WHERE g.courseid = :courseid",
-        ['courseid' => $courseid]);
+             WHERE g.courseid = :courseid";
+    $memberships = $DB->get_records_sql($sql, ['courseid' => $courseid]);
 
     $membersbygroup = [];
     $hasgroup = [];
@@ -212,10 +203,7 @@ foreach ($sections as $index => $section) {
     $sections[$index]['rows'] = helper::sort_rows($section['rows'], $sort, $descending);
 }
 
-// ---------------------------------------------------------------------------
 // Export. Must run before any output is sent.
-// ---------------------------------------------------------------------------
-
 if ($download) {
     // The group column only earns its place when the course actually uses
     // groups, otherwise it would be a column of blanks.
@@ -239,14 +227,14 @@ if ($download) {
                 array_unshift($values, $section['name']);
             }
             $exportrows[] = [
-                'values'  => $values,
+                'values' => $values,
                 'bgcolor' => $row['state'] ? ($colors[$row['state']] ?? null) : null,
             ];
         }
     }
 
     // Spreadsheet cells take raw text, not the HTML-escaped output of
-    // format_string(), which would turn an ampersand into &amp;.
+    // format_string(), which would turn an ampersand into an entity.
     $preamble = [
         [get_string('course'), $course->fullname],
         [get_string('enddate'), helper::format_date($course->enddate, '')],
@@ -254,7 +242,7 @@ if ($download) {
 
     export::download(
         $download,
-        clean_filename(get_string('completionstatus', 'local_coursesoverview') . '_' . $course->shortname),
+        clean_filename($pagetitle . '_' . $course->shortname),
         $course->shortname,
         $columns,
         $exportrows,
@@ -262,54 +250,43 @@ if ($download) {
     );
 }
 
-// ---------------------------------------------------------------------------
-// Output.
-// ---------------------------------------------------------------------------
-
 echo $OUTPUT->header();
 
-echo html_writer::div(
-    html_writer::link(
-        new moodle_url('/local/coursesoverview/index.php'),
-        '← ' . get_string('backtooverview', 'local_coursesoverview')
-    ),
-    'coursesoverview-backlink mb-3'
-);
+$backurl = new moodle_url('/local/coursesoverview/index.php');
+$backlabel = '← ' . get_string('backtooverview', 'local_coursesoverview');
+echo html_writer::div(html_writer::link($backurl, $backlabel), 'coursesoverview-backlink mb-3');
 
-echo html_writer::tag('p',
-    html_writer::tag('strong', get_string('course') . ': ') .
-    format_string($course->fullname, true, ['context' => $context])
-);
-echo html_writer::tag('p',
-    html_writer::tag('strong', get_string('enddate') . ': ') .
-    helper::format_date($course->enddate)
-);
+$coursename = format_string($course->fullname, true, ['context' => $context]);
+echo html_writer::tag('p', html_writer::tag('strong', get_string('course') . ': ') . $coursename);
+
+$enddate = helper::format_date($course->enddate);
+echo html_writer::tag('p', html_writer::tag('strong', get_string('enddate') . ': ') . $enddate);
 
 if (!$completion->is_enabled()) {
-    echo $OUTPUT->notification(get_string('completiondisabled', 'local_coursesoverview'), 'warning');
+    $notice = get_string('completiondisabled', 'local_coursesoverview');
+    echo $OUTPUT->notification($notice, 'warning');
 } else if (!$numcriteria) {
-    echo $OUTPUT->notification(get_string('nocriteria', 'local_coursesoverview'), 'warning');
+    $notice = get_string('nocriteria', 'local_coursesoverview');
+    echo $OUTPUT->notification($notice, 'warning');
 }
 
 if (empty($participants)) {
-    echo html_writer::tag('p', html_writer::tag('strong',
-        get_string('noparticipants', 'local_coursesoverview')));
+    $notice = get_string('noparticipants', 'local_coursesoverview');
+    echo html_writer::tag('p', html_writer::tag('strong', $notice));
     echo $OUTPUT->footer();
     exit;
 }
 
 echo output::export_button($sorturl);
 echo output::legend(['notstarted', 'inprogress', 'completed']);
-
 echo output::start_tables();
 
 foreach ($sections as $section) {
     if ($section['name'] !== '') {
         echo html_writer::tag('h3', $section['name']);
     }
-    echo output::participants_table($section['rows'], $sort, $descending, $baseurl,
-        $section['name'] !== '' ? $section['name']
-            : get_string('completionstatus', 'local_coursesoverview'));
+    $caption = ($section['name'] !== '') ? $section['name'] : $pagetitle;
+    echo output::participants_table($section['rows'], $sort, $descending, $baseurl, $caption);
 }
 
 echo output::end_tables();

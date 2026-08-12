@@ -27,7 +27,6 @@ use stdClass;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class helper {
-
     /** @var int Courses ending within this window count as "ending soon". */
     const ENDING_SOON = 14 * DAYSECS;
 
@@ -44,15 +43,15 @@ class helper {
             // Participants.
             'notstarted' => '#f8d7da',
             'inprogress' => '#fff3cd',
-            'completed'  => '#d4edda',
+            'completed' => '#d4edda',
             // Courses.
-            'overdue'    => '#f5c6cb',
+            'overdue' => '#f5c6cb',
             'endingsoon' => '#fff3cd',
-            'tosettle'   => '#d4edda',
-            'hidden'     => '#e0e0e0',
+            'tosettle' => '#d4edda',
+            'hidden' => '#e0e0e0',
             // Ended, but the completion rate is unknown: stated, not coloured.
-            'past'       => null,
-            'active'     => null,
+            'past' => null,
+            'active' => null,
         ];
     }
 
@@ -91,8 +90,12 @@ class helper {
      * @param int $now
      * @return string state key
      */
-    public static function course_state(stdClass $course, ?int $completed, int $total,
-            int $now): string {
+    public static function course_state(
+        stdClass $course,
+        ?int $completed,
+        int $total,
+        int $now
+    ): string {
         if ($course->visible == 0) {
             return 'hidden';
         }
@@ -102,14 +105,15 @@ class helper {
         }
 
         $incomplete = ($completed !== null);
-        $ended = (!empty($course->enddate) && $course->enddate < $now);
+        $hasenddate = !empty($course->enddate);
 
-        if ($ended) {
+        if ($hasenddate && $course->enddate < $now) {
             return $incomplete ? 'overdue' : 'past';
         }
 
-        if ($incomplete && !empty($course->enddate)
-                && $course->enddate <= $now + self::ENDING_SOON) {
+        $endingsoon = $hasenddate && $course->enddate <= $now + self::ENDING_SOON;
+
+        if ($incomplete && $endingsoon) {
             return 'endingsoon';
         }
 
@@ -163,13 +167,13 @@ class helper {
      */
     public static function sorted_criteria(completion_info $completion): array {
         $weights = [
-            COMPLETION_CRITERIA_TYPE_COURSE   => 0,
+            COMPLETION_CRITERIA_TYPE_COURSE => 0,
             COMPLETION_CRITERIA_TYPE_ACTIVITY => 1,
         ];
 
         $criteria = $completion->get_criteria();
 
-        uasort($criteria, function($a, $b) use ($weights) {
+        uasort($criteria, function ($a, $b) use ($weights) {
             $wa = $weights[$a->criteriatype] ?? 2;
             $wb = $weights[$b->criteriatype] ?? 2;
             if ($wa !== $wb) {
@@ -206,7 +210,7 @@ class helper {
     public static function sort_rows(array $rows, string $key, bool $descending): array {
         $rows = array_values($rows);
 
-        usort($rows, function($a, $b) use ($key, $descending) {
+        usort($rows, function ($a, $b) use ($key, $descending) {
             $va = $a['sort'][$key] ?? null;
             $vb = $b['sort'][$key] ?? null;
 

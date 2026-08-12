@@ -17,7 +17,13 @@
  * variables feeding both. Every route is closed here, on the row and on the
  * cell, so that a highlighted row cannot end up in two shades depending on
  * whether it happens to be an odd or an even row.
+ *
+ * That is also why !important is unavoidable below: the theme rules we are
+ * overriding carry it themselves, and losing the fight means the highlight
+ * silently stops working. Hence the rule is switched off for this file only.
  */
+
+/* stylelint-disable declaration-no-important */
 
 #coursesoverview-tables tbody tr,
 #coursesoverview-tables tbody tr:hover {
@@ -76,6 +82,8 @@
     background-color: #d4edda !important;
 }
 
+/* stylelint-enable declaration-no-important */
+
 /* Legend swatches. */
 
 .coursesoverview-swatch {
@@ -87,10 +95,30 @@
     border: 1px solid #ccc;
 }
 
-.coursesoverview-swatch-overdue { background-color: #f5c6cb; }
-.coursesoverview-swatch-endingsoon { background-color: #fff3cd; }
-.coursesoverview-swatch-tosettle { background-color: #d4edda; }
-.coursesoverview-swatch-hidden { background-color: #e0e0e0; }
-.coursesoverview-swatch-notstarted { background-color: #f8d7da; }
-.coursesoverview-swatch-inprogress { background-color: #fff3cd; }
-.coursesoverview-swatch-completed { background-color: #d4edda; }
+.coursesoverview-swatch-overdue {
+    background-color: #f5c6cb;
+}
+
+.coursesoverview-swatch-endingsoon {
+    background-color: #fff3cd;
+}
+
+.coursesoverview-swatch-tosettle {
+    background-color: #d4edda;
+}
+
+.coursesoverview-swatch-hidden {
+    background-color: #e0e0e0;
+}
+
+.coursesoverview-swatch-notstarted {
+    background-color: #f8d7da;
+}
+
+.coursesoverview-swatch-inprogress {
+    background-color: #fff3cd;
+}
+
+.coursesoverview-swatch-completed {
+    background-color: #d4edda;
+}
