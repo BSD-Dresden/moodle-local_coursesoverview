@@ -250,7 +250,8 @@ function local_coursesoverview_render_participants_table(array $rows, string $so
     }
 
     $table = new html_table();
-    $table->attributes['class'] = 'generaltable coursesoverview-participants';
+    $table->attributes['class'] = 'generaltable coursesoverview-participants '
+        . LOCAL_COURSESOVERVIEW_TABLE_CLASS;
     $table->head = [
         local_coursesoverview_sort_header(get_string('firstname'), 'firstname', $sort, $descending, $baseurl),
         local_coursesoverview_sort_header(get_string('lastname'), 'lastname', $sort, $descending, $baseurl),
@@ -313,6 +314,8 @@ echo local_coursesoverview_export_button($sorturl);
 
 echo local_coursesoverview_row_styles(['notstarted', 'inprogress', 'completed']);
 
+echo local_coursesoverview_start_tables();
+
 foreach ($sections as $section) {
     if ($section['name'] !== '') {
         echo html_writer::tag('h3', $section['name']);
@@ -320,5 +323,7 @@ foreach ($sections as $section) {
     local_coursesoverview_render_participants_table(
         $section['rows'], $sort, $descending, $baseurl);
 }
+
+echo local_coursesoverview_end_tables();
 
 echo $OUTPUT->footer();

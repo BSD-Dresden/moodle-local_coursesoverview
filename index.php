@@ -6,6 +6,7 @@
  */
 
 require_once(__DIR__ . '/../../config.php');
+require_once($CFG->dirroot . '/course/lib.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->libdir . '/completionlib.php');
 require_once(__DIR__ . '/locallib.php');
@@ -13,6 +14,8 @@ require_once(__DIR__ . '/locallib.php');
 $download = optional_param('download', '', PARAM_ALPHA);
 $sort = optional_param('sort', 'enddate', PARAM_ALPHA);
 $dir = optional_param('dir', 'desc', PARAM_ALPHA);
+$hide = optional_param('hide', 0, PARAM_INT);
+$show = optional_param('show', 0, PARAM_INT);
 
 $sort = local_coursesoverview_validate_sort($sort,
     ['fullname', 'startdate', 'enddate', 'completed', 'total'], 'enddate');
@@ -23,6 +26,30 @@ admin_externalpage_setup('localcoursesoverview', '', ['sort' => $sort, 'dir' => 
 
 $baseurl = new moodle_url('/local/coursesoverview/index.php');
 $sorturl = new moodle_url($baseurl, ['sort' => $sort, 'dir' => $dir]);
+
+// Toggle course visibility straight from the overview.
+if ($hide || $show) {
+    require_sesskey();
+
+    $targetid = $hide ?: $show;
+    if ($targetid == SITEID) {
+        throw new moodle_exception('invalidcourseid', 'error');
+    }
+
+    $targetcourse = get_course($targetid);
+    require_capability('moodle/course:visibility', context_course::instance($targetid));
+
+    course_change_visibility($targetid, (bool) $show);
+
+    redirect(
+        $sorturl,
+        get_string($hide ? 'coursehidden' : 'courseshown', 'local_coursesoverview',
+            format_string($targetcourse->fullname, true,
+                ['context' => context_course::instance($targetid)])),
+        null,
+        \core\output\notification::NOTIFY_SUCCESS
+    );
+}
 
 $now = time();
 
@@ -71,14 +98,8 @@ foreach ($courses as $course) {
         $rate = null;
     }
 
-    // Hidden / past / active. A course without an end date is never "past".
-    if ($course->visible == 0) {
-        $state = 'hidden';
-    } else if (!empty($course->enddate) && $course->enddate < $now) {
-        $state = 'past';
-    } else {
-        $state = 'active';
-    }
+    $state = local_coursesoverview_course_state($course, $completedparticipants,
+        $totalparticipants, $now);
     $status = get_string('status' . $state, 'local_coursesoverview');
 
     $coursename = format_string($course->fullname, true, ['context' => $coursecontext]);
@@ -92,6 +113,13 @@ foreach ($courses as $course) {
         $courseactions .= ' / ' . html_writer::link(
             new moodle_url('/course/edit.php', ['id' => $course->id]),
             get_string('edit')
+        );
+    }
+    if (has_capability('moodle/course:visibility', $coursecontext)) {
+        $action = $course->visible ? 'hide' : 'show';
+        $courseactions .= ' / ' . html_writer::link(
+            new moodle_url($sorturl, [$action => $course->id, 'sesskey' => sesskey()]),
+            get_string($action)
         );
     }
 
@@ -180,12 +208,14 @@ if (empty($rows)) {
 
 echo local_coursesoverview_export_button($sorturl);
 
-echo local_coursesoverview_row_styles(
-    ['past', 'hidden'],
-    ['past' => 'color: #888', 'hidden' => 'color: #aaa']
-);
+$states = ['overdue', 'endingsoon', 'tosettle', 'hidden'];
+
+echo local_coursesoverview_row_styles($states, ['hidden' => 'color: #888']);
+
+echo local_coursesoverview_legend($states);
 
 $table = new html_table();
+$table->attributes['class'] = 'generaltable ' . LOCAL_COURSESOVERVIEW_TABLE_CLASS;
 $table->head = [
     local_coursesoverview_sort_header(get_string('course'), 'fullname', $sort, $descending, $baseurl),
     local_coursesoverview_sort_header(get_string('startdate'), 'startdate', $sort, $descending, $baseurl),
@@ -204,6 +234,8 @@ foreach ($rows as $row) {
     $table->data[] = $tablerow;
 }
 
+echo local_coursesoverview_start_tables();
 echo html_writer::table($table);
+echo local_coursesoverview_end_tables();
 
 echo $OUTPUT->footer();

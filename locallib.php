@@ -9,6 +9,42 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/completionlib.php');
 
+/** Courses ending within this window count as "ending soon". */
+define('LOCAL_COURSESOVERVIEW_ENDING_SOON', 14 * DAYSECS);
+
+/** Class marking the tables whose row colouring this plugin controls. */
+define('LOCAL_COURSESOVERVIEW_TABLE_CLASS', 'coursesoverview-table');
+
+/**
+ * Id of the wrapper the tables are rendered into.
+ *
+ * The row colours are scoped to this id on purpose. Themes and site custom CSS
+ * style table rows with selectors such as
+ * "table.generaltable tbody tr:nth-child(even) td", which carries more
+ * specificity than any class based rule we could write and often !important on
+ * top. An id outranks any number of classes, so scoping by id is what makes
+ * our colours stick regardless of the theme.
+ */
+define('LOCAL_COURSESOVERVIEW_WRAPPER_ID', 'coursesoverview-tables');
+
+/**
+ * Open the wrapper the row colouring is scoped to.
+ *
+ * @return string
+ */
+function local_coursesoverview_start_tables(): string {
+    return html_writer::start_div('', ['id' => LOCAL_COURSESOVERVIEW_WRAPPER_ID]);
+}
+
+/**
+ * Close the wrapper opened by local_coursesoverview_start_tables().
+ *
+ * @return string
+ */
+function local_coursesoverview_end_tables(): string {
+    return html_writer::end_div();
+}
+
 /**
  * Row highlight colours, shared by the on-screen tables and the Excel export
  * so both stay in sync.
@@ -22,10 +58,86 @@ function local_coursesoverview_colors(): array {
         'inprogress' => '#fff3cd',
         'completed'  => '#d4edda',
         // Courses.
-        'past'       => '#f0f0f0',
+        'overdue'    => '#f5c6cb',
+        'endingsoon' => '#fff3cd',
+        'tosettle'   => '#d4edda',
         'hidden'     => '#e0e0e0',
+        // Ended, but the completion rate is unknown: stated, not highlighted.
+        'past'       => null,
         'active'     => null,
     ];
+}
+
+/**
+ * Determine the highlight state of a course row.
+ *
+ * Hidden wins over everything: hiding a course is the manual marker for
+ * "settled, may eventually be deleted", so it must never be nagged about.
+ * Everybody being done comes next, whether or not the course has ended: that
+ * is what makes a course ready to be settled. Courses without completion
+ * tracking have no known rate and are never flagged.
+ *
+ * The counts are compared directly rather than via a rounded percentage, so
+ * that 199 of 200 participants does not round up to "everybody done".
+ *
+ * @param stdClass $course needs visible and enddate
+ * @param int|null $completed participants that completed, null if unknown
+ * @param int $total tracked participants
+ * @param int $now
+ * @return string state key
+ */
+function local_coursesoverview_course_state(stdClass $course, ?int $completed, int $total,
+        int $now): string {
+    if ($course->visible == 0) {
+        return 'hidden';
+    }
+
+    if ($completed !== null && $total > 0 && $completed >= $total) {
+        return 'tosettle';
+    }
+
+    $incomplete = ($completed !== null);
+    $ended = (!empty($course->enddate) && $course->enddate < $now);
+
+    if ($ended) {
+        return $incomplete ? 'overdue' : 'past';
+    }
+
+    if ($incomplete && !empty($course->enddate)
+            && $course->enddate <= $now + LOCAL_COURSESOVERVIEW_ENDING_SOON) {
+        return 'endingsoon';
+    }
+
+    return 'active';
+}
+
+/**
+ * Render a colour legend for the given states.
+ *
+ * @param array $states state keys, in the order they should be listed
+ * @return string
+ */
+function local_coursesoverview_legend(array $states): string {
+    $colors = local_coursesoverview_colors();
+    $items = '';
+
+    foreach ($states as $state) {
+        if (empty($colors[$state])) {
+            continue;
+        }
+
+        $swatch = html_writer::span('', 'coursesoverview-swatch', ['style' =>
+            'display: inline-block; width: 1em; height: 1em; margin-right: 0.4em;' .
+            ' vertical-align: text-bottom; border: 1px solid #ccc;' .
+            ' background-color: ' . $colors[$state] . ';']);
+
+        $items .= html_writer::span(
+            $swatch . get_string('status' . $state, 'local_coursesoverview'),
+            'd-inline-block mr-3 me-3 mb-1'
+        );
+    }
+
+    return html_writer::div($items, 'coursesoverview-legend mb-3');
 }
 
 /**
@@ -40,18 +152,44 @@ function local_coursesoverview_colors(): array {
  */
 function local_coursesoverview_row_styles(array $states, array $extra = []): string {
     $colors = local_coursesoverview_colors();
-    $css = '';
+    $table = '#' . LOCAL_COURSESOVERVIEW_WRAPPER_ID;
+
+    // Row striping and hover reach the cell through several routes depending
+    // on the Bootstrap version and the theme: a background colour on the tr
+    // that shows through a transparent cell, an inset box shadow on the cell
+    // in Bootstrap 4 and 5, a gradient background image in 5.3, and the
+    // accent variables feeding both. Chasing them one at a time did not hold
+    // up, so every route is closed here for our tables only, on the row and
+    // on the cell. Cells get an opaque default background rather than a
+    // transparent one, so nothing can show through from behind.
+    $css = "{$table} tbody tr,\n{$table} tbody tr:hover {\n" .
+           "    background-color: transparent !important;\n" .
+           "    background-image: none !important;\n" .
+           "    box-shadow: none !important;\n" .
+           "}\n" .
+           "{$table} tbody tr td,\n{$table} tbody tr:hover td {\n" .
+           "    background-color: var(--bs-body-bg, #fff) !important;\n" .
+           "    background-image: none !important;\n" .
+           "    box-shadow: none !important;\n" .
+           "    filter: none !important;\n" .
+           "    --bs-table-accent-bg: transparent !important;\n" .
+           "    --bs-table-bg-type: transparent !important;\n" .
+           "}\n";
 
     foreach ($states as $state) {
         $declarations = [];
         if (!empty($colors[$state])) {
-            $declarations[] = 'background-color: ' . $colors[$state];
+            $declarations[] = 'background-color: ' . $colors[$state] . ' !important';
         }
         if (!empty($extra[$state])) {
             $declarations[] = $extra[$state];
         }
         if ($declarations) {
-            $css .= ".coursesoverview-{$state} td { " . implode('; ', $declarations) . "; }\n";
+            // One class more specific than the reset, and emitted after the
+            // hover reset it ties with, so it wins on both counts.
+            $rule = ' { ' . implode('; ', $declarations) . "; }\n";
+            $css .= "{$table} tbody tr.coursesoverview-{$state} td," .
+                "\n{$table} tbody tr.coursesoverview-{$state}:hover td" . $rule;
         }
     }
 
