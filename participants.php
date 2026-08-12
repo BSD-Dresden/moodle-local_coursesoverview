@@ -1,21 +1,41 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
 /**
  * Completion status of all participants of a single course.
  *
- * @package local_coursesoverview
+ * @package    local_coursesoverview
+ * @copyright  2026 BSD GmbH
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/completionlib.php');
 require_once($CFG->dirroot . '/group/lib.php');
-require_once(__DIR__ . '/locallib.php');
+
+use local_coursesoverview\export;
+use local_coursesoverview\helper;
+use local_coursesoverview\output;
 
 $courseid = required_param('courseid', PARAM_INT);
 $download = optional_param('download', '', PARAM_ALPHA);
 $sort = optional_param('sort', 'lastname', PARAM_ALPHA);
 $dir = optional_param('dir', 'asc', PARAM_ALPHA);
 
-$sort = local_coursesoverview_validate_sort($sort,
+$sort = helper::validate_sort($sort,
     ['firstname', 'lastname', 'email', 'progress', 'date'], 'lastname');
 $descending = ($dir === 'desc');
 
@@ -35,7 +55,7 @@ $PAGE->set_title(get_string('completionstatus', 'local_coursesoverview'));
 $PAGE->set_heading(format_string($course->fullname, true, ['context' => $context]));
 
 $completion = new completion_info($course);
-$criteria = local_coursesoverview_get_sorted_criteria($completion);
+$criteria = helper::sorted_criteria($completion);
 $numcriteria = count($criteria);
 
 // ---------------------------------------------------------------------------
@@ -100,7 +120,6 @@ foreach ($participants as $user) {
         }
     } else {
         // No criteria defined: colouring everybody red would be misleading.
-        $percentage = null;
         $progress = '—';
         $state = null;
     }
@@ -125,7 +144,7 @@ foreach ($participants as $user) {
             s($user->lastname),
             s($user->email),
             $progress,
-            local_coursesoverview_format_date($date),
+            helper::format_date($date),
         ],
         // The export mirrors the compact on-screen columns: one name, one
         // progress figure, one date.
@@ -133,7 +152,7 @@ foreach ($participants as $user) {
             fullname($user),
             $user->email,
             $progress,
-            local_coursesoverview_format_date($date, ''),
+            helper::format_date($date, ''),
         ],
     ];
 }
@@ -190,7 +209,7 @@ if (!empty($groups)) {
 }
 
 foreach ($sections as $index => $section) {
-    $sections[$index]['rows'] = local_coursesoverview_sort_rows($section['rows'], $sort, $descending);
+    $sections[$index]['rows'] = helper::sort_rows($section['rows'], $sort, $descending);
 }
 
 // ---------------------------------------------------------------------------
@@ -211,7 +230,7 @@ if ($download) {
     $columns[] = get_string('progressheader', 'local_coursesoverview');
     $columns[] = get_string('completed_lastseen', 'local_coursesoverview');
 
-    $colors = local_coursesoverview_colors();
+    $colors = helper::colors();
     $exportrows = [];
     foreach ($sections as $section) {
         foreach ($section['rows'] as $row) {
@@ -230,10 +249,10 @@ if ($download) {
     // format_string(), which would turn an ampersand into &amp;.
     $preamble = [
         [get_string('course'), $course->fullname],
-        [get_string('enddate'), local_coursesoverview_format_date($course->enddate, '')],
+        [get_string('enddate'), helper::format_date($course->enddate, '')],
     ];
 
-    local_coursesoverview_download(
+    export::download(
         $download,
         clean_filename(get_string('completionstatus', 'local_coursesoverview') . '_' . $course->shortname),
         $course->shortname,
@@ -246,47 +265,6 @@ if ($download) {
 // ---------------------------------------------------------------------------
 // Output.
 // ---------------------------------------------------------------------------
-
-/**
- * Render one participants table.
- *
- * @param array $rows already sorted rows as built above
- * @param string $sort active sort column
- * @param bool $descending active sort direction
- * @param moodle_url $baseurl page url without sort parameters
- */
-function local_coursesoverview_render_participants_table(array $rows, string $sort,
-        bool $descending, moodle_url $baseurl): void {
-    if (empty($rows)) {
-        echo html_writer::tag('p', get_string('noparticipants', 'local_coursesoverview'));
-        return;
-    }
-
-    $table = new html_table();
-    $table->attributes['class'] = 'generaltable coursesoverview-participants '
-        . LOCAL_COURSESOVERVIEW_TABLE_CLASS;
-    $table->head = [
-        local_coursesoverview_sort_header(get_string('firstname'), 'firstname', $sort, $descending, $baseurl),
-        local_coursesoverview_sort_header(get_string('lastname'), 'lastname', $sort, $descending, $baseurl),
-        local_coursesoverview_sort_header(get_string('email'), 'email', $sort, $descending, $baseurl),
-        local_coursesoverview_sort_header(get_string('progressheader', 'local_coursesoverview'),
-            'progress', $sort, $descending, $baseurl),
-        local_coursesoverview_sort_header(get_string('completed_lastseen', 'local_coursesoverview'),
-            'date', $sort, $descending, $baseurl),
-    ];
-
-    foreach ($rows as $row) {
-        $tablerow = new html_table_row($row['cells']);
-
-        // html_writer::table() rebuilds the <tr> attributes, so an inline
-        // style set here would be dropped. Colour via a class instead.
-        $tablerow->attributes['class'] = $row['state'] ? 'coursesoverview-' . $row['state'] : '';
-
-        $table->data[] = $tablerow;
-    }
-
-    echo html_writer::table($table);
-}
 
 echo $OUTPUT->header();
 
@@ -304,7 +282,7 @@ echo html_writer::tag('p',
 );
 echo html_writer::tag('p',
     html_writer::tag('strong', get_string('enddate') . ': ') .
-    local_coursesoverview_format_date($course->enddate)
+    helper::format_date($course->enddate)
 );
 
 if (!$completion->is_enabled()) {
@@ -320,20 +298,20 @@ if (empty($participants)) {
     exit;
 }
 
-echo local_coursesoverview_export_button($sorturl);
+echo output::export_button($sorturl);
+echo output::legend(['notstarted', 'inprogress', 'completed']);
 
-echo local_coursesoverview_row_styles(['notstarted', 'inprogress', 'completed']);
-
-echo local_coursesoverview_start_tables();
+echo output::start_tables();
 
 foreach ($sections as $section) {
     if ($section['name'] !== '') {
         echo html_writer::tag('h3', $section['name']);
     }
-    local_coursesoverview_render_participants_table(
-        $section['rows'], $sort, $descending, $baseurl);
+    echo output::participants_table($section['rows'], $sort, $descending, $baseurl,
+        $section['name'] !== '' ? $section['name']
+            : get_string('completionstatus', 'local_coursesoverview'));
 }
 
-echo local_coursesoverview_end_tables();
+echo output::end_tables();
 
 echo $OUTPUT->footer();

@@ -1,0 +1,96 @@
+/*
+ * Row highlighting for local_coursesoverview.
+ *
+ * The colours are duplicated in local_coursesoverview\helper::colors(), which
+ * feeds the Excel export. Change them in both places.
+ *
+ * Everything is scoped to #coursesoverview-tables on purpose. Themes and site
+ * custom CSS style table rows with selectors such as
+ * "table.generaltable tbody tr:nth-child(even) td", which carries more
+ * specificity than any class based rule we could write and often !important on
+ * top. An id outranks any number of classes.
+ *
+ * Row striping and hover reach the cell through several routes depending on
+ * the Bootstrap version and the theme: a background colour on the tr that
+ * shows through a transparent cell, an inset box shadow on the cell in
+ * Bootstrap 4 and 5, a gradient background image in 5.3, and the accent
+ * variables feeding both. Every route is closed here, on the row and on the
+ * cell, so that a highlighted row cannot end up in two shades depending on
+ * whether it happens to be an odd or an even row.
+ */
+
+#coursesoverview-tables tbody tr,
+#coursesoverview-tables tbody tr:hover {
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+#coursesoverview-tables tbody tr td,
+#coursesoverview-tables tbody tr:hover td {
+    background-color: var(--bs-body-bg, #fff) !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+    --bs-table-accent-bg: transparent !important;
+    --bs-table-bg-type: transparent !important;
+}
+
+/* Courses. */
+
+#coursesoverview-tables tbody tr.coursesoverview-overdue td,
+#coursesoverview-tables tbody tr.coursesoverview-overdue:hover td {
+    background-color: #f5c6cb !important;
+}
+
+#coursesoverview-tables tbody tr.coursesoverview-endingsoon td,
+#coursesoverview-tables tbody tr.coursesoverview-endingsoon:hover td {
+    background-color: #fff3cd !important;
+}
+
+#coursesoverview-tables tbody tr.coursesoverview-tosettle td,
+#coursesoverview-tables tbody tr.coursesoverview-tosettle:hover td {
+    background-color: #d4edda !important;
+}
+
+#coursesoverview-tables tbody tr.coursesoverview-hidden td,
+#coursesoverview-tables tbody tr.coursesoverview-hidden:hover td {
+    background-color: #e0e0e0 !important;
+    color: #888;
+}
+
+/* Participants. */
+
+#coursesoverview-tables tbody tr.coursesoverview-notstarted td,
+#coursesoverview-tables tbody tr.coursesoverview-notstarted:hover td {
+    background-color: #f8d7da !important;
+}
+
+#coursesoverview-tables tbody tr.coursesoverview-inprogress td,
+#coursesoverview-tables tbody tr.coursesoverview-inprogress:hover td {
+    background-color: #fff3cd !important;
+}
+
+#coursesoverview-tables tbody tr.coursesoverview-completed td,
+#coursesoverview-tables tbody tr.coursesoverview-completed:hover td {
+    background-color: #d4edda !important;
+}
+
+/* Legend swatches. */
+
+.coursesoverview-swatch {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    margin-right: 0.4em;
+    vertical-align: text-bottom;
+    border: 1px solid #ccc;
+}
+
+.coursesoverview-swatch-overdue { background-color: #f5c6cb; }
+.coursesoverview-swatch-endingsoon { background-color: #fff3cd; }
+.coursesoverview-swatch-tosettle { background-color: #d4edda; }
+.coursesoverview-swatch-hidden { background-color: #e0e0e0; }
+.coursesoverview-swatch-notstarted { background-color: #f8d7da; }
+.coursesoverview-swatch-inprogress { background-color: #fff3cd; }
+.coursesoverview-swatch-completed { background-color: #d4edda; }
