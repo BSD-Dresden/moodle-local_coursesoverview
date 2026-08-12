@@ -11,6 +11,13 @@ require_once($CFG->dirroot . '/group/lib.php');
 require_once(__DIR__ . '/locallib.php');
 
 $courseid = required_param('courseid', PARAM_INT);
+$download = optional_param('download', '', PARAM_ALPHA);
+$sort = optional_param('sort', 'lastname', PARAM_ALPHA);
+$dir = optional_param('dir', 'asc', PARAM_ALPHA);
+
+$sort = local_coursesoverview_validate_sort($sort,
+    ['firstname', 'lastname', 'email', 'progress', 'date'], 'lastname');
+$descending = ($dir === 'desc');
 
 require_login();
 
@@ -18,8 +25,11 @@ $course = get_course($courseid);
 $context = context_course::instance($courseid);
 require_capability('local/coursesoverview:view', $context);
 
+$baseurl = new moodle_url('/local/coursesoverview/participants.php', ['courseid' => $courseid]);
+$sorturl = new moodle_url($baseurl, ['sort' => $sort, 'dir' => $descending ? 'desc' : 'asc']);
+
 $PAGE->set_course($course);
-$PAGE->set_url(new moodle_url('/local/coursesoverview/participants.php', ['courseid' => $courseid]));
+$PAGE->set_url($sorturl);
 $PAGE->set_pagelayout('report');
 $PAGE->set_title(get_string('completionstatus', 'local_coursesoverview'));
 $PAGE->set_heading(format_string($course->fullname, true, ['context' => $context]));
@@ -29,7 +39,7 @@ $criteria = local_coursesoverview_get_sorted_criteria($completion);
 $numcriteria = count($criteria);
 
 // ---------------------------------------------------------------------------
-// Gather all completion data up front: three queries for the whole page
+// Gather all completion data up front: a handful of queries for the whole page
 // instead of one query per user and criterion.
 // ---------------------------------------------------------------------------
 
@@ -69,79 +79,200 @@ $lastaccessbyuser = $DB->get_records_sql_menu("
          WHERE ul.courseid = :courseid",
     ['courseid' => $courseid]);
 
-$completiondata = [
-    'numcriteria'     => $numcriteria,
-    'numcompleted'    => $numcompletedbyuser,
-    'coursecompleted' => $coursecompletedbyuser,
-    'lastaccess'      => $lastaccessbyuser,
-];
+// ---------------------------------------------------------------------------
+// Build one row per participant.
+// ---------------------------------------------------------------------------
 
-/**
- * Render one participants table.
- *
- * @param array $users user records (must carry name fields and email)
- * @param array $data precomputed completion data, see $completiondata above
- */
-function local_coursesoverview_render_participants_table(array $users, array $data): void {
-    if (empty($users)) {
-        echo html_writer::tag('p', get_string('noparticipants', 'local_coursesoverview'));
-        return;
-    }
+$rowsbyuser = [];
 
-    $cellstyle = 'border: 1px solid #ddd; padding: 8px;';
-    $colornone = '#f8d7da';
-    $colorincomplete = '#fff3cd';
-    $colorcomplete = '#d4edda';
+foreach ($participants as $user) {
+    $numcompleted = (int) ($numcompletedbyuser[$user->id] ?? 0);
 
-    $numcriteria = $data['numcriteria'];
-    $users = local_coursesoverview_sort_users_by_fullname($users);
-
-    echo '<table style="border-collapse: collapse; border: 1px solid #ddd;">';
-    echo '<thead><tr>';
-    echo "<th style=\"{$cellstyle}\">" . get_string('name') . '</th>';
-    echo "<th style=\"{$cellstyle}\">" . get_string('email') . '</th>';
-    echo "<th style=\"{$cellstyle}\">" . get_string('progressheader', 'local_coursesoverview') . '</th>';
-    echo "<th style=\"{$cellstyle}\">" . get_string('coursecompleted', 'local_coursesoverview') . '</th>';
-    echo "<th style=\"{$cellstyle}\">" . get_string('lastaccess') . '</th>';
-    echo '</tr></thead><tbody>';
-
-    foreach ($users as $user) {
-        $numcompleted = (int) ($data['numcompleted'][$user->id] ?? 0);
-
-        if ($numcriteria) {
-            $percentage = (int) round(($numcompleted / $numcriteria) * 100);
-            $progress = "{$numcompleted} / {$numcriteria} ({$percentage}%)";
-            if ($percentage == 0) {
-                $rowstyle = "background-color: {$colornone};";
-            } else if ($percentage < 100) {
-                $rowstyle = "background-color: {$colorincomplete};";
-            } else {
-                $rowstyle = "background-color: {$colorcomplete};";
-            }
+    if ($numcriteria) {
+        $percentage = (int) round(($numcompleted / $numcriteria) * 100);
+        $progress = "{$numcompleted} / {$numcriteria} ({$percentage}%)";
+        if ($percentage == 0) {
+            $state = 'notstarted';
+        } else if ($percentage < 100) {
+            $state = 'inprogress';
         } else {
-            // No criteria defined: colouring everybody red would be misleading.
-            $progress = '—';
-            $rowstyle = '';
+            $state = 'completed';
         }
-
-        $completeddate = local_coursesoverview_format_date($data['coursecompleted'][$user->id] ?? null);
-        $lastaccess = local_coursesoverview_format_date($data['lastaccess'][$user->id] ?? null);
-
-        echo "<tr style=\"{$rowstyle}\">";
-        echo "<td style=\"{$cellstyle}\">" . fullname($user) . '</td>';
-        echo "<td style=\"{$cellstyle}\">" . s($user->email) . '</td>';
-        echo "<td style=\"{$cellstyle}\">" . $progress . '</td>';
-        echo "<td style=\"{$cellstyle}\">" . $completeddate . '</td>';
-        echo "<td style=\"{$cellstyle}\">" . $lastaccess . '</td>';
-        echo '</tr>';
+    } else {
+        // No criteria defined: colouring everybody red would be misleading.
+        $percentage = null;
+        $progress = '—';
+        $state = null;
     }
 
-    echo '</tbody></table>';
+    // One date column: the completion date once the course is completed,
+    // otherwise the last access. A visit after completion does not override
+    // the completion date.
+    $completedtime = (int) ($coursecompletedbyuser[$user->id] ?? 0);
+    $date = $completedtime ?: (int) ($lastaccessbyuser[$user->id] ?? 0);
+
+    $rowsbyuser[$user->id] = [
+        'sort' => [
+            'firstname' => $user->firstname,
+            'lastname'  => $user->lastname,
+            'email'     => $user->email,
+            'progress'  => $numcompleted,
+            'date'      => $date,
+        ],
+        'state' => $state,
+        'cells' => [
+            s($user->firstname),
+            s($user->lastname),
+            s($user->email),
+            $progress,
+            local_coursesoverview_format_date($date),
+        ],
+        'export' => [
+            $user->firstname,
+            $user->lastname,
+            $user->email,
+            $numcompleted,
+            $numcriteria,
+            $percentage,
+            local_coursesoverview_format_date($date),
+        ],
+    ];
+}
+
+// ---------------------------------------------------------------------------
+// Split into groups, if the course uses any.
+// ---------------------------------------------------------------------------
+
+$groups = groups_get_all_groups($courseid);
+$sections = [];
+
+if (!empty($groups)) {
+    // Group memberships for the whole course in one query.
+    $memberships = $DB->get_records_sql("
+            SELECT gm.id, gm.groupid, gm.userid
+              FROM {groups_members} gm
+              JOIN {groups} g ON g.id = gm.groupid
+             WHERE g.courseid = :courseid",
+        ['courseid' => $courseid]);
+
+    $membersbygroup = [];
+    $hasgroup = [];
+    foreach ($memberships as $membership) {
+        // Only consider users that are currently enrolled.
+        if (!isset($rowsbyuser[$membership->userid])) {
+            continue;
+        }
+        $membersbygroup[$membership->groupid][] = $rowsbyuser[$membership->userid];
+        $hasgroup[$membership->userid] = true;
+    }
+
+    foreach ($groups as $group) {
+        $sections[] = [
+            'name' => format_string($group->name, true, ['context' => $context]),
+            'rows' => $membersbygroup[$group->id] ?? [],
+        ];
+    }
+
+    $nogroup = [];
+    foreach ($rowsbyuser as $userid => $row) {
+        if (empty($hasgroup[$userid])) {
+            $nogroup[] = $row;
+        }
+    }
+
+    if (!empty($nogroup)) {
+        $sections[] = [
+            'name' => get_string('nogroup', 'local_coursesoverview'),
+            'rows' => $nogroup,
+        ];
+    }
+} else {
+    $sections[] = ['name' => '', 'rows' => array_values($rowsbyuser)];
+}
+
+foreach ($sections as $index => $section) {
+    $sections[$index]['rows'] = local_coursesoverview_sort_rows($section['rows'], $sort, $descending);
+}
+
+// ---------------------------------------------------------------------------
+// Export. Must run before any output is sent.
+// ---------------------------------------------------------------------------
+
+if ($download) {
+    $columns = [
+        get_string('group'),
+        get_string('firstname'),
+        get_string('lastname'),
+        get_string('email'),
+        get_string('criteriacompleted', 'local_coursesoverview'),
+        get_string('criteriatotal', 'local_coursesoverview'),
+        get_string('progresspercent', 'local_coursesoverview'),
+        get_string('completed_lastseen', 'local_coursesoverview'),
+    ];
+
+    $colors = local_coursesoverview_colors();
+    $exportrows = [];
+    foreach ($sections as $section) {
+        foreach ($section['rows'] as $row) {
+            $exportrows[] = [
+                'values'  => array_merge([$section['name']], $row['export']),
+                'bgcolor' => $row['state'] ? ($colors[$row['state']] ?? null) : null,
+            ];
+        }
+    }
+
+    local_coursesoverview_download(
+        $download,
+        clean_filename(get_string('completionstatus', 'local_coursesoverview') . '_' . $course->shortname),
+        format_string($course->shortname, true, ['context' => $context]),
+        $columns,
+        $exportrows
+    );
 }
 
 // ---------------------------------------------------------------------------
 // Output.
 // ---------------------------------------------------------------------------
+
+/**
+ * Render one participants table.
+ *
+ * @param array $rows already sorted rows as built above
+ * @param string $sort active sort column
+ * @param bool $descending active sort direction
+ * @param moodle_url $baseurl page url without sort parameters
+ */
+function local_coursesoverview_render_participants_table(array $rows, string $sort,
+        bool $descending, moodle_url $baseurl): void {
+    if (empty($rows)) {
+        echo html_writer::tag('p', get_string('noparticipants', 'local_coursesoverview'));
+        return;
+    }
+
+    $table = new html_table();
+    $table->attributes['class'] = 'generaltable coursesoverview-participants';
+    $table->head = [
+        local_coursesoverview_sort_header(get_string('firstname'), 'firstname', $sort, $descending, $baseurl),
+        local_coursesoverview_sort_header(get_string('lastname'), 'lastname', $sort, $descending, $baseurl),
+        local_coursesoverview_sort_header(get_string('email'), 'email', $sort, $descending, $baseurl),
+        local_coursesoverview_sort_header(get_string('progressheader', 'local_coursesoverview'),
+            'progress', $sort, $descending, $baseurl),
+        local_coursesoverview_sort_header(get_string('completed_lastseen', 'local_coursesoverview'),
+            'date', $sort, $descending, $baseurl),
+    ];
+
+    foreach ($rows as $row) {
+        $tablerow = new html_table_row($row['cells']);
+
+        // html_writer::table() rebuilds the <tr> attributes, so an inline
+        // style set here would be dropped. Colour via a class instead.
+        $tablerow->attributes['class'] = $row['state'] ? 'coursesoverview-' . $row['state'] : '';
+
+        $table->data[] = $tablerow;
+    }
+
+    echo html_writer::table($table);
+}
 
 echo $OUTPUT->header();
 
@@ -150,8 +281,7 @@ echo html_writer::div(
         new moodle_url('/local/coursesoverview/index.php'),
         '← ' . get_string('backtooverview', 'local_coursesoverview')
     ),
-    'coursesoverview-backlink',
-    ['style' => 'margin-bottom: 1em;']
+    'coursesoverview-backlink mb-3'
 );
 
 echo html_writer::tag('p',
@@ -179,48 +309,16 @@ if (empty($participants)) {
     exit;
 }
 
-$groups = groups_get_all_groups($courseid);
+echo local_coursesoverview_export_button($sorturl);
 
-if (!empty($groups)) {
-    // Group memberships for the whole course in one query.
-    $memberships = $DB->get_records_sql("
-            SELECT gm.id, gm.groupid, gm.userid
-              FROM {groups_members} gm
-              JOIN {groups} g ON g.id = gm.groupid
-             WHERE g.courseid = :courseid",
-        ['courseid' => $courseid]);
+echo local_coursesoverview_row_styles(['notstarted', 'inprogress', 'completed']);
 
-    $membersbygroup = [];
-    $hasgroup = [];
-    foreach ($memberships as $membership) {
-        // Only consider users that are currently enrolled.
-        if (!isset($participants[$membership->userid])) {
-            continue;
-        }
-        $membersbygroup[$membership->groupid][] = $participants[$membership->userid];
-        $hasgroup[$membership->userid] = true;
+foreach ($sections as $section) {
+    if ($section['name'] !== '') {
+        echo html_writer::tag('h3', $section['name']);
     }
-
-    foreach ($groups as $group) {
-        echo html_writer::tag('h3', format_string($group->name, true, ['context' => $context]));
-        local_coursesoverview_render_participants_table(
-            $membersbygroup[$group->id] ?? [], $completiondata);
-        echo html_writer::empty_tag('hr');
-    }
-
-    $nogroup = [];
-    foreach ($participants as $participant) {
-        if (empty($hasgroup[$participant->id])) {
-            $nogroup[] = $participant;
-        }
-    }
-
-    if (!empty($nogroup)) {
-        echo html_writer::tag('h3', get_string('nogroup', 'local_coursesoverview'));
-        local_coursesoverview_render_participants_table($nogroup, $completiondata);
-    }
-} else {
-    local_coursesoverview_render_participants_table($participants, $completiondata);
+    local_coursesoverview_render_participants_table(
+        $section['rows'], $sort, $descending, $baseurl);
 }
 
 echo $OUTPUT->footer();

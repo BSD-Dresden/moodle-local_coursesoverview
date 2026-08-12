@@ -6,19 +6,23 @@
  */
 
 require_once(__DIR__ . '/../../config.php');
+require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->libdir . '/completionlib.php');
 require_once(__DIR__ . '/locallib.php');
 
-require_login();
+$download = optional_param('download', '', PARAM_ALPHA);
+$sort = optional_param('sort', 'enddate', PARAM_ALPHA);
+$dir = optional_param('dir', 'desc', PARAM_ALPHA);
 
-$context = context_system::instance();
-require_capability('local/coursesoverview:view', $context);
+$sort = local_coursesoverview_validate_sort($sort,
+    ['fullname', 'startdate', 'enddate', 'completed', 'total'], 'enddate');
+$descending = ($dir !== 'asc');
+$dir = $descending ? 'desc' : 'asc';
 
-$PAGE->set_url(new moodle_url('/local/coursesoverview/index.php'));
-$PAGE->set_context($context);
-$PAGE->set_pagelayout('report');
-$PAGE->set_title(get_string('pluginname', 'local_coursesoverview'));
-$PAGE->set_heading(get_string('pluginname', 'local_coursesoverview'));
+admin_externalpage_setup('localcoursesoverview', '', ['sort' => $sort, 'dir' => $dir]);
+
+$baseurl = new moodle_url('/local/coursesoverview/index.php');
+$sorturl = new moodle_url($baseurl, ['sort' => $sort, 'dir' => $dir]);
 
 $now = time();
 
@@ -30,33 +34,10 @@ $courses = $DB->get_records_sql("
           FROM {course} c
           JOIN {context} ctx ON ctx.instanceid = c.id AND ctx.contextlevel = :contextcourse
          WHERE c.id <> :siteid
-      ORDER BY c.enddate DESC, c.fullname ASC",
+      ORDER BY c.fullname ASC",
     ['contextcourse' => CONTEXT_COURSE, 'siteid' => SITEID]);
 
-echo $OUTPUT->header();
-
-if (!$courses) {
-    echo html_writer::tag('p', get_string('nocourses', 'local_coursesoverview'));
-    echo $OUTPUT->footer();
-    exit;
-}
-
-echo html_writer::tag('style', '
-    .coursesoverview-past td { background-color: #f0f0f0; color: #888; }
-    .coursesoverview-active td { background-color: #ffffff; color: #000; }
-    .coursesoverview-hidden td { background-color: #e0e0e0; color: #aaa; }
-');
-
-$table = new html_table();
-$table->head = [
-    get_string('course'),
-    get_string('startdate'),
-    get_string('enddate'),
-    get_string('completedparticipants', 'local_coursesoverview') . ' / ' .
-        get_string('totalparticipants', 'local_coursesoverview'),
-    get_string('actions'),
-    get_string('completionstatus', 'local_coursesoverview'),
-];
+$rows = [];
 
 foreach ($courses as $course) {
     context_helper::preload_from_record($course);
@@ -83,9 +64,24 @@ foreach ($courses as $course) {
             ['covcourseid' => $course->id]
         );
         $completioncell = "{$completedparticipants} / {$totalparticipants}";
+        $rate = (int) round(($completedparticipants / $totalparticipants) * 100);
     } else {
+        $completedparticipants = null;
         $completioncell = get_string('completiondisabled', 'local_coursesoverview');
+        $rate = null;
     }
+
+    // Hidden / past / active. A course without an end date is never "past".
+    if ($course->visible == 0) {
+        $state = 'hidden';
+    } else if (!empty($course->enddate) && $course->enddate < $now) {
+        $state = 'past';
+    } else {
+        $state = 'active';
+    }
+    $status = get_string('status' . $state, 'local_coursesoverview');
+
+    $coursename = format_string($course->fullname, true, ['context' => $coursecontext]);
 
     // Course actions: view, plus edit if the user may edit this course.
     $courseactions = html_writer::link(
@@ -104,32 +100,110 @@ foreach ($courses as $course) {
         get_string('completionstatus', 'local_coursesoverview')
     );
 
-    // Hidden / past / active. A course without an end date is never "past".
-    if ($course->visible == 0) {
-        $rowclass = 'coursesoverview-hidden';
-    } else if (!empty($course->enddate) && $course->enddate < $now) {
-        $rowclass = 'coursesoverview-past';
-    } else {
-        $rowclass = 'coursesoverview-active';
+    $rows[] = [
+        'sort' => [
+            'fullname'  => $coursename,
+            'startdate' => (int) $course->startdate,
+            'enddate'   => (int) $course->enddate,
+            'completed' => (int) $completedparticipants,
+            'total'     => (int) $totalparticipants,
+        ],
+        'state' => $state,
+        'cells' => [
+            $coursename,
+            local_coursesoverview_format_date($course->startdate),
+            local_coursesoverview_format_date($course->enddate),
+            $completioncell,
+            $courseactions,
+            $participantslink,
+        ],
+        'export' => [
+            $course->fullname,
+            $course->shortname,
+            local_coursesoverview_format_date($course->startdate),
+            local_coursesoverview_format_date($course->enddate),
+            $status,
+            $completedparticipants,
+            $totalparticipants,
+            $rate,
+        ],
+    ];
+}
+
+$rows = local_coursesoverview_sort_rows($rows, $sort, $descending);
+
+// ---------------------------------------------------------------------------
+// Export. Must run before any output is sent.
+// ---------------------------------------------------------------------------
+
+if ($download) {
+    $columns = [
+        get_string('course'),
+        get_string('shortnamecourse'),
+        get_string('startdate'),
+        get_string('enddate'),
+        get_string('status'),
+        get_string('completedparticipants', 'local_coursesoverview'),
+        get_string('totalparticipants', 'local_coursesoverview'),
+        get_string('completionrate', 'local_coursesoverview'),
+    ];
+
+    $colors = local_coursesoverview_colors();
+    $exportrows = [];
+    foreach ($rows as $row) {
+        $exportrows[] = [
+            'values'  => $row['export'],
+            'bgcolor' => $colors[$row['state']] ?? null,
+        ];
     }
 
-    $row = new html_table_row([
-        format_string($course->fullname, true, ['context' => $coursecontext]),
-        local_coursesoverview_format_date($course->startdate),
-        local_coursesoverview_format_date($course->enddate),
-        $completioncell,
-        $courseactions,
-        $participantslink,
-    ]);
-    $row->attributes['class'] = $rowclass;
-
-    $table->data[] = $row;
+    local_coursesoverview_download(
+        $download,
+        clean_filename(get_string('pluginname', 'local_coursesoverview')),
+        get_string('pluginname', 'local_coursesoverview'),
+        $columns,
+        $exportrows
+    );
 }
 
-if (empty($table->data)) {
+// ---------------------------------------------------------------------------
+// Output.
+// ---------------------------------------------------------------------------
+
+echo $OUTPUT->header();
+
+if (empty($rows)) {
     echo html_writer::tag('p', get_string('nocourses', 'local_coursesoverview'));
-} else {
-    echo html_writer::table($table);
+    echo $OUTPUT->footer();
+    exit;
 }
+
+echo local_coursesoverview_export_button($sorturl);
+
+echo local_coursesoverview_row_styles(
+    ['past', 'hidden'],
+    ['past' => 'color: #888', 'hidden' => 'color: #aaa']
+);
+
+$table = new html_table();
+$table->head = [
+    local_coursesoverview_sort_header(get_string('course'), 'fullname', $sort, $descending, $baseurl),
+    local_coursesoverview_sort_header(get_string('startdate'), 'startdate', $sort, $descending, $baseurl),
+    local_coursesoverview_sort_header(get_string('enddate'), 'enddate', $sort, $descending, $baseurl),
+    local_coursesoverview_sort_header(get_string('completedparticipants', 'local_coursesoverview'),
+        'completed', $sort, $descending, $baseurl) . ' / ' .
+    local_coursesoverview_sort_header(get_string('totalparticipants', 'local_coursesoverview'),
+        'total', $sort, $descending, $baseurl),
+    get_string('actions'),
+    get_string('completionstatus', 'local_coursesoverview'),
+];
+
+foreach ($rows as $row) {
+    $tablerow = new html_table_row($row['cells']);
+    $tablerow->attributes['class'] = 'coursesoverview-' . $row['state'];
+    $table->data[] = $tablerow;
+}
+
+echo html_writer::table($table);
 
 echo $OUTPUT->footer();
