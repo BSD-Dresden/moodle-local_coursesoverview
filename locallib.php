@@ -197,19 +197,20 @@ function local_coursesoverview_row_styles(array $states, array $extra = []): str
 }
 
 /**
- * Format a timestamp as a plain date in the user's timezone/locale.
+ * Format a timestamp as a short numeric date in the user's timezone.
  *
- * Returns a dash for empty timestamps so that "no date set" is not rendered
- * as 01.01.1970.
+ * Empty timestamps yield the placeholder rather than 01.01.1970. On screen
+ * that is a dash; exports pass an empty string so the cell stays blank.
  *
  * @param int|null $timestamp
+ * @param string $empty what to return when no date is set
  * @return string
  */
-function local_coursesoverview_format_date($timestamp): string {
+function local_coursesoverview_format_date($timestamp, string $empty = '—'): string {
     if (empty($timestamp)) {
-        return '—';
+        return $empty;
     }
-    return userdate($timestamp, get_string('strftimedaydate', 'langconfig'));
+    return userdate($timestamp, '%d.%m.%Y');
 }
 
 /**
@@ -329,14 +330,17 @@ function local_coursesoverview_sort_header(string $label, string $column, string
  * @param string $sheetname worksheet title, sanitised here
  * @param array $columns column headers
  * @param array $rows list of ['values' => array, 'bgcolor' => string|null]
+ * @param array $preamble lines written above the table, each an array of
+ *      cell values whose first entry is rendered bold. Excel only, the core
+ *      dataformats have no place to put them.
  */
 function local_coursesoverview_download(string $dataformat, string $filename, string $sheetname,
-        array $columns, array $rows): void {
+        array $columns, array $rows, array $preamble = []): void {
     // ISO order, so that the files sort chronologically by name.
     $filename = clean_filename($filename . '_' . userdate(time(), '%Y-%m-%d'));
 
     if ($dataformat === 'excel') {
-        local_coursesoverview_export_excel($filename, $sheetname, $columns, $rows);
+        local_coursesoverview_export_excel($filename, $sheetname, $columns, $rows, $preamble);
     }
 
     $plain = [];
@@ -354,9 +358,10 @@ function local_coursesoverview_download(string $dataformat, string $filename, st
  * @param string $sheetname worksheet title
  * @param array $columns column headers
  * @param array $rows list of ['values' => array, 'bgcolor' => string|null]
+ * @param array $preamble lines written above the table
  */
 function local_coursesoverview_export_excel(string $filename, string $sheetname,
-        array $columns, array $rows): void {
+        array $columns, array $rows, array $preamble = []): void {
     global $CFG;
 
     require_once($CFG->libdir . '/excellib.class.php');
@@ -371,15 +376,28 @@ function local_coursesoverview_export_excel(string $filename, string $sheetname,
 
     $worksheet = $workbook->add_worksheet($sheetname !== '' ? $sheetname : 'Export');
 
-    $headerformat = $workbook->add_format(['bold' => 1]);
+    $boldformat = $workbook->add_format(['bold' => 1]);
+    $rownum = 0;
+
+    // Context lines above the table, mirroring what the page shows there.
+    foreach ($preamble as $line) {
+        foreach (array_values($line) as $col => $value) {
+            $worksheet->write_string($rownum, $col, (string) $value, $col === 0 ? $boldformat : null);
+        }
+        $rownum++;
+    }
+    if ($preamble) {
+        $rownum++;
+    }
+
     foreach (array_values($columns) as $col => $label) {
-        $worksheet->write_string(0, $col, (string) $label, $headerformat);
+        $worksheet->write_string($rownum, $col, (string) $label, $boldformat);
         $worksheet->set_column($col, $col, min(40, max(12, core_text::strlen((string) $label) + 4)));
     }
+    $rownum++;
 
     // One format object per colour, reused across rows.
     $formats = [];
-    $rownum = 1;
 
     foreach ($rows as $row) {
         $format = null;

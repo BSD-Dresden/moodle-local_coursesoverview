@@ -148,8 +148,8 @@ foreach ($courses as $course) {
         'export' => [
             $course->fullname,
             $course->shortname,
-            local_coursesoverview_format_date($course->startdate),
-            local_coursesoverview_format_date($course->enddate),
+            local_coursesoverview_format_date($course->startdate, ''),
+            local_coursesoverview_format_date($course->enddate, ''),
             $status,
             $completedparticipants,
             $totalparticipants,

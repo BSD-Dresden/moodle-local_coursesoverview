@@ -127,14 +127,13 @@ foreach ($participants as $user) {
             $progress,
             local_coursesoverview_format_date($date),
         ],
+        // The export mirrors the compact on-screen columns: one name, one
+        // progress figure, one date.
         'export' => [
-            $user->firstname,
-            $user->lastname,
+            fullname($user),
             $user->email,
-            $numcompleted,
-            $numcriteria,
-            $percentage,
-            local_coursesoverview_format_date($date),
+            $progress,
+            local_coursesoverview_format_date($date, ''),
         ],
     ];
 }
@@ -199,34 +198,48 @@ foreach ($sections as $index => $section) {
 // ---------------------------------------------------------------------------
 
 if ($download) {
-    $columns = [
-        get_string('group'),
-        get_string('firstname'),
-        get_string('lastname'),
-        get_string('email'),
-        get_string('criteriacompleted', 'local_coursesoverview'),
-        get_string('criteriatotal', 'local_coursesoverview'),
-        get_string('progresspercent', 'local_coursesoverview'),
-        get_string('completed_lastseen', 'local_coursesoverview'),
-    ];
+    // The group column only earns its place when the course actually uses
+    // groups, otherwise it would be a column of blanks.
+    $withgroups = !empty($groups);
+
+    $columns = [];
+    if ($withgroups) {
+        $columns[] = get_string('group');
+    }
+    $columns[] = get_string('name');
+    $columns[] = get_string('email');
+    $columns[] = get_string('progressheader', 'local_coursesoverview');
+    $columns[] = get_string('completed_lastseen', 'local_coursesoverview');
 
     $colors = local_coursesoverview_colors();
     $exportrows = [];
     foreach ($sections as $section) {
         foreach ($section['rows'] as $row) {
+            $values = $row['export'];
+            if ($withgroups) {
+                array_unshift($values, $section['name']);
+            }
             $exportrows[] = [
-                'values'  => array_merge([$section['name']], $row['export']),
+                'values'  => $values,
                 'bgcolor' => $row['state'] ? ($colors[$row['state']] ?? null) : null,
             ];
         }
     }
 
+    // Spreadsheet cells take raw text, not the HTML-escaped output of
+    // format_string(), which would turn an ampersand into &amp;.
+    $preamble = [
+        [get_string('course'), $course->fullname],
+        [get_string('enddate'), local_coursesoverview_format_date($course->enddate, '')],
+    ];
+
     local_coursesoverview_download(
         $download,
         clean_filename(get_string('completionstatus', 'local_coursesoverview') . '_' . $course->shortname),
-        format_string($course->shortname, true, ['context' => $context]),
+        $course->shortname,
         $columns,
-        $exportrows
+        $exportrows,
+        $preamble
     );
 }
 
@@ -287,10 +300,7 @@ echo html_writer::div(
 
 echo html_writer::tag('p',
     html_writer::tag('strong', get_string('course') . ': ') .
-    html_writer::link(
-        new moodle_url('/course/view.php', ['id' => $course->id]),
-        format_string($course->fullname, true, ['context' => $context])
-    )
+    format_string($course->fullname, true, ['context' => $context])
 );
 echo html_writer::tag('p',
     html_writer::tag('strong', get_string('enddate') . ': ') .
