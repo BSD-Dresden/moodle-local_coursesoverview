@@ -252,9 +252,14 @@ if ($download) {
 
 echo $OUTPUT->header();
 
-$backurl = new moodle_url('/local/coursesoverview/index.php');
-$backlabel = '← ' . get_string('backtooverview', 'local_coursesoverview');
-echo html_writer::div(html_writer::link($backurl, $backlabel), 'coursesoverview-backlink mb-3');
+// The overview is gated on the system context. Someone who only holds the
+// capability on this one course would follow the link into an access denied
+// page, so it is only offered to those who can actually get there.
+if (has_capability('local/coursesoverview:view', context_system::instance())) {
+    $backurl = new moodle_url('/local/coursesoverview/index.php');
+    $backlabel = '← ' . get_string('backtooverview', 'local_coursesoverview');
+    echo html_writer::div(html_writer::link($backurl, $backlabel), 'coursesoverview-backlink mb-3');
+}
 
 $coursename = format_string($course->fullname, true, ['context' => $context]);
 echo html_writer::tag('p', html_writer::tag('strong', get_string('course') . ': ') . $coursename);

@@ -24,10 +24,16 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+// Declared at course level on purpose, even though the overview itself checks
+// the capability in the system context. A course context only lists
+// capabilities declared at course level or below, so this is what makes the
+// capability appear in a course's "Change permissions" page. Granted there, it
+// unlocks the completion status of that one course and nothing else, which is
+// what a customer's organiser needs.
 $capabilities = [
     'local/coursesoverview:view' => [
         'captype'      => 'read',
-        'contextlevel' => CONTEXT_SYSTEM,
+        'contextlevel' => CONTEXT_COURSE,
         'archetypes'   => [
             // Site administrators have every capability anyway.
             'manager' => CAP_ALLOW,
