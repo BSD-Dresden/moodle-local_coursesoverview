@@ -18,7 +18,9 @@ Nach `local/coursesoverview` entpacken, dann:
 php admin/cli/upgrade.php --non-interactive
 ```
 
-Aufruf über **Website-Administration → Kurse → Kursübersicht**.
+Aufruf über **Website-Administration → Kurse → Kursübersicht**. Der
+Abschlussstatus eines einzelnen Kurses steht zusätzlich in dessen Kursmenü
+unter **Mehr**, für alle, die die Berechtigung in diesem Kurs besitzen.
 
 Voraussetzung: Moodle 4.2+, PHP 8.0+. Getestet gegen Moodle 4.2 mit PHP 8.2 und
 PostgreSQL.
@@ -60,6 +62,7 @@ classes/output.php    Filterleiste, Legende, Tabellen, Sortier-Links
 classes/export.php    Excel-Export
 index.php             Kursübersicht
 participants.php      Abschlussstatus eines Kurses
+lib.php               Eintrag im Kursmenü
 settings.php          Eintrag im Admin-Baum
 styles.css            Zeilenfarben
 ```
