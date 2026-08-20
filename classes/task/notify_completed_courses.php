@@ -93,9 +93,9 @@ class notify_completed_courses extends \core\task\scheduled_task {
     protected function complete_courses(): array {
         global $CFG, $DB;
 
-        // completion_info is a legacy global class and is not autoloaded. The
-        // two pages of this plugin get it for free from their other includes;
-        // a task running under cron does not.
+        // The completion_info class is a legacy global one and is not
+        // autoloaded. Both pages of this plugin get it from their other
+        // includes; a task running under cron does not.
         require_once($CFG->libdir . '/completionlib.php');
 
         $sql = "SELECT c.id, c.fullname, c.shortname, c.enddate, c.enablecompletion, c.visible
