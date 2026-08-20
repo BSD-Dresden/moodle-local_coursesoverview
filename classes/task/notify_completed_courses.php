@@ -37,7 +37,6 @@ use stdClass;
  * can be prepared without watching the page.
  */
 class notify_completed_courses extends \core\task\scheduled_task {
-
     /** @var string Config entry holding the course ids reported last time. */
     const REPORTED = 'reportedcourses';
 
