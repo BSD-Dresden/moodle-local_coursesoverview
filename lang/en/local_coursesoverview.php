@@ -39,8 +39,19 @@ $string['nocoursesmatch'] = 'No courses match the filter.';
 $string['nocriteria'] = 'No completion criteria are defined for this course.';
 $string['nogroup'] = 'No group';
 $string['noparticipants'] = 'No participants.';
+$string['notifybody'] = 'All {$a->total} participants have completed the course "{$a->fullname}" ({$a->shortname}).
+
+Course end: {$a->enddate}
+
+Participant list: {$a->url}';
+$string['notifyemails'] = 'Recipients of the completion notice';
+$string['notifyemails_desc'] = 'Addresses notified once every participant of a course has completed. '
+    . 'Separate several with commas, leave empty to switch the notice off. A Moodle account is not '
+    . 'required, a shared mailbox will do.';
+$string['notifysubject'] = 'Course fully completed: {$a}';
 $string['pluginname'] = 'Courses Overview';
 $string['progressheader'] = 'Sections completed / total';
+$string['settings'] = 'Courses Overview: settings';
 $string['statusactive'] = 'Ongoing';
 $string['statuscompleted'] = 'Completed';
 $string['statusendingsoon'] = 'Ending soon, not completed';
@@ -51,5 +62,6 @@ $string['statusoverdue'] = 'Ended, not completed';
 $string['statuspast'] = 'Finished';
 $string['statustodo'] = 'Needs attention';
 $string['statustosettle'] = 'Completed, not yet settled';
+$string['tasknotifycompleted'] = 'Notify about fully completed courses';
 $string['totalparticipants'] = 'Total Participants';
 $string['withoutparticipants'] = 'Show courses without participants';

@@ -54,16 +54,37 @@ Zwei Dinge sind absichtlich so gebaut:
 Die Schwelle für „endet demnächst" steht als Konstante `ENDING_SOON` in
 `classes/helper.php`.
 
+## Meldung bei vollständigem Abschluss
+
+Eine geplante Aufgabe meldet per E-Mail, sobald ein Kurs in den grünen Zustand
+wechselt — also sobald der letzte Teilnehmer fertig ist. Empfänger eintragen
+unter **Website-Administration → Kurse → Kursübersicht: Einstellungen**; ohne
+Eintrag passiert nichts. Die Adressen brauchen kein Moodle-Konto.
+
+Zwei Eigenheiten:
+
+* **Der erste Lauf meldet nichts.** Er merkt sich nur, welche Kurse bereits
+  abgeschlossen sind. Sonst käme für jeden vor der Einführung fertigen Kurs
+  eine Mail.
+* **Erneute Meldung ist gewollt.** Gespeichert wird der aktuelle Stand, nicht
+  die Summe aller je gemeldeten Kurse. Wird jemand nachträglich eingeschrieben,
+  fällt der Kurs aus dem Zustand heraus und wird erneut gemeldet, sobald auch
+  diese Person fertig ist — genau der Nachzügler, auf den man wartet.
+
+Die Aufgabe läuft stündlich, einstellbar unter **Server → Geplante Aufgaben**.
+
 ## Aufbau
 
 ```
 classes/helper.php    Datumsformat, Kurszustände, Sortierung
 classes/output.php    Filterleiste, Legende, Tabellen, Sortier-Links
 classes/export.php    Excel-Export
+classes/task/         Geplante Aufgabe für die Abschlussmeldung
+db/tasks.php          Zeitplan der Aufgabe
 index.php             Kursübersicht
 participants.php      Abschlussstatus eines Kurses
 lib.php               Eintrag im Kursmenü
-settings.php          Eintrag im Admin-Baum
+settings.php          Admin-Baum und Einstellungen
 styles.css            Zeilenfarben
 ```
 

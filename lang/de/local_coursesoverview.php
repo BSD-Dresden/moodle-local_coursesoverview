@@ -39,8 +39,19 @@ $string['nocoursesmatch'] = 'Keine Kurse entsprechen dem Filter.';
 $string['nocriteria'] = 'Für diesen Kurs sind keine Abschlusskriterien definiert.';
 $string['nogroup'] = 'Ohne Gruppe';
 $string['noparticipants'] = 'Keine Teilnehmer vorhanden.';
+$string['notifybody'] = 'Im Kurs "{$a->fullname}" ({$a->shortname}) haben alle {$a->total} Teilnehmer/innen abgeschlossen.
+
+Kursende: {$a->enddate}
+
+Teilnehmerliste: {$a->url}';
+$string['notifyemails'] = 'Empfänger der Abschlussmeldung';
+$string['notifyemails_desc'] = 'Adressen, die eine Meldung erhalten, sobald in einem Kurs alle '
+    . 'Teilnehmer/innen abgeschlossen haben. Mehrere durch Komma trennen, leer lassen schaltet die '
+    . 'Meldung ab. Ein Moodle-Konto ist nicht nötig, ein Sammelpostfach genügt.';
+$string['notifysubject'] = 'Kurs vollständig abgeschlossen: {$a}';
 $string['pluginname'] = 'Kursübersicht';
 $string['progressheader'] = 'Abschnitte abgeschlossen / Gesamt';
+$string['settings'] = 'Kursübersicht: Einstellungen';
 $string['statusactive'] = 'Laufend';
 $string['statuscompleted'] = 'Abgeschlossen';
 $string['statusendingsoon'] = 'Endet demnächst, nicht abgeschlossen';
@@ -51,5 +62,6 @@ $string['statusoverdue'] = 'Beendet, nicht abgeschlossen';
 $string['statuspast'] = 'Beendet';
 $string['statustodo'] = 'Handlungsbedarf';
 $string['statustosettle'] = 'Abgeschlossen, noch nicht abgerechnet';
+$string['tasknotifycompleted'] = 'Meldung über vollständig abgeschlossene Kurse';
 $string['totalparticipants'] = 'Gesamtteilnehmer';
 $string['withoutparticipants'] = 'Kurse ohne Teilnehmer anzeigen';

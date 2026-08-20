@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Admin tree entry.
+ * Scheduled tasks.
  *
  * @package    local_coursesoverview
  * @copyright  2026 BSD GmbH
@@ -24,29 +24,14 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-if ($hassiteconfig || has_capability('local/coursesoverview:view', context_system::instance())) {
-    $ADMIN->add('courses', new admin_externalpage(
-        'localcoursesoverview',
-        get_string('pluginname', 'local_coursesoverview'),
-        new moodle_url('/local/coursesoverview/index.php'),
-        'local/coursesoverview:view'
-    ));
-}
-
-if ($hassiteconfig) {
-    $settings = new admin_settingpage(
-        'localcoursesoverviewsettings',
-        get_string('settings', 'local_coursesoverview'),
-        'moodle/site:config'
-    );
-
-    $settings->add(new admin_setting_configtext(
-        'local_coursesoverview/notifyemails',
-        get_string('notifyemails', 'local_coursesoverview'),
-        get_string('notifyemails_desc', 'local_coursesoverview'),
-        '',
-        PARAM_NOTAGS
-    ));
-
-    $ADMIN->add('courses', $settings);
-}
+$tasks = [
+    [
+        'classname' => 'local_coursesoverview\task\notify_completed_courses',
+        'blocking' => 0,
+        'minute' => '20',
+        'hour' => '*',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*',
+    ],
+];
