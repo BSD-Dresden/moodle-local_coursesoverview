@@ -43,7 +43,8 @@ $string['notifybody'] = 'All {$a->total} participants have completed the course 
 
 Course end: {$a->enddate}
 
-Participant list: {$a->url}';
+Participant list: {$a->url}
+Excel export: {$a->exporturl}';
 $string['notifyemails'] = 'Recipients of the completion notice';
 $string['notifyemails_desc'] = 'Addresses notified once every participant of a course has completed. '
     . 'Separate several with commas, leave empty to switch the notice off. A Moodle account is not '

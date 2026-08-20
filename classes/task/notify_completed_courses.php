@@ -202,12 +202,21 @@ class notify_completed_courses extends \core\task\scheduled_task {
     protected function notify(stdClass $course, array $recipients): void {
         $url = new moodle_url('/local/coursesoverview/participants.php', ['courseid' => $course->id]);
 
+        // The export is a plain GET link, so it can be handed out directly.
+        // participants.php checks login and capability before it writes
+        // anything, which keeps the data behind the login.
+        $exporturl = new moodle_url(
+            '/local/coursesoverview/participants.php',
+            ['courseid' => $course->id, 'download' => 'excel']
+        );
+
         $a = new stdClass();
         $a->fullname = format_string($course->fullname);
         $a->shortname = format_string($course->shortname);
         $a->total = $course->totalcount;
         $a->enddate = helper::format_date($course->enddate);
         $a->url = $url->out(false);
+        $a->exporturl = $exporturl->out(false);
 
         $subject = get_string('notifysubject', 'local_coursesoverview', $a->fullname);
         $text = get_string('notifybody', 'local_coursesoverview', $a);

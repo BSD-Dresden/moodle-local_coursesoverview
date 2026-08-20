@@ -43,7 +43,8 @@ $string['notifybody'] = 'Im Kurs "{$a->fullname}" ({$a->shortname}) haben alle {
 
 Kursende: {$a->enddate}
 
-Teilnehmerliste: {$a->url}';
+Teilnehmerliste: {$a->url}
+Excel-Export: {$a->exporturl}';
 $string['notifyemails'] = 'Empfänger der Abschlussmeldung';
 $string['notifyemails_desc'] = 'Adressen, die eine Meldung erhalten, sobald in einem Kurs alle '
     . 'Teilnehmer/innen abgeschlossen haben. Mehrere durch Komma trennen, leer lassen schaltet die '
