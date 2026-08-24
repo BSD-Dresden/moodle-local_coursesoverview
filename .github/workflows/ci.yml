@@ -8,7 +8,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:14
+        image: postgres:17
         env:
           POSTGRES_USER: 'postgres'
           POSTGRES_HOST_AUTH_METHOD: 'trust'
@@ -20,16 +20,23 @@ jobs:
           --health-timeout=5s
           --health-retries=3
 
+    continue-on-error: ${{ matrix.experimental }}
+
     strategy:
       fail-fast: false
       matrix:
         include:
-          # The version the site actually runs.
-          - php: '8.2'
-            moodle-branch: 'MOODLE_402_STABLE'
-          # Early warning for the next upgrade.
+          # What the site runs. This one gates the build.
           - php: '8.2'
             moodle-branch: 'MOODLE_405_STABLE'
+            experimental: false
+          # Readiness for the next LTS. 5.3 is not out yet, so 5.2 stands in
+          # for it: same PHP and database floor, one string to change later.
+          # Allowed to fail -- a red run here means work is coming, not that
+          # the plugin is broken today.
+          - php: '8.3'
+            moodle-branch: 'MOODLE_502_STABLE'
+            experimental: true
 
     steps:
       - name: Check out plugin
