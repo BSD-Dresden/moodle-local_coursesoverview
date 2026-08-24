@@ -120,6 +120,13 @@ $sql = "SELECT ul.userid, ul.timeaccess
          WHERE ul.courseid = :courseid";
 $lastaccessbyuser = $DB->get_records_sql_menu($sql, ['courseid' => $courseid]);
 
+// Whether participant names link into their course profile, the way Moodle's
+// own tables do through flexible_table::col_fullname(). The capability is
+// checked in the viewer's own user context on purpose, the same test that
+// keeps those links out of the core completion report: administrators and
+// managers hold it there, a role granted inside a single course does not.
+$maylinkprofiles = has_capability('moodle/user:viewuseractivitiesreport', context_user::instance($USER->id));
+
 // Build one row per participant.
 $rowsbyuser = [];
 
@@ -148,6 +155,8 @@ foreach ($participants as $user) {
     $completedtime = (int) ($coursecompletedbyuser[$user->id] ?? 0);
     $date = $completedtime ?: (int) ($lastaccessbyuser[$user->id] ?? 0);
 
+    $profileurl = new moodle_url('/user/view.php', ['id' => $user->id, 'course' => $courseid]);
+
     $rowsbyuser[$user->id] = [
         'sort' => [
             'firstname' => $user->firstname,
@@ -158,8 +167,8 @@ foreach ($participants as $user) {
         ],
         'state' => $state,
         'cells' => [
-            s($user->firstname),
-            s($user->lastname),
+            $maylinkprofiles ? html_writer::link($profileurl, s($user->firstname)) : s($user->firstname),
+            $maylinkprofiles ? html_writer::link($profileurl, s($user->lastname)) : s($user->lastname),
             s($user->email),
             $progress,
             helper::format_date($date),

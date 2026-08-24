@@ -25,6 +25,15 @@ Kurs, weil sie ihn als Ganzes betreuen.
 Im **Excel-Export stehen sie nicht**. Er wird aus den Teilnehmerzeilen gebaut,
 und dort kommen Organisatoren gar nicht erst vor.
 
+## Profillinks
+
+Teilnehmernamen führen ins Kursprofil, so wie in Moodles eigenen Tabellen über
+`flexible_table::col_fullname()`. Verlinkt wird aber nur, wer
+`moodle/user:viewuseractivitiesreport` **im eigenen Nutzerkontext** besitzt —
+Administratoren und Manager also, nicht eine Rolle, die nur in einem einzelnen
+Kurs vergeben wurde. Dieselbe Prüfung hält die Links aus dem Kern-Abschlussbericht
+heraus. Im Export stehen ohnehin nur Namen als Text.
+
 ## Installation
 
 Nach `local/coursesoverview` entpacken, dann:
