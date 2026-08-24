@@ -63,7 +63,22 @@ $numcriteria = count($criteria);
 // Gather all completion data up front: a handful of queries for the whole page
 // instead of one query per user and criterion.
 $userfields = \core_user\fields::for_name()->get_sql('u', false, '', '', false)->selects;
-$participants = get_enrolled_users($context, '', 0, 'u.id, u.email, ' . ltrim($userfields, ' ,'));
+
+// Ask for the same set of people the overview page counts. It goes through
+// completion_info::get_num_tracked_users(), which takes enrolled users holding
+// moodle/course:isincompletionreports and active enrolments only. Listing
+// everybody enrolled instead put organisers and managers into the table, and
+// made the two pages disagree about the same course.
+$participants = get_enrolled_users(
+    $context,
+    'moodle/course:isincompletionreports',
+    0,
+    'u.id, u.email, ' . ltrim($userfields, ' ,'),
+    null,
+    0,
+    0,
+    true
+);
 
 // Number of completed criteria per user.
 $numcompletedbyuser = [];
