@@ -10,6 +10,21 @@ durch mehrere Moodle-Berichte klicken müsste:
 2. **Wer in einem Kurs ist fertig?** Abschlussstatus aller Teilnehmer eines
    Kurses, bei Bedarf nach Gruppen getrennt.
 
+## Wer als Teilnehmer zählt
+
+Beide Seiten fragen nach demselben Kriterium: eingeschrieben, Einschreibung
+aktiv, und im Besitz von `moodle/course:isincompletionreports`. Das ist
+dieselbe Menge, die Moodles Abschlussberichte verwenden — standardmäßig also
+die Teilnehmerrolle, nicht Organisatoren, Trainer oder Manager.
+
+Wer eingeschrieben ist, aber nicht dazuzählt, erscheint auf der Detailseite
+als **Organisator** über der Tabelle: bei Gruppen über der jeweiligen Gruppe,
+sonst über dem Kurs. Organisatoren ohne Gruppenzugehörigkeit stehen oben beim
+Kurs, weil sie ihn als Ganzes betreuen.
+
+Im **Excel-Export stehen sie nicht**. Er wird aus den Teilnehmerzeilen gebaut,
+und dort kommen Organisatoren gar nicht erst vor.
+
 ## Installation
 
 Nach `local/coursesoverview` entpacken, dann:

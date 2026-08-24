@@ -80,6 +80,14 @@ $participants = get_enrolled_users(
     true
 );
 
+// Everyone else who is enrolled and active: organisers, trainers, managers.
+// They are deliberately not in the table above, because no completion is
+// tracked for them -- but who looks after a group is exactly what somebody
+// consulting this page wants to know. Kept out of $rowsbyuser on purpose, so
+// that the Excel export, which draws from those rows, never sees them.
+$others = get_enrolled_users($context, '', 0, 'u.id, ' . ltrim($userfields, ' ,'), null, 0, 0, true);
+$organisers = array_diff_key($others, $participants);
+
 // Number of completed criteria per user.
 $numcompletedbyuser = [];
 if ($numcriteria) {
@@ -170,6 +178,7 @@ foreach ($participants as $user) {
 // Split into groups, if the course uses any.
 $groups = groups_get_all_groups($courseid);
 $sections = [];
+$organiserhasgroup = [];
 
 if (!empty($groups)) {
     // Group memberships for the whole course in one query.
@@ -180,20 +189,27 @@ if (!empty($groups)) {
     $memberships = $DB->get_records_sql($sql, ['courseid' => $courseid]);
 
     $membersbygroup = [];
+    $organisersbygroup = [];
     $hasgroup = [];
     foreach ($memberships as $membership) {
-        // Only consider users that are currently enrolled.
-        if (!isset($rowsbyuser[$membership->userid])) {
+        if (isset($rowsbyuser[$membership->userid])) {
+            $membersbygroup[$membership->groupid][] = $rowsbyuser[$membership->userid];
+            $hasgroup[$membership->userid] = true;
             continue;
         }
-        $membersbygroup[$membership->groupid][] = $rowsbyuser[$membership->userid];
-        $hasgroup[$membership->userid] = true;
+
+        // Organisers are listed above their own group's table rather than in it.
+        if (isset($organisers[$membership->userid])) {
+            $organisersbygroup[$membership->groupid][] = fullname($organisers[$membership->userid]);
+            $organiserhasgroup[$membership->userid] = true;
+        }
     }
 
     foreach ($groups as $group) {
         $sections[] = [
             'name' => format_string($group->name, true, ['context' => $context]),
             'rows' => $membersbygroup[$group->id] ?? [],
+            'organisers' => $organisersbygroup[$group->id] ?? [],
         ];
     }
 
@@ -208,10 +224,21 @@ if (!empty($groups)) {
         $sections[] = [
             'name' => get_string('nogroup', 'local_coursesoverview'),
             'rows' => $nogroup,
+            'organisers' => [],
         ];
     }
 } else {
-    $sections[] = ['name' => '', 'rows' => array_values($rowsbyuser)];
+    $sections[] = ['name' => '', 'rows' => array_values($rowsbyuser), 'organisers' => []];
+}
+
+// Organisers without a group look after the whole course, so they belong above
+// everything rather than in one group's heading. Without groups, that is all of
+// them.
+$courseorganisers = [];
+foreach ($organisers as $userid => $user) {
+    if (empty($organiserhasgroup[$userid])) {
+        $courseorganisers[] = fullname($user);
+    }
 }
 
 foreach ($sections as $index => $section) {
@@ -282,6 +309,10 @@ echo html_writer::tag('p', html_writer::tag('strong', get_string('course') . ': 
 $enddate = helper::format_date($course->enddate);
 echo html_writer::tag('p', html_writer::tag('strong', get_string('enddate') . ': ') . $enddate);
 
+if (!empty($courseorganisers)) {
+    echo output::organisers($courseorganisers);
+}
+
 if (!$completion->is_enabled()) {
     $notice = get_string('completiondisabled', 'local_coursesoverview');
     echo $OUTPUT->notification($notice, 'warning');
@@ -304,6 +335,9 @@ echo output::start_tables();
 foreach ($sections as $section) {
     if ($section['name'] !== '') {
         echo html_writer::tag('h3', $section['name']);
+    }
+    if (!empty($section['organisers'])) {
+        echo output::organisers($section['organisers']);
     }
     $caption = ($section['name'] !== '') ? $section['name'] : $pagetitle;
     echo output::participants_table($section['rows'], $sort, $descending, $baseurl, $caption);

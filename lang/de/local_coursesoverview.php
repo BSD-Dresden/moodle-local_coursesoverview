@@ -50,6 +50,8 @@ $string['notifyemails_desc'] = 'Adressen, die eine Meldung erhalten, sobald in e
     . 'Teilnehmer/innen abgeschlossen haben. Mehrere durch Komma trennen, leer lassen schaltet die '
     . 'Meldung ab. Ein Moodle-Konto ist nicht nötig, ein Sammelpostfach genügt.';
 $string['notifysubject'] = 'Kurs vollständig abgeschlossen: {$a}';
+$string['organiser'] = 'Organisator';
+$string['organisers'] = 'Organisatoren';
 $string['pluginname'] = 'Kursübersicht';
 $string['progressheader'] = 'Abschnitte abgeschlossen / Gesamt';
 $string['settings'] = 'Kursübersicht: Einstellungen';

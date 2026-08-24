@@ -50,6 +50,8 @@ $string['notifyemails_desc'] = 'Addresses notified once every participant of a c
     . 'Separate several with commas, leave empty to switch the notice off. A Moodle account is not '
     . 'required, a shared mailbox will do.';
 $string['notifysubject'] = 'Course fully completed: {$a}';
+$string['organiser'] = 'Organiser';
+$string['organisers'] = 'Organisers';
 $string['pluginname'] = 'Courses Overview';
 $string['progressheader'] = 'Sections completed / total';
 $string['settings'] = 'Courses Overview: settings';

@@ -117,6 +117,29 @@ class output {
     }
 
     /**
+     * Render the people looking after a course or a single group.
+     *
+     * Screen only. The Excel export is built from the participant rows, and
+     * organisers are deliberately not among them.
+     *
+     * @param array $names full names, unescaped
+     * @return string
+     */
+    public static function organisers(array $names): string {
+        sort($names, SORT_NATURAL | SORT_FLAG_CASE);
+
+        $key = (count($names) === 1) ? 'organiser' : 'organisers';
+        $label = get_string($key, 'local_coursesoverview');
+        $list = implode(', ', array_map('s', $names));
+
+        return html_writer::tag(
+            'p',
+            html_writer::tag('strong', $label . ': ') . $list,
+            ['class' => 'coursesoverview-organisers']
+        );
+    }
+
+    /**
      * Render a colour legend for the given states.
      *
      * @param array $states state keys, in the order they should be listed
