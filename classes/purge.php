@@ -45,7 +45,7 @@ class purge {
      * @return array ['delete' => stdClass[], 'keep' => array of ['user' => stdClass, 'reason' => string]]
      */
     public static function plan(int $courseid, context_course $context): array {
-        global $DB, $USER;
+        global $USER;
 
         $namefields = \core_user\fields::for_name()->get_sql('u', false, '', '', false)->selects;
         $enrolled = get_enrolled_users($context, '', 0, 'u.id, u.username, u.email, ' . ltrim($namefields, ' ,'));
