@@ -78,6 +78,37 @@ Zwei Dinge sind absichtlich so gebaut:
 Die Schwelle für „endet demnächst" steht als Konstante `ENDING_SOON` in
 `classes/helper.php`.
 
+## Kurs mit Teilnehmern löschen
+
+In der Aktionsspalte der Übersicht steht bei **verborgenen** Kursen ein
+`Löschen`. Verborgen heißt hier abgerechnet — dadurch kann nichts entfernt
+werden, das nicht vorher bewusst als erledigt markiert wurde. Der Link führt
+auf eine Bestätigungsseite und löscht nichts.
+
+Dort stehen zwei Listen: die Konten, die mitgelöscht werden, und die, die
+bleiben, jeweils mit Grund. Erst nach dem Setzen des Hakens ist der Löschknopf
+wirksam; der Haken wird auch serverseitig geprüft.
+
+Ein Konto bleibt erhalten, wenn es
+
+* einem Administrator gehört, dem Gastzugang oder Ihnen selbst,
+* eine Rolle außerhalb dieses Kurses besitzt — System- oder Kursbereichsebene,
+* oder in **irgendeinem** anderen Kurs eingeschrieben ist, auch verborgen,
+  abgelaufen oder ausgesetzt.
+
+Die Rolle im zu löschenden Kurs spielt keine Rolle: Organisatoren werden
+mitgelöscht, wenn sie sonst nirgends gebraucht werden.
+
+Nötig sind `moodle/course:delete` im Kurs sowie `moodle/user:delete` und
+`local/coursesoverview:view` auf Systemebene.
+
+**Was Löschen bedeutet.** Für Konten wird `delete_user()` verwendet, dieselbe
+Funktion wie in Moodles Bulk-Löschung. Sie entfernt Bewertungen, Einschreibungen,
+Rollen, Gruppen- und Kalendereinträge, markiert den Datensatz dann als gelöscht
+und ersetzt Anmeldename und E-Mail — **Vor- und Nachname bleiben in der
+`user`-Tabelle stehen**. Der Kurs selbst wird über `delete_course()` wirklich
+entfernt. Beides ist nicht rückgängig zu machen.
+
 ## Meldung bei vollständigem Abschluss
 
 Eine geplante Aufgabe meldet per E-Mail, sobald ein Kurs in den grünen Zustand
@@ -103,10 +134,12 @@ Die Aufgabe läuft stündlich, einstellbar unter **Server → Geplante Aufgaben*
 classes/helper.php    Datumsformat, Kurszustände, Sortierung
 classes/output.php    Filterleiste, Legende, Tabellen, Sortier-Links
 classes/export.php    Excel-Export
+classes/purge.php     Wer beim Löschen eines Kurses mitgeht
 classes/task/         Geplante Aufgabe für die Abschlussmeldung
 db/tasks.php          Zeitplan der Aufgabe
 index.php             Kursübersicht
 participants.php      Abschlussstatus eines Kurses
+delete.php            Bestätigung und Löschung von Kurs samt Konten
 lib.php               Eintrag im Kursmenü
 settings.php          Admin-Baum und Einstellungen
 styles.css            Zeilenfarben

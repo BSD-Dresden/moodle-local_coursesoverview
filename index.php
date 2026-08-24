@@ -137,6 +137,11 @@ $completedwhere = 'u.id IN (SELECT cc.userid
                                AND cc.timecompleted IS NOT NULL)';
 
 $completionstatuslabel = get_string('completionstatus', 'local_coursesoverview');
+
+// Deleting accounts is a site-wide power, so it is checked once rather than
+// per course. Without it the delete link is not offered at all.
+$candeletecourses = has_capability('moodle/user:delete', context_system::instance());
+
 $rows = [];
 
 foreach ($courses as $course) {
@@ -192,6 +197,15 @@ foreach ($courses as $course) {
         $toggleparams = [$action => $course->id, 'sesskey' => sesskey()];
         $toggleurl = new moodle_url($sorturl, $toggleparams);
         $courseactions .= ' / ' . html_writer::link($toggleurl, get_string($action));
+    }
+
+    // Deleting is offered for hidden courses only. Hidden means settled here,
+    // so nothing can be removed that was not deliberately marked as finished.
+    // The link leads to a confirmation page, it does not delete anything.
+    if (!$course->visible && $candeletecourses && can_delete_course($course->id)) {
+        $deleteurl = new moodle_url('/local/coursesoverview/delete.php', ['courseid' => $course->id]);
+        $deletelink = html_writer::link($deleteurl, get_string('delete'), ['class' => 'text-danger']);
+        $courseactions .= ' / ' . $deletelink;
     }
 
     $participantsurl = new moodle_url('/local/coursesoverview/participants.php', [
