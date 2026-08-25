@@ -120,6 +120,19 @@ $sql = "SELECT ul.userid, ul.timeaccess
          WHERE ul.courseid = :courseid";
 $lastaccessbyuser = $DB->get_records_sql_menu($sql, ['courseid' => $courseid]);
 
+// Since when each participant has access to this course. Moodle keeps two
+// dates: timestart is when the enrolment begins and is 0 when it was left
+// open, timecreated is when the enrolment was made. The first is the honest
+// answer where it exists, the second is the fallback. Somebody enrolled twice,
+// say manually and through self enrolment, gets the earlier of the two.
+$sql = "SELECT ue.userid,
+               MIN(CASE WHEN ue.timestart > 0 THEN ue.timestart ELSE ue.timecreated END) AS accesssince
+          FROM {user_enrolments} ue
+          JOIN {enrol} e ON e.id = ue.enrolid
+         WHERE e.courseid = :courseid
+      GROUP BY ue.userid";
+$accesssincebyuser = $DB->get_records_sql_menu($sql, ['courseid' => $courseid]);
+
 // Whether participant names link into their course profile, the way Moodle's
 // own tables do through flexible_table::col_fullname(). The capability is
 // checked in the viewer's own user context on purpose, the same test that
@@ -174,10 +187,12 @@ foreach ($participants as $user) {
             helper::format_date($date),
         ],
         // The export mirrors the compact on-screen columns: one name, one
-        // progress figure, one date.
+        // progress figure, one date -- plus the enrolment date, which is of
+        // interest when the sheet is passed on but only clutters the screen.
         'export' => [
             fullname($user),
             $user->email,
+            helper::format_date((int) ($accesssincebyuser[$user->id] ?? 0), ''),
             $progress,
             helper::format_date($date, ''),
         ],
@@ -266,6 +281,7 @@ if ($download) {
     }
     $columns[] = get_string('name');
     $columns[] = get_string('email');
+    $columns[] = get_string('accesssince', 'local_coursesoverview');
     $columns[] = get_string('progressheader', 'local_coursesoverview');
     $columns[] = get_string('completed_lastseen', 'local_coursesoverview');
 

@@ -24,6 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['accesssince'] = 'Access since';
 $string['applyfilters'] = 'Filter';
 $string['backtooverview'] = 'Back to courses overview';
 $string['completed_lastseen'] = 'Course completed / Last seen';

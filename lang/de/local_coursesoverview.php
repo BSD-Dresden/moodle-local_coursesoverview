@@ -24,6 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['accesssince'] = 'Zugang seit';
 $string['applyfilters'] = 'Filtern';
 $string['backtooverview'] = 'Zurück zur Kursübersicht';
 $string['completed_lastseen'] = 'Kurs abgeschlossen / Zuletzt im Kurs';
