@@ -45,9 +45,10 @@ class progress {
     public static function criteria(stdClass $course): array {
         global $CFG;
 
-        // completion_info is a legacy global class and is not autoloaded.
-        // Leaving this out works under the web server, where something else
-        // has usually pulled the file in already, and fails under cron.
+        // The completion_info class is a legacy global one and is not
+        // autoloaded. Leaving this out works under the web server, where
+        // something else has usually pulled the file in already, and fails
+        // under cron.
         require_once($CFG->libdir . '/completionlib.php');
 
         $completion = new completion_info($course);
