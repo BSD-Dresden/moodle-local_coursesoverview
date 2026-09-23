@@ -17,6 +17,7 @@
 namespace local_coursesoverview;
 
 use completion_info;
+use context_course;
 use stdClass;
 
 /**
@@ -224,5 +225,40 @@ class helper {
         });
 
         return $rows;
+    }
+
+    /**
+     * The groups somebody may look at in a course.
+     *
+     * Holding accessallgroups means the whole course. Being in groups means
+     * those groups, which is what keeps one customer's departments apart
+     * inside a shared course. Being in no group at all means looking after the
+     * course as a whole, so everybody.
+     *
+     * @param context_course $context
+     * @return array [group ids for get_enrolled_users, group names to display]
+     */
+    public static function visible_groups(context_course $context): array {
+        global $USER;
+
+        if (has_capability('moodle/site:accessallgroups', $context)) {
+            return [0, []];
+        }
+
+        $groups = groups_get_all_groups($context->instanceid, $USER->id);
+
+        if (empty($groups)) {
+            return [0, []];
+        }
+
+        $ids = [];
+        $names = [];
+
+        foreach ($groups as $group) {
+            $ids[] = (int) $group->id;
+            $names[] = format_string($group->name, true, ['context' => $context]);
+        }
+
+        return [$ids, $names];
     }
 }

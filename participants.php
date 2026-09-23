@@ -46,6 +46,12 @@ $course = get_course($courseid);
 $context = context_course::instance($courseid);
 require_capability('local/coursesoverview:view', $context);
 
+// Somebody holding the capability inside a single course sees their own groups
+// only, so that several of a customer's departments can share a course without
+// looking at each other. Administrators and managers hold accessallgroups and
+// see the whole course, as does an organiser who is in no group at all.
+[$viewgroups] = helper::visible_groups($context);
+
 $baseurl = new moodle_url('/local/coursesoverview/participants.php', ['courseid' => $courseid]);
 $sorturl = new moodle_url($baseurl, ['sort' => $sort, 'dir' => $descending ? 'desc' : 'asc']);
 
@@ -73,7 +79,7 @@ $userfields = \core_user\fields::for_name()->get_sql('u', false, '', '', false)-
 $participants = get_enrolled_users(
     $context,
     'moodle/course:isincompletionreports',
-    0,
+    $viewgroups,
     'u.id, u.email, ' . ltrim($userfields, ' ,'),
     null,
     0,
@@ -86,7 +92,7 @@ $participants = get_enrolled_users(
 // tracked for them -- but who looks after a group is exactly what somebody
 // consulting this page wants to know. Kept out of $rowsbyuser on purpose, so
 // that the Excel export, which draws from those rows, never sees them.
-$others = get_enrolled_users($context, '', 0, 'u.id, ' . ltrim($userfields, ' ,'), null, 0, 0, true);
+$others = get_enrolled_users($context, '', $viewgroups, 'u.id, ' . ltrim($userfields, ' ,'), null, 0, 0, true);
 $organisers = array_diff_key($others, $participants);
 
 // Number of completed criteria per user. The course page block counts the
@@ -187,6 +193,12 @@ foreach ($participants as $user) {
 
 // Split into groups, if the course uses any.
 $groups = groups_get_all_groups($courseid);
+
+// A restricted viewer gets headings for their own groups only. Without this
+// the page would print empty tables for the departments they may not see.
+if (!empty($viewgroups)) {
+    $groups = array_intersect_key($groups, array_flip($viewgroups));
+}
 $sections = [];
 $organiserhasgroup = [];
 
