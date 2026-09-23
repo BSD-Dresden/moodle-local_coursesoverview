@@ -46,8 +46,8 @@ Aufruf über **Website-Administration → Kurse → Kursübersicht**. Der
 Abschlussstatus eines einzelnen Kurses steht zusätzlich in dessen Kursmenü
 unter **Mehr**, für alle, die die Berechtigung in diesem Kurs besitzen.
 
-Voraussetzung: Moodle 4.2+, PHP 8.0+. Getestet gegen Moodle 4.2 mit PHP 8.2 und
-PostgreSQL.
+Voraussetzung: Moodle 4.5+, PHP 8.1+. Getestet gegen Moodle 4.5 mit PHP 8.2 und
+gegen 5.2 mit PHP 8.3, jeweils auf PostgreSQL.
 
 ## Berechtigung
 
