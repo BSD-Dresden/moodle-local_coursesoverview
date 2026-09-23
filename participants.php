@@ -29,6 +29,7 @@ require_once($CFG->dirroot . '/group/lib.php');
 use local_coursesoverview\export;
 use local_coursesoverview\helper;
 use local_coursesoverview\output;
+use local_coursesoverview\progress;
 
 $courseid = required_param('courseid', PARAM_INT);
 $download = optional_param('download', '', PARAM_ALPHA);
@@ -57,7 +58,7 @@ $PAGE->set_title($pagetitle);
 $PAGE->set_heading(format_string($course->fullname, true, ['context' => $context]));
 
 $completion = new completion_info($course);
-$criteria = helper::sorted_criteria($completion);
+$criteria = progress::criteria($course);
 $numcriteria = count($criteria);
 
 // Gather all completion data up front: a handful of queries for the whole page
@@ -88,24 +89,9 @@ $participants = get_enrolled_users(
 $others = get_enrolled_users($context, '', 0, 'u.id, ' . ltrim($userfields, ' ,'), null, 0, 0, true);
 $organisers = array_diff_key($others, $participants);
 
-// Number of completed criteria per user.
-$numcompletedbyuser = [];
-if ($numcriteria) {
-    $criteriaids = [];
-    foreach ($criteria as $criterion) {
-        $criteriaids[] = $criterion->id;
-    }
-
-    [$insql, $inparams] = $DB->get_in_or_equal($criteriaids, SQL_PARAMS_NAMED, 'crit');
-
-    $sql = "SELECT ccc.userid, COUNT(ccc.id) AS numcompleted
-              FROM {course_completion_crit_compl} ccc
-             WHERE ccc.course = :courseid
-               AND ccc.timecompleted IS NOT NULL
-               AND ccc.criteriaid {$insql}
-          GROUP BY ccc.userid";
-    $numcompletedbyuser = $DB->get_records_sql_menu($sql, ['courseid' => $courseid] + $inparams);
-}
+// Number of completed criteria per user. The course page block counts the
+// same way through the same class, so the two never disagree.
+$numcompletedbyuser = progress::completed_counts($courseid, progress::criteria_ids($criteria));
 
 // Actual course completion time per user.
 $sql = "SELECT cc.userid, cc.timecompleted
