@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 if ($hassiteconfig || has_capability('local/coursesoverview:view', context_system::instance())) {
     $ADMIN->add('courses', new admin_externalpage(
         'localcoursesoverview',
-        get_string('pluginname', 'local_coursesoverview'),
+        get_string('overview', 'local_coursesoverview'),
         new moodle_url('/local/coursesoverview/index.php'),
         'local/coursesoverview:view'
     ));

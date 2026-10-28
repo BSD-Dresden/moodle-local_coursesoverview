@@ -271,12 +271,12 @@ if ($download) {
         ];
     }
 
-    $pluginname = get_string('pluginname', 'local_coursesoverview');
+    $exportname = get_string('overview', 'local_coursesoverview');
 
     export::download(
         $download,
-        clean_filename($pluginname),
-        $pluginname,
+        clean_filename($exportname),
+        $exportname,
         $columns,
         $exportrows
     );
@@ -310,7 +310,7 @@ $totalheader = output::sort_header($totallabel, 'total', $sort, $descending, $ba
 
 $table = new html_table();
 $table->attributes['class'] = 'generaltable ' . output::TABLE_CLASS;
-$table->caption = get_string('pluginname', 'local_coursesoverview');
+$table->caption = get_string('overview', 'local_coursesoverview');
 $table->captionhide = true;
 $table->head = [
     output::sort_header(get_string('course'), 'fullname', $sort, $descending, $baseurl),
