@@ -21,10 +21,10 @@ use stdClass;
 /**
  * Turn a checked order into a course with its participants.
  *
- * Nothing here reimplements what Moodle can already do. The course comes from
- * the course import with the module's course as its template, the accounts
- * come from the user import, and both are fed a file that is built here and
- * never touches the disk. What this class owns is the order around them: that
+ * Nothing here reimplements what Moodle can already do. The course is a copy of
+ * the module's template, made by the same task as "Copy course", and the
+ * accounts come from the user import, fed a file that is built here and never
+ * touches the disk. What this class owns is the order around them: that
  * the welcome message is silenced before anybody is enrolled, that a
  * deliberately reused account is enrolled rather than created, and that the
  * order is written down afterwards.
@@ -104,7 +104,20 @@ class provision {
     }
 
     /**
-     * Create the course from the module's template.
+     * Copy the module's template into a new course, the way "Copy course" does.
+     *
+     * The course import would have been less code but is the wrong tool. It
+     * creates a course with the site's defaults and only pours the template's
+     * content into it, so completion tracking stays off, the course blocks are
+     * lost and a news forum turns up that the template does not have. A copy
+     * restores the template as a whole, which is how these courses have always
+     * been made by hand.
+     *
+     * Moodle runs a copy as a background task. Here the same task is run
+     * straight away instead, so that the accounts can follow in the same
+     * request. The controllers are prepared exactly as copy_helper does it,
+     * with one difference: the session is not released, because the list of
+     * credentials still has to go into it afterwards.
      *
      * @param stdClass $order
      * @param module $module
@@ -112,52 +125,86 @@ class provision {
      * @return stdClass|null the new course
      */
     protected static function create_course(stdClass $order, module $module, stdClass $result): ?stdClass {
-        global $DB;
+        global $CFG, $DB, $USER;
 
-        $columns = ['shortname', 'fullname', 'category', 'startdate', 'enddate', 'idnumber'];
-        $values = [
-            $order->shortname,
-            $order->fullname,
-            (string) $module->category(),
-            date('Y-m-d', $order->startdate),
-            date('Y-m-d', $order->enddate),
-            $order->abnr,
+        require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
+        require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
+
+        $template = $module->template_course();
+        $copydata = (object) [
+            'courseid' => $template->id,
+            'fullname' => $order->fullname,
+            'shortname' => $order->shortname,
+            'category' => $module->category(),
+            'visible' => 1,
+            'startdate' => $order->startdate,
+            'enddate' => $order->enddate,
+            'idnumber' => $order->abnr,
+            'userdata' => 0,
+            'keptroles' => [],
         ];
 
-        $content = self::csv_line($columns) . self::csv_line($values);
+        \core_php_time_limit::raise();
+        raise_memory_limit(MEMORY_EXTRA);
 
-        $iid = \csv_import_reader::get_new_iid('uploadcourse');
-        $reader = new \csv_import_reader($iid, 'uploadcourse');
-        if (!$reader->load_csv_content($content, 'UTF-8', 'semicolon')) {
-            $result->errors[] = $reader->get_error();
-            $reader->cleanup();
-            return null;
-        }
+        $backup = new \backup_controller(
+            \backup::TYPE_1COURSE,
+            $template->id,
+            \backup::FORMAT_MOODLE,
+            \backup::INTERACTIVE_NO,
+            \backup::MODE_COPY,
+            $USER->id,
+            \backup::RELEASESESSION_NO
+        );
+        $ids = ['backupid' => $backup->get_backupid()];
 
-        $options = [
-            'mode' => \tool_uploadcourse_processor::MODE_CREATE_NEW,
-            'updatemode' => \tool_uploadcourse_processor::UPDATE_NOTHING,
-            'templatecourse' => $module->template,
-        ];
+        // The copy starts as a placeholder course and receives its names at the end.
+        [$fullname, $shortname] = \restore_dbops::calculate_course_names(
+            0,
+            get_string('copyingcourse', 'backup'),
+            get_string('copyingcourseshortname', 'backup')
+        );
+        $courseid = \restore_dbops::create_new_course($fullname, $shortname, $copydata->category);
 
-        // The import prints its report as it goes. It is only of interest when
-        // the course did not appear, so it is caught and held until then.
+        $restore = new \restore_controller(
+            $ids['backupid'],
+            $courseid,
+            \backup::INTERACTIVE_NO,
+            \backup::MODE_COPY,
+            $USER->id,
+            \backup::TARGET_NEW_COURSE,
+            null,
+            \backup::RELEASESESSION_NO,
+            $copydata
+        );
+        $ids['restoreid'] = $restore->get_restoreid();
+
+        $backup->set_status(\backup::STATUS_AWAITING);
+        $backup->get_status();
+        $restore->save_controller();
+        $backup->destroy();
+
+        // The task reports through mtrace(), which only matters when it fails.
+        $task = new \core\task\asynchronous_copy_task();
+        $task->set_custom_data($ids);
         ob_start();
         try {
-            $processor = new \tool_uploadcourse_processor($reader, $options, []);
-            $processor->execute(new \tool_uploadcourse_tracker(\tool_uploadcourse_tracker::OUTPUT_PLAIN));
+            $task->execute();
         } catch (\Throwable $e) {
             $result->errors[] = $e->getMessage();
         } finally {
             $log = ob_get_clean();
         }
-        $reader->cleanup();
 
-        $course = $DB->get_record('course', ['shortname' => $order->shortname]);
-        if (!$course) {
+        $course = $DB->get_record('course', ['id' => $courseid]);
+        if (!$course || $course->shortname !== $order->shortname) {
+            // A copy that stopped halfway leaves its placeholder behind.
+            if ($course) {
+                delete_course($course, false);
+            }
             $result->errors[] = get_string('ordercoursefailed', 'local_coursesoverview');
-            if (trim($log) !== '') {
-                $result->errors[] = trim($log);
+            if (trim(strip_tags($log)) !== '') {
+                $result->errors[] = trim(strip_tags($log));
             }
             return null;
         }
