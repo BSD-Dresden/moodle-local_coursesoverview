@@ -33,6 +33,15 @@ if ($hassiteconfig || has_capability('local/coursesoverview:view', context_syste
     ));
 }
 
+if ($hassiteconfig || has_capability('local/coursesoverview:createorder', context_system::instance())) {
+    $ADMIN->add('courses', new admin_externalpage(
+        'localcoursesovervieworder',
+        get_string('neworder', 'local_coursesoverview'),
+        new moodle_url('/local/coursesoverview/order.php'),
+        'local/coursesoverview:createorder'
+    ));
+}
+
 if ($hassiteconfig) {
     $settings = new admin_settingpage(
         'localcoursesoverviewsettings',
@@ -46,6 +55,32 @@ if ($hassiteconfig) {
         get_string('notifyemails_desc', 'local_coursesoverview'),
         '',
         PARAM_NOTAGS
+    ));
+
+    $settings->add(new admin_setting_configtextarea(
+        'local_coursesoverview/ordermodules',
+        get_string('ordermodules', 'local_coursesoverview'),
+        get_string('ordermodules_desc', 'local_coursesoverview'),
+        '',
+        PARAM_RAW,
+        60,
+        6
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'local_coursesoverview/orderpattern',
+        get_string('orderpattern', 'local_coursesoverview'),
+        get_string('orderpattern_desc', 'local_coursesoverview'),
+        '{module} {company} (AB {abnr})',
+        PARAM_TEXT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'local_coursesoverview/ordermonths',
+        get_string('ordermonths', 'local_coursesoverview'),
+        get_string('ordermonths_desc', 'local_coursesoverview'),
+        2,
+        PARAM_INT
     ));
 
     $ADMIN->add('courses', $settings);

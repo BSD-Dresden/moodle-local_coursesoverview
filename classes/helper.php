@@ -74,6 +74,25 @@ class helper {
     }
 
     /**
+     * Read a date out of a date field.
+     *
+     * @param string $value as a browser sends it, "2026-10-28"
+     * @return int midnight of that day, zero when the value is not a date
+     */
+    public static function parse_date(string $value): int {
+        if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', trim($value), $matches)) {
+            return 0;
+        }
+
+        [, $year, $month, $day] = array_map('intval', $matches);
+        if (!checkdate($month, $day, $year)) {
+            return 0;
+        }
+
+        return make_timestamp($year, $month, $day);
+    }
+
+    /**
      * Determine the highlight state of a course row.
      *
      * Hidden wins over everything: hiding a course is the manual marker for

@@ -39,4 +39,14 @@ $capabilities = [
             'manager' => CAP_ALLOW,
         ],
     ],
+
+    // Creating an order makes accounts and a course. Declared at system level
+    // because that is the only place it is ever granted, and deliberately not
+    // given to any archetype: this is for our own team, not for a customer's
+    // organiser, who may well hold the manager archetype in a category.
+    'local/coursesoverview:createorder' => [
+        'captype'      => 'write',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes'   => [],
+    ],
 ];

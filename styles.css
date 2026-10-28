@@ -82,6 +82,13 @@
     background-color: #d4edda !important;
 }
 
+/* Orders. */
+
+#coursesoverview-tables tbody tr.coursesoverview-problem td,
+#coursesoverview-tables tbody tr.coursesoverview-problem:hover td {
+    background-color: #f5c6cb !important;
+}
+
 /* stylelint-enable declaration-no-important */
 
 /* Legend swatches. */
