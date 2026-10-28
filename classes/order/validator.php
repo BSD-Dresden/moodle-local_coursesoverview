@@ -140,7 +140,8 @@ class validator {
     protected static function flag_existing(array $checks, array $usernames, array $emails, array $reuse): void {
         $accounts = self::accounts($usernames);
         $mailcounts = self::mailcounts($emails);
-        $courses = $accounts ? self::courses(array_keys($accounts)) : [];
+        // The accounts are keyed by user name, the enrolments are found by id.
+        $courses = $accounts ? self::courses(array_column($accounts, 'id')) : [];
 
         foreach ($checks as $index => $check) {
             if ($check->username !== '' && isset($accounts[$check->username])) {
