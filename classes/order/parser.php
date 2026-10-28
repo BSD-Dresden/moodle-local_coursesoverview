@@ -28,7 +28,6 @@ namespace local_coursesoverview\order;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class parser {
-
     /** @var string work the separator out from the text */
     const AUTO = 'auto';
 

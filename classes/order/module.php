@@ -30,7 +30,6 @@ use stdClass;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class module {
-
     /** @var string name shown in the form */
     public $name;
 

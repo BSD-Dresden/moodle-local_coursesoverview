@@ -34,7 +34,6 @@ use stdClass;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class provision {
-
     /** @var string role of somebody who takes the course */
     const ROLE_PARTICIPANT = 'student';
 

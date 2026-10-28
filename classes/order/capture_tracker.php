@@ -35,7 +35,6 @@ namespace local_coursesoverview\order;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class capture_tracker extends \uu_progress_tracker {
-
     /** @var array one entry per line of the last import */
     protected static $lines = [];
 

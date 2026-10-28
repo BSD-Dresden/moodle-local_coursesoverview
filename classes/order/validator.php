@@ -27,7 +27,6 @@ use local_coursesoverview\helper;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class validator {
-
     /** @var string the address doubles as the user name */
     const SCHEME_EMAIL = 'email';
 

@@ -29,7 +29,6 @@ use core_text;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class participant {
-
     /** @var string takes part, nothing more */
     const ROLE_PARTICIPANT = 'participant';
 
@@ -55,6 +54,8 @@ class participant {
     public $role = self::ROLE_PARTICIPANT;
 
     /**
+     * Start an empty person for one line of the list.
+     *
      * @param int $rownumber
      */
     public function __construct(int $rownumber) {

@@ -30,7 +30,6 @@ use core_text;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class columnmap {
-
     /** @var string column nobody needs */
     const IGNORE = 'ignore';
 
@@ -268,7 +267,7 @@ class columnmap {
     public static function read_email(string $cell): string {
         $cell = str_ireplace('mailto:', '', trim($cell));
 
-        // "Max Mustermann <max@example.com>" and the same without the name.
+        // Covers "Max Mustermann <max@example.com>" and the same without the name.
         if (preg_match('/<([^>]+)>/', $cell, $matches)) {
             $cell = $matches[1];
         } else if (preg_match('/\S+@\S+/u', $cell, $matches)) {

@@ -30,7 +30,6 @@ use stdClass;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class check {
-
     /** @var participant the person this is about */
     public $person;
 
@@ -56,6 +55,8 @@ class check {
     public $notes = [];
 
     /**
+     * Start the verdict on one line, with nothing against it yet.
+     *
      * @param participant $person
      * @param int $index
      */
