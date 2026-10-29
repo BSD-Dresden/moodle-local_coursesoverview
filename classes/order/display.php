@@ -19,6 +19,9 @@ namespace local_coursesoverview\order;
 use html_table;
 use html_table_row;
 use html_writer;
+use local_coursesoverview\helper;
+use moodle_url;
+use single_button;
 
 /**
  * The pieces the order page is drawn from.
@@ -283,5 +286,55 @@ class display {
         }
 
         return html_writer::table($table);
+    }
+
+    /**
+     * What our own team needs to see of the order behind a course.
+     *
+     * Shown on the participants page, which customers' organisers see as
+     * well, so the caller checks the capability to create orders first.
+     *
+     * @param int $courseid
+     * @return string nothing when the course was not made by an order
+     */
+    public static function order_box(int $courseid): string {
+        global $DB, $OUTPUT;
+
+        $order = $DB->get_record('local_coursesoverview_order', ['courseid' => $courseid], '*', IGNORE_MULTIPLE);
+        if (!$order) {
+            return '';
+        }
+
+        $a = (object) [
+            'company' => s($order->company),
+            'abnr' => s($order->abnr),
+            'created' => helper::format_date($order->timecreated),
+        ];
+        $out = html_writer::tag('h4', get_string('orderbox', 'local_coursesoverview'), ['class' => 'h5']);
+        $out .= html_writer::tag('p', get_string('orderboxinfo', 'local_coursesoverview', $a));
+
+        $buttons = '';
+        [$people, $senddate] = credentials::waiting((int) $order->id);
+        if ($people) {
+            $a = (object) ['count' => $people, 'date' => helper::format_date($senddate)];
+            $out .= html_writer::tag('p', get_string('orderboxwaiting', 'local_coursesoverview', $a));
+
+            $url = new moodle_url('/local/coursesoverview/order.php', [
+                'action' => 'release',
+                'orderid' => $order->id,
+                'sesskey' => sesskey(),
+            ]);
+            $button = new single_button($url, get_string('orderrelease', 'local_coursesoverview'), 'post');
+            $button->add_confirm_action(get_string('orderreleaseconfirm', 'local_coursesoverview', $a));
+            $buttons .= html_writer::div($OUTPUT->render($button), 'mr-2 me-2');
+        }
+
+        $addurl = new moodle_url('/local/coursesoverview/order.php', ['orderid' => $order->id]);
+        $buttons .= html_writer::link($addurl, get_string('orderaddpeople', 'local_coursesoverview'), [
+            'class' => 'btn btn-secondary',
+        ]);
+        $out .= html_writer::div($buttons, 'd-flex align-items-start');
+
+        return html_writer::div($out, 'card card-body mb-3');
     }
 }

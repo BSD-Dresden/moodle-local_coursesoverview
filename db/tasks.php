@@ -34,4 +34,15 @@ $tasks = [
         'dayofweek' => '*',
         'month' => '*',
     ],
+    [
+        // Start days begin at midnight, so the credentials go out shortly
+        // after. Hourly rather than daily, so that an outage costs an hour.
+        'classname' => 'local_coursesoverview\task\send_credentials',
+        'blocking' => 0,
+        'minute' => '5',
+        'hour' => '*',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*',
+    ],
 ];

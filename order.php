@@ -32,6 +32,7 @@ require_once($CFG->libdir . '/adminlib.php');
 use local_coursesoverview\export;
 use local_coursesoverview\helper;
 use local_coursesoverview\order\columnmap;
+use local_coursesoverview\order\credentials;
 use local_coursesoverview\order\display;
 use local_coursesoverview\order\module;
 use local_coursesoverview\order\parser;
@@ -43,6 +44,9 @@ use local_coursesoverview\output;
 $action = optional_param('action', '', PARAM_ALPHA);
 $step = optional_param('step', 1, PARAM_INT);
 
+// Set when people are reported late to an order that already exists.
+$orderid = optional_param('orderid', 0, PARAM_INT);
+
 // The order itself.
 $moduleprefix = optional_param('module', '', PARAM_TEXT);
 $company = trim(optional_param('company', '', PARAM_TEXT));
@@ -50,7 +54,7 @@ $abnr = trim(optional_param('abnr', '', PARAM_TEXT));
 $startdate = optional_param('startdate', '', PARAM_TEXT);
 $enddate = optional_param('enddate', '', PARAM_TEXT);
 $scheme = optional_param('scheme', validator::SCHEME_EMAIL, PARAM_ALPHA);
-$delivery = optional_param('delivery', provision::DELIVERY_DIRECT, PARAM_ALPHA);
+$delivery = optional_param('delivery', '', PARAM_ALPHA);
 
 // The pasted list and how it is cut up.
 $list = optional_param('list', '', PARAM_RAW);
@@ -70,6 +74,21 @@ admin_externalpage_setup('localcoursesovervieworder');
 require_capability('local/coursesoverview:createorder', context_system::instance());
 
 $pageurl = new moodle_url('/local/coursesoverview/order.php');
+
+// Starting a held order early, from the box on the participants page.
+if ($action === 'release') {
+    require_sesskey();
+
+    $held = $DB->get_record('local_coursesoverview_order', ['id' => $orderid], '*', MUST_EXIST);
+    $sent = credentials::release($held);
+
+    redirect(
+        new moodle_url('/local/coursesoverview/participants.php', ['courseid' => $held->courseid]),
+        get_string('orderreleased', 'local_coursesoverview', $sent),
+        null,
+        \core\output\notification::NOTIFY_SUCCESS
+    );
+}
 
 // The list of credentials is sent from the session, where the order that
 // created them left it. Passwords are never written to the database.
@@ -128,6 +147,28 @@ $deliveries = [
     provision::DELIVERY_LIST => get_string('orderdeliverylist', 'local_coursesoverview'),
 ];
 
+// A late report keeps everything of its order except how the credentials go
+// out, which is chosen anew.
+$existing = null;
+$course = null;
+if ($orderid) {
+    $existing = $DB->get_record('local_coursesoverview_order', ['id' => $orderid], '*', MUST_EXIST);
+    $course = $existing->courseid ? $DB->get_record('course', ['id' => $existing->courseid]) : null;
+    if (!$course) {
+        throw new moodle_exception('orderwithoutcourse', 'local_coursesoverview', $pageurl->out(false));
+    }
+
+    $moduleprefix = $existing->module;
+    $company = $existing->company;
+    $abnr = $existing->abnr;
+    $scheme = $existing->usernamescheme;
+    if ($delivery === '') {
+        $delivery = $existing->delivery;
+    }
+    $startdate = date('Y-m-d', $course->startdate);
+    $enddate = date('Y-m-d', $course->enddate);
+}
+
 if (!array_key_exists($scheme, $schemes)) {
     $scheme = validator::SCHEME_EMAIL;
 }
@@ -149,9 +190,16 @@ $module = null;
 $starttime = helper::parse_date($startdate);
 $endtime = helper::parse_date($enddate);
 
+if ($existing) {
+    // Only for showing its name, the course already exists.
+    $module = module::get($moduleprefix);
+}
+
 if ($step >= 2) {
     require_sesskey();
+}
 
+if ($step >= 2 && !$existing) {
     $module = module::get($moduleprefix);
     if (!$module) {
         $errors[] = get_string('ordererrormodule', 'local_coursesoverview');
@@ -172,6 +220,9 @@ if ($step >= 2) {
     } else if ($endtime <= $starttime) {
         $errors[] = get_string('ordererrorrange', 'local_coursesoverview');
     }
+}
+
+if ($step >= 2) {
     if (trim($list) === '') {
         $errors[] = get_string('ordererrorlist', 'local_coursesoverview');
     }
@@ -207,21 +258,18 @@ if ($step >= 2) {
     }
 }
 
-if ($step >= 2) {
+if ($step >= 2 && $existing) {
+    $shortname = $course->shortname;
+    $fullname = $course->fullname;
+} else if ($step >= 2) {
     $shortname = $module->shortname($company, $abnr);
     $fullname = $module->fullname($company, $abnr);
 }
 
 if ($step >= 3) {
-    $checks = validator::run($people, $scheme, $roles, $reuse);
+    $checks = validator::run($people, $scheme, $roles, $reuse, $existing ? (int) $course->id : 0);
 
-    // Holding the credentials back until a later start is the next stage.
-    // Until it is in place a future start is refused rather than half done,
-    // because half done here means mails going out today.
-    if ($starttime > usergetmidnight(time())) {
-        $blockers[] = get_string('orderfuturelater', 'local_coursesoverview');
-    }
-    if ($DB->record_exists('course', ['shortname' => $shortname])) {
+    if (!$existing && $DB->record_exists('course', ['shortname' => $shortname])) {
         $blockers[] = get_string('ordercourseexists', 'local_coursesoverview', s($shortname));
     }
 }
@@ -237,6 +285,8 @@ $result = null;
 if ($step >= 4) {
     if ($blocked) {
         $step = 3;
+    } else if ($existing) {
+        $result = provision::add($existing, $course, $checks, $delivery);
     } else {
         $order = (object) [
             'company' => $company,
@@ -263,7 +313,12 @@ if ($step >= 4) {
 }
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('neworder', 'local_coursesoverview'));
+if ($existing) {
+    $coursename = format_string($course->fullname, true, ['context' => context_course::instance($course->id)]);
+    echo $OUTPUT->heading(get_string('orderaddheading', 'local_coursesoverview', $coursename));
+} else {
+    echo $OUTPUT->heading(get_string('neworder', 'local_coursesoverview'));
+}
 
 if (!$modules) {
     $settingsurl = new moodle_url('/admin/settings.php', ['section' => 'localcoursesoverviewsettings']);
@@ -280,6 +335,7 @@ foreach ($errors as $error) {
 // Everything entered in step one, carried through all later steps.
 $carried = [
     'sesskey' => sesskey(),
+    'orderid' => $orderid,
     'module' => $moduleprefix,
     'company' => $company,
     'abnr' => $abnr,
@@ -304,65 +360,77 @@ $field = function (string $label, string $control, string $id, string $help = ''
 if ($step < 2) {
     // Step one: the order and the list as the customer sent it.
     $form = html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
+    $form .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'orderid', 'value' => $orderid]);
 
-    $form .= $field(
-        get_string('ordermodule', 'local_coursesoverview'),
-        html_writer::select($modules, 'module', $moduleprefix, false, [
-            'id' => 'coursesoverview-module',
-            'class' => 'custom-select form-select',
-        ]),
-        'coursesoverview-module'
-    );
-
-    foreach (['company' => 40, 'abnr' => 20] as $name => $size) {
+    if ($existing) {
+        // What the order already settled is shown, not asked.
+        echo display::summary([
+            get_string('ordershortname', 'local_coursesoverview') => $course->shortname,
+            get_string('ordercompany', 'local_coursesoverview') => $company,
+            get_string('orderabnr', 'local_coursesoverview') => $abnr,
+            get_string('orderscheme', 'local_coursesoverview') => $schemes[$scheme],
+        ]);
+        echo html_writer::tag('p', get_string('orderadd_help', 'local_coursesoverview'));
+    } else {
         $form .= $field(
-            get_string('order' . $name, 'local_coursesoverview'),
+            get_string('ordermodule', 'local_coursesoverview'),
+            html_writer::select($modules, 'module', $moduleprefix, false, [
+                'id' => 'coursesoverview-module',
+                'class' => 'custom-select form-select',
+            ]),
+            'coursesoverview-module'
+        );
+
+        foreach (['company' => 40, 'abnr' => 20] as $name => $size) {
+            $form .= $field(
+                get_string('order' . $name, 'local_coursesoverview'),
+                html_writer::empty_tag('input', [
+                    'type' => 'text',
+                    'name' => $name,
+                    'id' => 'coursesoverview-' . $name,
+                    'value' => $name === 'company' ? $company : $abnr,
+                    'size' => $size,
+                    'class' => 'form-control',
+                ]),
+                'coursesoverview-' . $name
+            );
+        }
+
+        $form .= $field(
+            get_string('orderstartdate', 'local_coursesoverview'),
             html_writer::empty_tag('input', [
-                'type' => 'text',
-                'name' => $name,
-                'id' => 'coursesoverview-' . $name,
-                'value' => $name === 'company' ? $company : $abnr,
-                'size' => $size,
+                'type' => 'date',
+                'name' => 'startdate',
+                'id' => 'coursesoverview-startdate',
+                'value' => $startdate,
                 'class' => 'form-control',
             ]),
-            'coursesoverview-' . $name
+            'coursesoverview-startdate',
+            get_string('orderstartdate_help', 'local_coursesoverview')
+        );
+
+        $form .= $field(
+            get_string('orderenddate', 'local_coursesoverview'),
+            html_writer::empty_tag('input', [
+                'type' => 'date',
+                'name' => 'enddate',
+                'id' => 'coursesoverview-enddate',
+                'value' => $enddate,
+                'class' => 'form-control',
+            ]),
+            'coursesoverview-enddate'
+        );
+
+        $form .= $field(
+            get_string('orderscheme', 'local_coursesoverview'),
+            html_writer::select($schemes, 'scheme', $scheme, false, [
+                'id' => 'coursesoverview-scheme',
+                'class' => 'custom-select form-select',
+            ]),
+            'coursesoverview-scheme',
+            get_string('orderscheme_help', 'local_coursesoverview')
         );
     }
-
-    $form .= $field(
-        get_string('orderstartdate', 'local_coursesoverview'),
-        html_writer::empty_tag('input', [
-            'type' => 'date',
-            'name' => 'startdate',
-            'id' => 'coursesoverview-startdate',
-            'value' => $startdate,
-            'class' => 'form-control',
-        ]),
-        'coursesoverview-startdate',
-        get_string('orderstartdate_help', 'local_coursesoverview')
-    );
-
-    $form .= $field(
-        get_string('orderenddate', 'local_coursesoverview'),
-        html_writer::empty_tag('input', [
-            'type' => 'date',
-            'name' => 'enddate',
-            'id' => 'coursesoverview-enddate',
-            'value' => $enddate,
-            'class' => 'form-control',
-        ]),
-        'coursesoverview-enddate'
-    );
-
-    $form .= $field(
-        get_string('orderscheme', 'local_coursesoverview'),
-        html_writer::select($schemes, 'scheme', $scheme, false, [
-            'id' => 'coursesoverview-scheme',
-            'class' => 'custom-select form-select',
-        ]),
-        'coursesoverview-scheme',
-        get_string('orderscheme_help', 'local_coursesoverview')
-    );
 
     $form .= $field(
         get_string('orderdelivery', 'local_coursesoverview'),
@@ -397,7 +465,7 @@ if ($step < 2) {
 $summary = [
     get_string('ordershortname', 'local_coursesoverview') => $shortname,
     get_string('orderfullname', 'local_coursesoverview') => $fullname,
-    get_string('ordermodule', 'local_coursesoverview') => $module->name,
+    get_string('ordermodule', 'local_coursesoverview') => $module ? $module->name : $moduleprefix,
     get_string('orderruntime', 'local_coursesoverview') =>
         helper::format_date($starttime) . ' - ' . helper::format_date($endtime),
     get_string('orderscheme', 'local_coursesoverview') => $schemes[$scheme],
@@ -408,14 +476,15 @@ if ($result) {
     // Step four: what was created.
     $course = get_course($result->courseid);
     $courseurl = new moodle_url('/course/view.php', ['id' => $course->id]);
-    $overviewurl = new moodle_url('/local/coursesoverview/index.php');
+    $participantsurl = new moodle_url('/local/coursesoverview/participants.php', ['courseid' => $course->id]);
 
     $a = (object) [
         'course' => s($course->shortname),
         'created' => $result->created,
         'reused' => $result->reused,
     ];
-    echo $OUTPUT->notification(get_string('orderdone', 'local_coursesoverview', $a), 'success');
+    $done = $existing ? 'orderaddeddone' : 'orderdone';
+    echo $OUTPUT->notification(get_string($done, 'local_coursesoverview', $a), 'success');
 
     foreach ($result->errors as $error) {
         echo $OUTPUT->notification(s($error), 'warning');
@@ -445,14 +514,17 @@ if ($result) {
             'mb-3'
         );
         echo display::credentials_table($result->credentials);
-    } else if ($delivery === provision::DELIVERY_DIRECT) {
+    } else if ($result->held) {
+        $a = (object) ['count' => $result->held, 'date' => helper::format_date($result->senddate)];
+        echo $OUTPUT->notification(get_string('orderheld', 'local_coursesoverview', $a), 'info');
+    } else if ($delivery === provision::DELIVERY_DIRECT && $result->created) {
         echo $OUTPUT->notification(get_string('orderdirectqueued', 'local_coursesoverview'), 'info');
     }
 
     echo html_writer::link($courseurl, get_string('ordergotocourse', 'local_coursesoverview'), [
         'class' => 'btn btn-secondary mr-2 me-2',
     ]);
-    echo html_writer::link($overviewurl, get_string('backtooverview', 'local_coursesoverview'), [
+    echo html_writer::link($participantsurl, get_string('ordergotoparticipants', 'local_coursesoverview'), [
         'class' => 'btn btn-secondary',
     ]);
 

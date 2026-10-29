@@ -92,5 +92,37 @@ function xmldb_local_coursesoverview_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026102900, 'local', 'coursesoverview');
     }
 
+    if ($oldversion < 2026102901) {
+        // People reported late can get their credentials differently from
+        // the order they join, and on a day of their own, so both move from
+        // the order to the person.
+        $table = new xmldb_table('local_coursesoverview_orderuser');
+
+        $field = new xmldb_field('delivery', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, '', 'reused');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('senddate', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'delivery');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $index = new xmldb_index('senddate-timesent', XMLDB_INDEX_NOTUNIQUE, ['senddate', 'timesent']);
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Everybody so far was part of the order that created them.
+        $DB->execute(
+            "UPDATE {local_coursesoverview_orderuser}
+                SET delivery = (SELECT o.delivery
+                                  FROM {local_coursesoverview_order} o
+                                 WHERE o.id = {local_coursesoverview_orderuser}.orderid)"
+        );
+
+        upgrade_plugin_savepoint(true, 2026102901, 'local', 'coursesoverview');
+    }
+
     return true;
 }

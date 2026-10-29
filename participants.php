@@ -336,6 +336,12 @@ if (!empty($courseorganisers)) {
     echo output::organisers($courseorganisers);
 }
 
+// The order behind the course is our own business. Customers' organisers see
+// this page too and must not be offered to send credentials or add people.
+if (has_capability('local/coursesoverview:createorder', context_system::instance())) {
+    echo \local_coursesoverview\order\display::order_box($courseid);
+}
+
 if (!$completion->is_enabled()) {
     $notice = get_string('completiondisabled', 'local_coursesoverview');
     echo $OUTPUT->notification($notice, 'warning');

@@ -37,6 +37,8 @@
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="role" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="reused" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="The account already existed and was deliberately used again instead of being created."/>
+        <FIELD NAME="delivery" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="" SEQUENCE="false" COMMENT="How this person's credentials go out. People reported late may get theirs differently from the original order."/>
+        <FIELD NAME="senddate" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="When the task mails the credentials. Zero means the task has nothing to do for this person."/>
         <FIELD NAME="timesent" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
@@ -45,6 +47,9 @@
         <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
         <KEY NAME="orderid-userid" TYPE="unique" FIELDS="orderid, userid"/>
       </KEYS>
+      <INDEXES>
+        <INDEX NAME="senddate-timesent" UNIQUE="false" FIELDS="senddate, timesent" COMMENT="Read by the task that mails the credentials."/>
+      </INDEXES>
     </TABLE>
   </TABLES>
 </XMLDB>

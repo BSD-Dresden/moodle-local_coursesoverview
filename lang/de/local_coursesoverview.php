@@ -83,8 +83,17 @@ $string['notifyemails_desc'] = 'Adressen, die eine Meldung erhalten, sobald in e
     . 'Meldung ab. Ein Moodle-Konto ist nicht nötig, ein Sammelpostfach genügt.';
 $string['notifysubject'] = 'Kurs vollständig abgeschlossen: {$a}';
 $string['orderabnr'] = 'AB-Nummer';
+$string['orderadd_help'] = 'Kurs, Firma, AB-Nummer und Benutzernamen kommen aus dem Auftrag. Wie die Zugangsdaten der '
+    . 'Nachgemeldeten rausgehen, lässt sich neu wählen.';
+$string['orderaddeddone'] = 'In „{$a->course}“ nachgemeldet: {$a->created} Konten neu, {$a->reused} vorhandene Konten '
+    . 'eingeschrieben.';
+$string['orderaddheading'] = 'Teilnehmer nachmelden: {$a}';
+$string['orderaddpeople'] = 'Teilnehmer nachmelden';
 $string['orderalreadyincourse'] = '{$a} ist bereits in diesem Kurs eingeschrieben.';
 $string['orderback'] = 'Zurück';
+$string['orderbox'] = 'Auftrag';
+$string['orderboxinfo'] = '{$a->company}, AB {$a->abnr}, angelegt am {$a->created}.';
+$string['orderboxwaiting'] = 'Zugangsdaten für {$a->count} Personen warten auf den {$a->date}.';
 $string['ordercheck'] = 'Gegen Moodle prüfen';
 $string['ordercheck_help'] = 'Jede Zeile ist jetzt mit den vorhandenen Konten abgeglichen. Rote Zeilen halten den Auftrag auf. '
     . 'Rollen lassen sich hier noch ändern, danach aktualisieren.';
@@ -127,10 +136,11 @@ $string['ordererrortemplate'] = 'Es gibt keinen Kurs mit dem Kurznamen „{$a}�
 $string['orderexists'] = 'Benutzername „{$a->username}“ gehört bereits zu einem Konto: {$a->name}, angelegt am {$a->created}.';
 $string['orderexistscourses'] = 'Eingeschrieben in: {$a}.';
 $string['orderfullname'] = 'Vollständiger Name';
-$string['orderfuturelater'] = 'Ein Beginn in der Zukunft ist noch nicht freigeschaltet, weil die Zugangsdaten sonst heute '
-    . 'rausgingen. Beginn auf heute setzen oder den Auftrag später anlegen.';
 $string['ordergotocourse'] = 'Zum Kurs';
+$string['ordergotoparticipants'] = 'Zur Teilnehmerliste';
 $string['orderhasheader'] = 'Erste Zeile benennt die Spalten';
+$string['orderheld'] = 'Die Zugangsdaten für {$a->count} Personen gehen am {$a->date} raus. Bis dahin bleibt der Kurs für sie zu, '
+    . 'und es geht keine Mail raus.';
 $string['orderinvalidemail'] = '„{$a}“ ist keine Adresse.';
 $string['orderlist'] = 'Teilnehmerliste';
 $string['orderlist_help'] = 'Fügen Sie die Liste so ein, wie der Kunde sie geschickt hat, eine Person je Zeile.';
@@ -161,6 +171,10 @@ $string['orderpattern_desc'] = 'Platzhalter: {module}, {company}, {abnr}, {short
     . 'reichen soll.';
 $string['orderpeople'] = 'Was gelesen wurde';
 $string['orderpeoplecount'] = '{$a->total} Personen, davon {$a->flawed} mit Hinweisen.';
+$string['orderrelease'] = 'Jetzt freischalten und senden';
+$string['orderreleaseconfirm'] = 'Die Einschreibungen öffnen sofort, und die Zugangsdaten für {$a->count} Personen gehen jetzt '
+    . 'raus statt am {$a->date}. Fortfahren?';
+$string['orderreleased'] = 'Kurs freigeschaltet, {$a} Zugangsdaten verschickt.';
 $string['orderreuse'] = 'Vorhandenes Konto verwenden und nur einschreiben';
 $string['orderreused'] = 'Das vorhandene Konto wird weiterverwendet und bekommt keine neuen Zugangsdaten.';
 $string['orderreusehint'] = 'Ein vorhandenes Konto behalten darf nur ein Organisator.';
@@ -177,6 +191,7 @@ $string['orderstartdate_help'] = 'Ein Beginn in der Zukunft hält die Einschreib
 $string['orderstartpassword'] = 'Start-Passwort';
 $string['orderupdate'] = 'Aktualisieren';
 $string['orderusername'] = 'Benutzername';
+$string['orderwithoutcourse'] = 'Der Kurs dieses Auftrags existiert nicht mehr, nachmelden ist nicht möglich.';
 $string['organiser'] = 'Organisator';
 $string['organisers'] = 'Organisatoren';
 $string['overview'] = 'Kursübersicht';
@@ -197,5 +212,6 @@ $string['statuspast'] = 'Beendet';
 $string['statustodo'] = 'Handlungsbedarf';
 $string['statustosettle'] = 'Abgeschlossen, noch nicht abgerechnet';
 $string['tasknotifycompleted'] = 'Meldung über vollständig abgeschlossene Kurse';
+$string['tasksendcredentials'] = 'Zurückgehaltene Zugangsdaten zum Kursbeginn verschicken';
 $string['totalparticipants'] = 'Gesamtteilnehmer';
 $string['withoutparticipants'] = 'Kurse ohne Teilnehmer anzeigen';

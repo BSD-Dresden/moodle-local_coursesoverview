@@ -26,8 +26,9 @@ use stdClass;
  * accounts come from the user import, fed a file that is built here and never
  * touches the disk. What this class owns is the order around them: that
  * the welcome message is silenced before anybody is enrolled, that a
- * deliberately reused account is enrolled rather than created, and that the
- * order is written down afterwards.
+ * deliberately reused account is enrolled rather than created, that mailed
+ * credentials wait for a later start, and that the order is written down
+ * afterwards. People reported late go through the same steps, minus the copy.
  *
  * @package    local_coursesoverview
  * @copyright  2026 BSD GmbH
@@ -50,28 +51,18 @@ class provision {
     const DELIVERY_LIST = 'list';
 
     /**
-     * Create the course, the accounts and the enrolments.
+     * Create the course, the accounts and the enrolments of a new order.
      *
      * @param stdClass $order company, abnr, module, shortname, fullname, startdate, enddate, scheme, delivery
      * @param module $module
      * @param check[] $checks the lines, already checked and free of errors
-     * @return stdClass courseid, created, reused, errors, credentials, orderid
+     * @return stdClass see result()
      */
     public static function run(stdClass $order, module $module, array $checks): stdClass {
-        global $CFG, $DB;
+        global $DB;
 
-        require_once($CFG->libdir . '/csvlib.class.php');
-        require_once($CFG->libdir . '/enrollib.php');
-        require_once($CFG->dirroot . '/' . $CFG->admin . '/tool/uploaduser/locallib.php');
-
-        $result = (object) [
-            'courseid' => 0,
-            'created' => 0,
-            'reused' => 0,
-            'errors' => [],
-            'credentials' => [],
-            'orderid' => 0,
-        ];
+        self::requires();
+        $result = self::result();
 
         if ($DB->record_exists('course', ['shortname' => $order->shortname])) {
             $result->errors[] = get_string('ordercourseexists', 'local_coursesoverview', s($order->shortname));
@@ -84,23 +75,124 @@ class provision {
         }
         $result->courseid = (int) $course->id;
 
-        $instance = self::silence_welcome((int) $course->id);
-        if (!$instance) {
-            $result->errors[] = get_string('ordernomanualenrol', 'local_coursesoverview');
+        $batch = self::batch($order->abnr, $order->delivery, $order->startdate);
+        if (!self::fill($course, $batch, $checks, $result)) {
             return $result;
         }
 
-        self::import_users($order, $course, $checks, $result);
+        $result->orderid = self::record_order($order, $course, $batch);
+        self::record_people($result->orderid, $checks, $batch);
+
+        return $result;
+    }
+
+    /**
+     * Add people reported late to an order that already has its course.
+     *
+     * They start on the order's start day, or today when that has passed, and
+     * their credentials go out however this report asks, which need not be
+     * the way the order went.
+     *
+     * @param stdClass $order the order as it is stored
+     * @param stdClass $course its course
+     * @param check[] $checks the lines, already checked and free of errors
+     * @param string $delivery one of the DELIVERY_ constants
+     * @return stdClass see result()
+     */
+    public static function add(stdClass $order, stdClass $course, array $checks, string $delivery): stdClass {
+        self::requires();
+        $result = self::result();
+        $result->courseid = (int) $course->id;
+        $result->orderid = (int) $order->id;
+
+        $start = max((int) $order->startdate, usergetmidnight(time()));
+        $batch = self::batch($order->abnr, $delivery, $start);
+        if (self::fill($course, $batch, $checks, $result)) {
+            self::record_people($result->orderid, $checks, $batch);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Load what the imports need.
+     */
+    protected static function requires(): void {
+        global $CFG;
+
+        require_once($CFG->libdir . '/csvlib.class.php');
+        require_once($CFG->libdir . '/enrollib.php');
+        require_once($CFG->dirroot . '/' . $CFG->admin . '/tool/uploaduser/locallib.php');
+    }
+
+    /**
+     * An empty account of what happened.
+     *
+     * @return stdClass courseid, orderid, created, reused, held and the day
+     *      they are sent, errors, and the credentials of a list
+     */
+    protected static function result(): stdClass {
+        return (object) [
+            'courseid' => 0,
+            'orderid' => 0,
+            'created' => 0,
+            'reused' => 0,
+            'held' => 0,
+            'senddate' => 0,
+            'errors' => [],
+            'credentials' => [],
+        ];
+    }
+
+    /**
+     * What the people handled in one go have in common.
+     *
+     * @param string $abnr
+     * @param string $delivery one of the DELIVERY_ constants
+     * @param int $start the day their enrolment begins
+     * @return stdClass
+     */
+    protected static function batch(string $abnr, string $delivery, int $start): stdClass {
+        return (object) [
+            'abnr' => $abnr,
+            'delivery' => $delivery,
+            'start' => $start,
+            // Mailed credentials for a later start wait for the task. Until
+            // then the account carries a password nobody is told.
+            'held' => $delivery === self::DELIVERY_DIRECT && $start > usergetmidnight(time()),
+        ];
+    }
+
+    /**
+     * Enrol a batch in a course, creating the accounts that are new.
+     *
+     * @param stdClass $course
+     * @param stdClass $batch
+     * @param check[] $checks
+     * @param stdClass $result
+     * @return bool false when the course cannot take anybody
+     */
+    protected static function fill(stdClass $course, stdClass $batch, array $checks, stdClass $result): bool {
+        $instance = self::silence_welcome((int) $course->id);
+        if (!$instance) {
+            $result->errors[] = get_string('ordernomanualenrol', 'local_coursesoverview');
+            return false;
+        }
+
+        self::import_users($course, $batch, $checks, $result);
 
         foreach ($checks as $check) {
             if ($check->reuse && $check->existing) {
-                self::enrol_existing($instance, $order, $check, $result);
+                self::enrol_existing($instance, $batch, $check, $result);
             }
         }
 
-        self::record($order, $course, $checks, $result);
+        if ($batch->held) {
+            $result->held = $result->created;
+            $result->senddate = $batch->start;
+        }
 
-        return $result;
+        return true;
     }
 
     /**
@@ -251,17 +343,38 @@ class provision {
     /**
      * Hand the new accounts to the user import.
      *
-     * @param stdClass $order
      * @param stdClass $course
+     * @param stdClass $batch
      * @param check[] $checks
      * @param stdClass $result
      */
-    protected static function import_users(stdClass $order, stdClass $course, array $checks, stdClass $result): void {
+    protected static function import_users(stdClass $course, stdClass $batch, array $checks, stdClass $result): void {
+        [$content, $passwords, $wanted] = self::user_file($course, $batch, $checks);
+        if (!$wanted) {
+            return;
+        }
+
+        self::run_import($content, $batch, $result);
+        self::collect($checks, $wanted, $passwords, $batch, $result);
+    }
+
+    /**
+     * The file the user import is fed with.
+     *
+     * @param stdClass $course
+     * @param stdClass $batch
+     * @param check[] $checks
+     * @return array the content, the passwords by user name, and the user names it holds
+     */
+    protected static function user_file(stdClass $course, stdClass $batch, array $checks): array {
         global $DB;
 
-        $withpassword = ($order->delivery === self::DELIVERY_LIST);
+        // A password goes into the file when the list hands it out, and when
+        // the mail is held back: without one, the import would have the
+        // credentials mailed the same night.
+        $withpassword = $batch->delivery === self::DELIVERY_LIST || $batch->held;
         $withabnr = $DB->record_exists('user_info_field', ['shortname' => self::PROFILE_FIELD]);
-        $start = date('Y-m-d', $order->startdate);
+        $start = date('Y-m-d', $batch->start);
 
         $columns = ['username', 'firstname', 'lastname', 'email'];
         if ($withpassword) {
@@ -294,25 +407,34 @@ class provision {
 
             // The participant side and the organiser side are two enrolments
             // in the same course, which is how somebody can be both.
-            $values[] = $person->is_participant() ? $course->shortname : '';
-            $values[] = $person->is_participant() ? self::ROLE_PARTICIPANT : '';
-            $values[] = $person->is_participant() ? $start : '';
-            $values[] = $person->is_organiser() ? $course->shortname : '';
-            $values[] = $person->is_organiser() ? self::ROLE_ORGANISER : '';
-            $values[] = $person->is_organiser() ? $start : '';
+            $participant = $person->is_participant();
+            $organiser = $person->is_organiser();
+            $values[] = $participant ? $course->shortname : '';
+            $values[] = $participant ? self::ROLE_PARTICIPANT : '';
+            $values[] = $participant ? $start : '';
+            $values[] = $organiser ? $course->shortname : '';
+            $values[] = $organiser ? self::ROLE_ORGANISER : '';
+            $values[] = $organiser ? $start : '';
 
             if ($withabnr) {
-                $values[] = $order->abnr;
+                $values[] = $batch->abnr;
             }
 
             $content .= self::csv_line($values);
             $wanted[] = $check->username;
         }
 
-        if (!$wanted) {
-            return;
-        }
+        return [$content, $passwords, $wanted];
+    }
 
+    /**
+     * Run the user import on a file.
+     *
+     * @param string $content
+     * @param stdClass $batch
+     * @param stdClass $result collects what the import calls an error
+     */
+    protected static function run_import(string $content, stdClass $batch, stdClass $result): void {
         $iid = \csv_import_reader::get_new_iid('uploaduser');
         $reader = new \csv_import_reader($iid, 'uploaduser');
         if (!$reader->load_csv_content($content, 'UTF-8', 'semicolon')) {
@@ -326,7 +448,7 @@ class provision {
         capture_tracker::reset();
         try {
             $process = new \tool_uploaduser\process($reader, capture_tracker::class);
-            $process->set_form_data(self::form_data($order));
+            $process->set_form_data(self::form_data($batch));
             $process->process();
         } catch (\Throwable $e) {
             $result->errors[] = $e->getMessage();
@@ -336,31 +458,50 @@ class provision {
         foreach (capture_tracker::errors() as $error) {
             $result->errors[] = $error;
         }
+    }
 
+    /**
+     * Find out what the import actually created.
+     *
+     * @param check[] $checks
+     * @param string[] $wanted the user names that were in the file
+     * @param array $passwords user name => password
+     * @param stdClass $batch
+     * @param stdClass $result
+     */
+    protected static function collect(
+        array $checks,
+        array $wanted,
+        array $passwords,
+        stdClass $batch,
+        stdClass $result
+    ): void {
         // What counts as created is what is in the database afterwards.
         $accounts = validator::accounts($wanted);
         $result->created = count($accounts);
 
         foreach ($checks as $check) {
-            if ($check->reuse || !isset($accounts[$check->username])) {
+            if ($check->reuse) {
                 continue;
             }
+            if (!isset($accounts[$check->username])) {
+                $result->errors[] = get_string('ordernotcreated', 'local_coursesoverview', s($check->username));
+                continue;
+            }
+
             $check->userid = (int) $accounts[$check->username]->id;
 
-            $result->credentials[] = (object) [
-                'name' => $check->person->name(),
-                'firstname' => $check->person->firstname,
-                'lastname' => $check->person->lastname,
-                'username' => $check->username,
-                'password' => $passwords[$check->username] ?? '',
-                'email' => $check->person->email,
-                'role' => $check->person->role,
-            ];
-        }
-
-        foreach ($checks as $check) {
-            if (!$check->reuse && !isset($accounts[$check->username])) {
-                $result->errors[] = get_string('ordernotcreated', 'local_coursesoverview', s($check->username));
+            // Only the list hands passwords out. A held one is never shown.
+            if ($batch->delivery === self::DELIVERY_LIST) {
+                $result->credentials[] = (object) [
+                    'name' => $check->person->name(),
+                    'firstname' => $check->person->firstname,
+                    'lastname' => $check->person->lastname,
+                    'username' => $check->username,
+                    'password' => $passwords[$check->username] ?? '',
+                    'email' => $check->person->email,
+                    'role' => $check->person->role,
+                ];
             }
         }
     }
@@ -368,11 +509,11 @@ class provision {
     /**
      * The settings the user import would otherwise take from its form.
      *
-     * @param stdClass $order
+     * @param stdClass $batch
      * @return stdClass
      */
-    protected static function form_data(stdClass $order): stdClass {
-        $direct = ($order->delivery === self::DELIVERY_DIRECT);
+    protected static function form_data(stdClass $batch): stdClass {
+        $mailnow = $batch->delivery === self::DELIVERY_DIRECT && !$batch->held;
 
         return (object) [
             // Existing accounts have been ruled out before this point, so
@@ -381,8 +522,8 @@ class provision {
             'uuupdatetype' => UU_UPDATE_NOCHANGES,
             // Without a password in the file the import hands the account to
             // the cron task that mails the credentials. With one it stores it
-            // quietly, which is what the list route needs.
-            'uupasswordnew' => $direct ? 1 : 0,
+            // quietly, which is what the list and a held mail need.
+            'uupasswordnew' => $mailnow ? 1 : 0,
             'uupasswordold' => 0,
             // The mailed route forces a new password at the first login by
             // itself. The list route deliberately does not, because the
@@ -406,20 +547,20 @@ class provision {
      * Enrol somebody who already has an account.
      *
      * @param stdClass $instance the manual enrolment instance
-     * @param stdClass $order
+     * @param stdClass $batch
      * @param check $check
      * @param stdClass $result
      */
-    protected static function enrol_existing(stdClass $instance, stdClass $order, check $check, stdClass $result): void {
+    protected static function enrol_existing(stdClass $instance, stdClass $batch, check $check, stdClass $result): void {
         $plugin = enrol_get_plugin('manual');
         $roles = self::role_ids();
         $check->userid = (int) $check->existing->id;
 
         if ($check->person->is_participant() && $roles[self::ROLE_PARTICIPANT]) {
-            $plugin->enrol_user($instance, $check->existing->id, $roles[self::ROLE_PARTICIPANT], $order->startdate);
+            $plugin->enrol_user($instance, $check->userid, $roles[self::ROLE_PARTICIPANT], $batch->start);
         }
         if ($check->person->is_organiser() && $roles[self::ROLE_ORGANISER]) {
-            $plugin->enrol_user($instance, $check->existing->id, $roles[self::ROLE_ORGANISER], $order->startdate);
+            $plugin->enrol_user($instance, $check->userid, $roles[self::ROLE_ORGANISER], $batch->start);
         }
 
         $result->reused++;
@@ -446,13 +587,15 @@ class provision {
      *
      * @param stdClass $order
      * @param stdClass $course
-     * @param check[] $checks
-     * @param stdClass $result
+     * @param stdClass $batch
+     * @return int the id of the order
      */
-    protected static function record(stdClass $order, stdClass $course, array $checks, stdClass $result): void {
+    protected static function record_order(stdClass $order, stdClass $course, stdClass $batch): int {
         global $DB, $USER;
 
-        $record = (object) [
+        $mailnow = $batch->delivery === self::DELIVERY_DIRECT && !$batch->held;
+
+        return (int) $DB->insert_record('local_coursesoverview_order', (object) [
             'courseid' => $course->id,
             'company' => $order->company,
             'abnr' => $order->abnr,
@@ -462,26 +605,39 @@ class provision {
             'enddate' => $order->enddate,
             'usernamescheme' => $order->scheme,
             'delivery' => $order->delivery,
-            // Nothing is held back yet, so the credentials are on their way
-            // as soon as the order is made.
-            'senddate' => 0,
-            'timesent' => ($order->delivery === self::DELIVERY_DIRECT) ? time() : 0,
+            'senddate' => $batch->held ? $batch->start : 0,
+            'timesent' => $mailnow ? time() : 0,
             'usercreated' => $USER->id,
             'timecreated' => time(),
-        ];
-        $result->orderid = $DB->insert_record('local_coursesoverview_order', $record);
+        ]);
+    }
+
+    /**
+     * Write down who belongs to an order, and when their credentials go out.
+     *
+     * @param int $orderid
+     * @param check[] $checks
+     * @param stdClass $batch
+     */
+    protected static function record_people(int $orderid, array $checks, stdClass $batch): void {
+        global $DB;
 
         foreach ($checks as $check) {
             if (!$check->userid) {
                 continue;
             }
 
+            // Somebody who keeps an existing account gets no credentials at all.
+            $mailed = $batch->delivery === self::DELIVERY_DIRECT && !$check->reuse;
+
             $DB->insert_record('local_coursesoverview_orderuser', (object) [
-                'orderid' => $result->orderid,
+                'orderid' => $orderid,
                 'userid' => $check->userid,
                 'role' => $check->person->role,
                 'reused' => $check->reuse ? 1 : 0,
-                'timesent' => $record->timesent,
+                'delivery' => $batch->delivery,
+                'senddate' => ($mailed && $batch->held) ? $batch->start : 0,
+                'timesent' => ($mailed && !$batch->held) ? time() : 0,
             ]);
         }
     }

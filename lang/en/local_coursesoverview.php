@@ -83,8 +83,17 @@ $string['notifyemails_desc'] = 'Addresses notified once every participant of a c
     . 'required, a shared mailbox will do.';
 $string['notifysubject'] = 'Course fully completed: {$a}';
 $string['orderabnr'] = 'Order number';
+$string['orderadd_help'] = 'Course, company, order number and user names come from the order. How the credentials of the people '
+    . 'reported late go out can be chosen anew.';
+$string['orderaddeddone'] = 'Reported late to "{$a->course}": {$a->created} accounts created, {$a->reused} existing accounts '
+    . 'enrolled.';
+$string['orderaddheading'] = 'Report participants late: {$a}';
+$string['orderaddpeople'] = 'Report participants late';
 $string['orderalreadyincourse'] = '{$a} is already enrolled in this course.';
 $string['orderback'] = 'Back';
+$string['orderbox'] = 'Order';
+$string['orderboxinfo'] = '{$a->company}, order number {$a->abnr}, created {$a->created}.';
+$string['orderboxwaiting'] = 'Credentials for {$a->count} people are waiting for {$a->date}.';
 $string['ordercheck'] = 'Check against Moodle';
 $string['ordercheck_help'] = 'Every line has now been held against the existing accounts. Lines in red stop the order. Roles can '
     . 'still be changed here, then update.';
@@ -125,10 +134,11 @@ $string['ordererrortemplate'] = 'No course with the short name "{$a}" exists, so
 $string['orderexists'] = 'User name "{$a->username}" already belongs to an account: {$a->name}, created {$a->created}.';
 $string['orderexistscourses'] = 'Enrolled in: {$a}.';
 $string['orderfullname'] = 'Full name';
-$string['orderfuturelater'] = 'A start in the future is not switched on yet, because the credentials would go out today. Set the '
-    . 'start to today or hand the order over later.';
 $string['ordergotocourse'] = 'Go to the course';
+$string['ordergotoparticipants'] = 'Go to the participant list';
 $string['orderhasheader'] = 'First line names the columns';
+$string['orderheld'] = 'The credentials for {$a->count} people go out on {$a->date}. Until then the course stays closed to them '
+    . 'and no mail is sent.';
 $string['orderinvalidemail'] = '"{$a}" is not an address.';
 $string['orderlist'] = 'Participant list';
 $string['orderlist_help'] = 'Paste the list as the customer sent it, one person per line.';
@@ -159,6 +169,10 @@ $string['orderpattern_desc'] = 'Placeholders: {module}, {company}, {abnr}, {shor
     . 'both.';
 $string['orderpeople'] = 'What was read';
 $string['orderpeoplecount'] = '{$a->total} people, {$a->flawed} of them with notes.';
+$string['orderrelease'] = 'Open now and send';
+$string['orderreleaseconfirm'] = 'The enrolments open at once and the credentials for {$a->count} people go out now instead of on '
+    . '{$a->date}. Continue?';
+$string['orderreleased'] = 'Course opened, {$a} credentials sent.';
 $string['orderreuse'] = 'Use the existing account and only enrol it';
 $string['orderreused'] = 'The existing account is used again and gets no new credentials.';
 $string['orderreusehint'] = 'Only an organiser may keep an existing account.';
@@ -175,6 +189,7 @@ $string['orderstartdate_help'] = 'A start in the future holds back the enrolment
 $string['orderstartpassword'] = 'Start password';
 $string['orderupdate'] = 'Update';
 $string['orderusername'] = 'User name';
+$string['orderwithoutcourse'] = 'The course of this order no longer exists, so nobody can be added to it.';
 $string['organiser'] = 'Organiser';
 $string['organisers'] = 'Organisers';
 $string['overview'] = 'Courses overview';
@@ -195,5 +210,6 @@ $string['statuspast'] = 'Finished';
 $string['statustodo'] = 'Needs attention';
 $string['statustosettle'] = 'Completed, not yet settled';
 $string['tasknotifycompleted'] = 'Notify about fully completed courses';
+$string['tasksendcredentials'] = 'Send credentials held back until the course starts';
 $string['totalparticipants'] = 'Total Participants';
 $string['withoutparticipants'] = 'Show courses without participants';
