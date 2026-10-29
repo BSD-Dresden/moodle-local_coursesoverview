@@ -56,7 +56,7 @@ class purge {
 
         $userids = array_keys($enrolled);
         $othercourses = self::other_enrolments($courseid, $userids);
-        $outsideroles = self::roles_outside($context, $userids);
+        $outsideroles = self::roles_outside($userids);
 
         $delete = [];
         $keep = [];
@@ -119,23 +119,23 @@ class purge {
      * A role in the system or a course category marks a staff account, which
      * has no business being removed along with a training course.
      *
-     * @param context_course $context
      * @param array $userids
      * @return array userid => number of role assignments outside the course
      */
-    protected static function roles_outside(context_course $context, array $userids): array {
+    protected static function roles_outside(array $userids): array {
         global $DB;
 
         [$insql, $params] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED, 'u');
-        $params['ctxid'] = $context->id;
-        $params['ctxpath'] = $context->path . '/%';
+        $params['system'] = CONTEXT_SYSTEM;
+        $params['coursecat'] = CONTEXT_COURSECAT;
 
+        // A role in another course is an enrolment there, which the other
+        // courses already account for with a better reason.
         $sql = "SELECT ra.userid, COUNT(ra.id) AS outsideroles
                   FROM {role_assignments} ra
                   JOIN {context} ctx ON ctx.id = ra.contextid
                  WHERE ra.userid {$insql}
-                   AND ctx.id <> :ctxid
-                   AND " . $DB->sql_like('ctx.path', ':ctxpath', true, true, true) . "
+                   AND ctx.contextlevel IN (:system, :coursecat)
               GROUP BY ra.userid";
 
         return $DB->get_records_sql_menu($sql, $params);
