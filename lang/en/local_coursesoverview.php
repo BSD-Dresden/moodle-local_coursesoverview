@@ -85,6 +85,7 @@ $string['notifysubject'] = 'Course fully completed: {$a}';
 $string['orderabnr'] = 'Order number';
 $string['orderadd_help'] = 'Course, company, order number and user names come from the order. How the credentials of the people '
     . 'reported late go out can be chosen anew.';
+$string['orderaddcreate'] = 'Create accounts and enrol';
 $string['orderaddeddone'] = 'Reported late to "{$a->course}": {$a->created} accounts created, {$a->reused} existing accounts '
     . 'enrolled.';
 $string['orderaddheading'] = 'Report participants late: {$a}';
@@ -244,6 +245,7 @@ $string['statusoverdue'] = 'Ended, not completed';
 $string['statuspast'] = 'Finished';
 $string['statustodo'] = 'Needs attention';
 $string['statustosettle'] = 'Completed, not yet settled';
+$string['statusupcoming'] = 'Starts later';
 $string['tasknotifycompleted'] = 'Notify about fully completed courses';
 $string['tasksendcredentials'] = 'Send the credentials of orders that are due';
 $string['totalparticipants'] = 'Total Participants';

@@ -153,7 +153,11 @@ foreach ($courses as $course) {
     // Number of users that show up in completion reports for this course.
     $totalparticipants = $completion->get_num_tracked_users();
 
-    if ($totalparticipants < 1 && !$withoutparticipants) {
+    // A course that starts later has nobody in it yet, because enrolments
+    // only begin on its start day. It is shown all the same, so that an
+    // order made for a later start does not vanish until then.
+    $upcoming = $course->visible && $course->startdate > $now;
+    if ($totalparticipants < 1 && !$withoutparticipants && !$upcoming) {
         continue;
     }
 

@@ -53,6 +53,7 @@ class helper {
             // Ended, but the completion rate is unknown: stated, not coloured.
             'past' => null,
             'active' => null,
+            'upcoming' => null,
         ];
     }
 
@@ -97,14 +98,16 @@ class helper {
      *
      * Hidden wins over everything: hiding a course is the manual marker for
      * "settled, may eventually be deleted", so it must never be nagged about.
-     * Everybody being done comes next, whether or not the course has ended:
+     * A course that starts later and has nobody in it yet is waiting for its
+     * people, whose enrolments only begin on its start day. Everybody being
+     * done comes next, whether or not the course has ended:
      * that is what makes a course ready to be settled. Courses without
      * completion tracking have no known rate and are never flagged.
      *
      * The counts are compared directly rather than via a rounded percentage,
      * so that 199 of 200 participants does not round up to "everybody done".
      *
-     * @param stdClass $course needs visible and enddate
+     * @param stdClass $course needs visible, startdate and enddate
      * @param int|null $completed participants that completed, null if unknown
      * @param int $total tracked participants
      * @param int $now
@@ -118,6 +121,10 @@ class helper {
     ): string {
         if ($course->visible == 0) {
             return 'hidden';
+        }
+
+        if ($total < 1 && $course->startdate > $now) {
+            return 'upcoming';
         }
 
         if ($completed !== null && $total > 0 && $completed >= $total) {
@@ -149,7 +156,7 @@ class helper {
      * @return array filter key => label
      */
     public static function filter_states(): array {
-        $states = ['todo', 'overdue', 'endingsoon', 'tosettle', 'active', 'past', 'hidden'];
+        $states = ['todo', 'overdue', 'endingsoon', 'tosettle', 'upcoming', 'active', 'past', 'hidden'];
 
         $options = [];
         foreach ($states as $state) {

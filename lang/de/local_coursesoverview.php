@@ -85,6 +85,7 @@ $string['notifysubject'] = 'Kurs vollständig abgeschlossen: {$a}';
 $string['orderabnr'] = 'AB-Nummer';
 $string['orderadd_help'] = 'Kurs, Firma, AB-Nummer und Benutzernamen kommen aus dem Auftrag. Wie die Zugangsdaten der '
     . 'Nachgemeldeten rausgehen, lässt sich neu wählen.';
+$string['orderaddcreate'] = 'Konten anlegen und einschreiben';
 $string['orderaddeddone'] = 'In „{$a->course}“ nachgemeldet: {$a->created} Konten neu, {$a->reused} vorhandene Konten '
     . 'eingeschrieben.';
 $string['orderaddheading'] = 'Teilnehmer nachmelden: {$a}';
@@ -246,6 +247,7 @@ $string['statusoverdue'] = 'Beendet, nicht abgeschlossen';
 $string['statuspast'] = 'Beendet';
 $string['statustodo'] = 'Handlungsbedarf';
 $string['statustosettle'] = 'Abgeschlossen, noch nicht abgerechnet';
+$string['statusupcoming'] = 'Beginnt später';
 $string['tasknotifycompleted'] = 'Meldung über vollständig abgeschlossene Kurse';
 $string['tasksendcredentials'] = 'Fällige Zugangsdaten aus Aufträgen verschicken';
 $string['totalparticipants'] = 'Gesamtteilnehmer';

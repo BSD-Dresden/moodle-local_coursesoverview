@@ -767,7 +767,9 @@ $form .= display::groups_line(array_column($checks, 'person'), [], $existinggrou
 $form .= output::start_tables() . display::checks_table($checks) . output::end_tables();
 
 $buttons = display::step_button(2, get_string('orderback', 'local_coursesoverview'), 'btn-secondary');
-$buttons .= display::step_button(4, get_string('ordercreate', 'local_coursesoverview'), 'btn-primary', $blocked);
+// A late report creates no course, only accounts.
+$createlabel = get_string($existing ? 'orderaddcreate' : 'ordercreate', 'local_coursesoverview');
+$buttons .= display::step_button(4, $createlabel, 'btn-primary', $blocked);
 $form .= html_writer::div($buttons, 'mt-3');
 
 echo html_writer::tag('form', $form, ['method' => 'post', 'action' => $pageurl->out(false)]);
