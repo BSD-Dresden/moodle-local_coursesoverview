@@ -288,7 +288,7 @@ class provision {
             $values = [$check->username, $person->firstname, $person->lastname, $person->email];
 
             if ($withpassword) {
-                $passwords[$check->username] = generate_password(10);
+                $passwords[$check->username] = self::password();
                 $values[] = $passwords[$check->username];
             }
 
@@ -484,6 +484,76 @@ class provision {
                 'timesent' => $record->timesent,
             ]);
         }
+    }
+
+    /**
+     * A password that can be read off a printed list.
+     *
+     * Moodle's own generator mixes punctuation into the filler as well, which
+     * gives passwords like "q9R,Mp;pov": a comma and a semicolon look like
+     * punctuation on paper, and l, 1, I, O and 0 are easily mistaken for each
+     * other. Here the alphabet leaves those out, punctuation is used only as
+     * often as the password policy demands, and the randomness comes from
+     * random_int() rather than str_shuffle().
+     *
+     * @return string
+     */
+    public static function password(): string {
+        global $CFG;
+
+        $sets = [
+            'upper' => 'ABCDEFGHJKLMNPQRSTUVWXYZ',
+            'lower' => 'abcdefghijkmnpqrstuvwxyz',
+            'digit' => '23456789',
+            'other' => '!?#+-',
+        ];
+
+        $policy = !empty($CFG->passwordpolicy);
+        $need = [
+            'upper' => max(1, $policy ? (int) $CFG->minpasswordupper : 0),
+            'lower' => max(1, $policy ? (int) $CFG->minpasswordlower : 0),
+            'digit' => max(1, $policy ? (int) $CFG->minpassworddigits : 0),
+            'other' => $policy ? (int) $CFG->minpasswordnonalphanum : 0,
+        ];
+        $length = max(10, $policy ? (int) $CFG->minpasswordlength : 0, array_sum($need));
+        $filler = $sets['upper'] . $sets['lower'] . $sets['digit'];
+
+        // The policy may know rules beyond the counts, so the result is
+        // checked against it, and Moodle's generator is the last resort.
+        for ($attempt = 0; $attempt < 10; $attempt++) {
+            $chars = [];
+            foreach ($need as $set => $count) {
+                for ($i = 0; $i < $count; $i++) {
+                    $chars[] = self::pick($sets[$set]);
+                }
+            }
+            while (count($chars) < $length) {
+                $chars[] = self::pick($filler);
+            }
+
+            for ($i = count($chars) - 1; $i > 0; $i--) {
+                $j = random_int(0, $i);
+                [$chars[$i], $chars[$j]] = [$chars[$j], $chars[$i]];
+            }
+
+            $password = implode('', $chars);
+            $errmsg = '';
+            if (check_password_policy($password, $errmsg)) {
+                return $password;
+            }
+        }
+
+        return generate_password($length);
+    }
+
+    /**
+     * One character out of a set, picked with a secure random number.
+     *
+     * @param string $set
+     * @return string
+     */
+    protected static function pick(string $set): string {
+        return $set[random_int(0, strlen($set) - 1)];
     }
 
     /**
