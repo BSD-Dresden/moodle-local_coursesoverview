@@ -515,10 +515,17 @@ if ($result) {
         );
         echo display::credentials_table($result->credentials);
     } else if ($result->held) {
-        $a = (object) ['count' => $result->held, 'date' => helper::format_date($result->senddate)];
+        $a = (object) [
+            'count' => $result->held,
+            'date' => helper::format_date($result->senddate),
+            'time' => userdate($result->senddate, '%H:%M'),
+        ];
         echo $OUTPUT->notification(get_string('orderheld', 'local_coursesoverview', $a), 'info');
     } else if ($delivery === provision::DELIVERY_DIRECT && $result->created) {
-        echo $OUTPUT->notification(get_string('orderdirectqueued', 'local_coursesoverview'), 'info');
+        echo $OUTPUT->notification(get_string('ordermailed', 'local_coursesoverview', $result->mailed), 'info');
+        if ($result->mailed < $result->created) {
+            echo $OUTPUT->notification(get_string('ordermailfailed', 'local_coursesoverview'), 'warning');
+        }
     }
 
     echo html_writer::link($courseurl, get_string('ordergotocourse', 'local_coursesoverview'), [

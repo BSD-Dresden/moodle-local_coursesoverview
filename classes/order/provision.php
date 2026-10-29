@@ -82,6 +82,7 @@ class provision {
 
         $result->orderid = self::record_order($order, $course, $batch);
         self::record_people($result->orderid, $checks, $batch);
+        self::mail_now($batch, $result);
 
         return $result;
     }
@@ -109,9 +110,24 @@ class provision {
         $batch = self::batch($order->abnr, $delivery, $start);
         if (self::fill($course, $batch, $checks, $result)) {
             self::record_people($result->orderid, $checks, $batch);
+            self::mail_now($batch, $result);
         }
 
         return $result;
+    }
+
+    /**
+     * Send the credentials that are not held back, straight away.
+     *
+     * A mail that fails stays due, and the hourly task tries it again.
+     *
+     * @param stdClass $batch
+     * @param stdClass $result
+     */
+    protected static function mail_now(stdClass $batch, stdClass $result): void {
+        if ($batch->delivery === self::DELIVERY_DIRECT && !$batch->held) {
+            $result->mailed = credentials::send_due(time(), $result->orderid);
+        }
     }
 
     /**
@@ -128,8 +144,8 @@ class provision {
     /**
      * An empty account of what happened.
      *
-     * @return stdClass courseid, orderid, created, reused, held and the day
-     *      they are sent, errors, and the credentials of a list
+     * @return stdClass courseid, orderid, created, reused, mailed, held and
+     *      when they are sent, errors, and the credentials of a list
      */
     protected static function result(): stdClass {
         return (object) [
@@ -137,6 +153,7 @@ class provision {
             'orderid' => 0,
             'created' => 0,
             'reused' => 0,
+            'mailed' => 0,
             'held' => 0,
             'senddate' => 0,
             'errors' => [],
@@ -153,13 +170,16 @@ class provision {
      * @return stdClass
      */
     protected static function batch(string $abnr, string $delivery, int $start): stdClass {
+        // Mailed credentials for a later start wait for the task, and go out
+        // on the morning of that day.
+        $held = $delivery === self::DELIVERY_DIRECT && $start > usergetmidnight(time());
+
         return (object) [
             'abnr' => $abnr,
             'delivery' => $delivery,
             'start' => $start,
-            // Mailed credentials for a later start wait for the task. Until
-            // then the account carries a password nobody is told.
-            'held' => $delivery === self::DELIVERY_DIRECT && $start > usergetmidnight(time()),
+            'held' => $held,
+            'senddate' => $held ? credentials::send_time($start) : time(),
         ];
     }
 
@@ -189,7 +209,7 @@ class provision {
 
         if ($batch->held) {
             $result->held = $result->created;
-            $result->senddate = $batch->start;
+            $result->senddate = $batch->senddate;
         }
 
         return true;
@@ -354,7 +374,7 @@ class provision {
             return;
         }
 
-        self::run_import($content, $batch, $result);
+        self::run_import($content, $result);
         self::collect($checks, $wanted, $passwords, $batch, $result);
     }
 
@@ -369,17 +389,13 @@ class provision {
     protected static function user_file(stdClass $course, stdClass $batch, array $checks): array {
         global $DB;
 
-        // A password goes into the file when the list hands it out, and when
-        // the mail is held back: without one, the import would have the
-        // credentials mailed the same night.
-        $withpassword = $batch->delivery === self::DELIVERY_LIST || $batch->held;
+        // Every account gets a password in the file. The list hands it out,
+        // a mailed one is replaced when our own mail goes out. Without one,
+        // the import would have Moodle mail its own text the same night.
         $withabnr = $DB->record_exists('user_info_field', ['shortname' => self::PROFILE_FIELD]);
         $start = date('Y-m-d', $batch->start);
 
-        $columns = ['username', 'firstname', 'lastname', 'email'];
-        if ($withpassword) {
-            $columns[] = 'password';
-        }
+        $columns = ['username', 'firstname', 'lastname', 'email', 'password'];
         $columns = array_merge($columns, [
             'course1', 'role1', 'enroltimestart1',
             'course2', 'role2', 'enroltimestart2',
@@ -398,12 +414,14 @@ class provision {
             }
 
             $person = $check->person;
-            $values = [$check->username, $person->firstname, $person->lastname, $person->email];
-
-            if ($withpassword) {
-                $passwords[$check->username] = self::password();
-                $values[] = $passwords[$check->username];
-            }
+            $passwords[$check->username] = self::password();
+            $values = [
+                $check->username,
+                $person->firstname,
+                $person->lastname,
+                $person->email,
+                $passwords[$check->username],
+            ];
 
             // The participant side and the organiser side are two enrolments
             // in the same course, which is how somebody can be both.
@@ -431,10 +449,9 @@ class provision {
      * Run the user import on a file.
      *
      * @param string $content
-     * @param stdClass $batch
      * @param stdClass $result collects what the import calls an error
      */
-    protected static function run_import(string $content, stdClass $batch, stdClass $result): void {
+    protected static function run_import(string $content, stdClass $result): void {
         $iid = \csv_import_reader::get_new_iid('uploaduser');
         $reader = new \csv_import_reader($iid, 'uploaduser');
         if (!$reader->load_csv_content($content, 'UTF-8', 'semicolon')) {
@@ -448,7 +465,7 @@ class provision {
         capture_tracker::reset();
         try {
             $process = new \tool_uploaduser\process($reader, capture_tracker::class);
-            $process->set_form_data(self::form_data($batch));
+            $process->set_form_data(self::form_data());
             $process->process();
         } catch (\Throwable $e) {
             $result->errors[] = $e->getMessage();
@@ -509,25 +526,21 @@ class provision {
     /**
      * The settings the user import would otherwise take from its form.
      *
-     * @param stdClass $batch
      * @return stdClass
      */
-    protected static function form_data(stdClass $batch): stdClass {
-        $mailnow = $batch->delivery === self::DELIVERY_DIRECT && !$batch->held;
-
+    protected static function form_data(): stdClass {
         return (object) [
             // Existing accounts have been ruled out before this point, so
             // skipping them here is a second net rather than a decision.
             'uutype' => UU_USER_ADDNEW,
             'uuupdatetype' => UU_UPDATE_NOCHANGES,
-            // Without a password in the file the import hands the account to
-            // the cron task that mails the credentials. With one it stores it
-            // quietly, which is what the list and a held mail need.
-            'uupasswordnew' => $mailnow ? 1 : 0,
+            // Every line carries its password, so the import never hands an
+            // account to Moodle's own mailing of new passwords.
+            'uupasswordnew' => 0,
             'uupasswordold' => 0,
-            // The mailed route forces a new password at the first login by
-            // itself. The list route deliberately does not, because the
-            // password on that list is what people are given to work with.
+            // A mailed password is forced to change when the mail goes out.
+            // The list deliberately does not, because the password on that
+            // list is what people are given to work with.
             'uuforcepasswordchange' => UU_PWRESET_NONE,
             'uuallowrenames' => 0,
             'uuallowdeletes' => 0,
@@ -593,7 +606,7 @@ class provision {
     protected static function record_order(stdClass $order, stdClass $course, stdClass $batch): int {
         global $DB, $USER;
 
-        $mailnow = $batch->delivery === self::DELIVERY_DIRECT && !$batch->held;
+        $mailed = $batch->delivery === self::DELIVERY_DIRECT;
 
         return (int) $DB->insert_record('local_coursesoverview_order', (object) [
             'courseid' => $course->id,
@@ -605,8 +618,9 @@ class provision {
             'enddate' => $order->enddate,
             'usernamescheme' => $order->scheme,
             'delivery' => $order->delivery,
-            'senddate' => $batch->held ? $batch->start : 0,
-            'timesent' => $mailnow ? time() : 0,
+            // Set once all of its mails have gone out.
+            'senddate' => $mailed ? $batch->senddate : 0,
+            'timesent' => 0,
             'usercreated' => $USER->id,
             'timecreated' => time(),
         ]);
@@ -636,8 +650,9 @@ class provision {
                 'role' => $check->person->role,
                 'reused' => $check->reuse ? 1 : 0,
                 'delivery' => $batch->delivery,
-                'senddate' => ($mailed && $batch->held) ? $batch->start : 0,
-                'timesent' => ($mailed && !$batch->held) ? time() : 0,
+                // Due now or on the start morning, and sent by credentials.
+                'senddate' => $mailed ? $batch->senddate : 0,
+                'timesent' => 0,
             ]);
         }
     }

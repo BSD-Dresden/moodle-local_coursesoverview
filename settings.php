@@ -83,5 +83,35 @@ if ($hassiteconfig) {
         PARAM_INT
     ));
 
+    $settings->add(new admin_setting_heading(
+        'local_coursesoverview/ordermailheading',
+        get_string('ordermailheading', 'local_coursesoverview'),
+        ''
+    ));
+
+    // The minutes live under their own name in the same plugin.
+    $settings->add(new admin_setting_configtime(
+        'local_coursesoverview/ordersendhour',
+        'ordersendminute',
+        get_string('ordersendtime', 'local_coursesoverview'),
+        get_string('ordersendtime_desc', 'local_coursesoverview'),
+        ['h' => 7, 'm' => 0]
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'local_coursesoverview/ordermailsubject',
+        get_string('ordermailsubject', 'local_coursesoverview'),
+        get_string('ordermailsubject_desc', 'local_coursesoverview'),
+        get_string('ordermailsubject_default', 'local_coursesoverview'),
+        PARAM_TEXT
+    ));
+
+    $settings->add(new admin_setting_confightmleditor(
+        'local_coursesoverview/ordermailbody',
+        get_string('ordermailbody', 'local_coursesoverview'),
+        get_string('ordermailbody_desc', 'local_coursesoverview'),
+        get_string('ordermailbody_default', 'local_coursesoverview')
+    ));
+
     $ADMIN->add('courses', $settings);
 }

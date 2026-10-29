@@ -93,7 +93,7 @@ $string['orderalreadyincourse'] = '{$a} is already enrolled in this course.';
 $string['orderback'] = 'Back';
 $string['orderbox'] = 'Order';
 $string['orderboxinfo'] = '{$a->company}, order number {$a->abnr}, created {$a->created}.';
-$string['orderboxwaiting'] = 'Credentials for {$a->count} people are waiting for {$a->date}.';
+$string['orderboxwaiting'] = 'Credentials for {$a->count} people are waiting for {$a->date}, {$a->time}.';
 $string['ordercheck'] = 'Check against Moodle';
 $string['ordercheck_help'] = 'Every line has now been held against the existing accounts. Lines in red stop the order. Roles can '
     . 'still be changed here, then update.';
@@ -116,7 +116,6 @@ $string['orderdelivery_help'] = 'Whether the credentials go to the addresses in 
     . 'free choice, also when several people share one address.';
 $string['orderdeliverydirect'] = 'Send to the participants';
 $string['orderdeliverylist'] = 'Hand back as a list';
-$string['orderdirectqueued'] = 'The credentials go out with the next run of the scheduled task that mails new passwords.';
 $string['orderdone'] = 'Course "{$a->course}" created, {$a->created} accounts created, {$a->reused} existing accounts enrolled.';
 $string['orderdownload'] = 'Download credentials as Excel';
 $string['orderduplicateemail'] = 'This address appears {$a} times in the list.';
@@ -137,13 +136,30 @@ $string['orderfullname'] = 'Full name';
 $string['ordergotocourse'] = 'Go to the course';
 $string['ordergotoparticipants'] = 'Go to the participant list';
 $string['orderhasheader'] = 'First line names the columns';
-$string['orderheld'] = 'The credentials for {$a->count} people go out on {$a->date}. Until then the course stays closed to them '
-    . 'and no mail is sent.';
+$string['orderheld'] = 'The credentials for {$a->count} people go out on {$a->date} at {$a->time}. Until then no mail is sent, and '
+    . 'the course only opens for them on its start day.';
 $string['orderinvalidemail'] = '"{$a}" is not an address.';
 $string['orderlist'] = 'Participant list';
 $string['orderlist_help'] = 'Paste the list as the customer sent it, one person per line.';
 $string['orderlistready'] = 'The passwords below are shown only now and are not stored. Download the list before leaving this '
     . 'page.';
+$string['ordermailbody'] = 'Text';
+$string['ordermailbody_default'] = '<p>Dear {firstname} {lastname},</p><p>{company} has registered you for the online instruction '
+    . '<strong>{module}</strong> on {sitename}. It is available to you from now until <strong>{enddate}</strong>.</p><p>Your '
+    . 'credentials:<br>User name: <strong>{username}</strong><br>Password: <strong>{password}</strong></p><p>This link takes you '
+    . 'straight to the instruction: {link}<br>When you log in for the first time you will be asked to choose a password of your '
+    . 'own.</p><p>Please complete all learning units and part tests by {enddate}. You do not have to do everything in one go, what '
+    . 'you have completed is kept.</p><p>If you have any questions, contact us at {supportemail}.</p><p>Kind '
+    . 'regards<br>{sitename}</p>';
+$string['ordermailbody_desc'] = 'Placeholders: {firstname}, {lastname}, {username}, {password}, {course}, {module}, {company}, '
+    . '{startdate}, {enddate}, {link}, {sitename}, {supportemail}. {link} leads straight into the course, {supportemail} is the '
+    . 'support address from the site settings. A signature of your own belongs in this text as well.';
+$string['ordermailed'] = '{$a} mails with credentials sent.';
+$string['ordermailfailed'] = 'Not every mail went out. The hourly run tries them again.';
+$string['ordermailheading'] = 'Mail with the credentials';
+$string['ordermailsubject'] = 'Subject';
+$string['ordermailsubject_default'] = 'Your credentials for the online instruction {module}';
+$string['ordermailsubject_desc'] = 'The same placeholders as in the text.';
 $string['ordermailtaken'] = '{$a} other accounts already use this address.';
 $string['ordermailtakenone'] = 'One other account already uses this address.';
 $string['ordermissingemail'] = 'Address missing.';
@@ -171,7 +187,7 @@ $string['orderpeople'] = 'What was read';
 $string['orderpeoplecount'] = '{$a->total} people, {$a->flawed} of them with notes.';
 $string['orderrelease'] = 'Open now and send';
 $string['orderreleaseconfirm'] = 'The enrolments open at once and the credentials for {$a->count} people go out now instead of on '
-    . '{$a->date}. Continue?';
+    . '{$a->date} at {$a->time}. Continue?';
 $string['orderreleased'] = 'Course opened, {$a} credentials sent.';
 $string['orderreuse'] = 'Use the existing account and only enrol it';
 $string['orderreused'] = 'The existing account is used again and gets no new credentials.';
@@ -183,6 +199,9 @@ $string['orderscheme_help'] = 'The address is the simpler choice, but it only wo
     . 'needs firstname.lastname.';
 $string['orderschemeemail'] = 'Email address';
 $string['orderschemename'] = 'firstname.lastname';
+$string['ordersendtime'] = 'Send time';
+$string['ordersendtime_desc'] = 'When a course starts later, its credentials go out at this time on the start day, more precisely '
+    . 'with the first hourly run after it. The course itself opens at midnight.';
 $string['ordershortname'] = 'Course short name';
 $string['orderstartdate'] = 'Course start';
 $string['orderstartdate_help'] = 'A start in the future holds back the enrolment, and the credentials with it.';
@@ -210,6 +229,6 @@ $string['statuspast'] = 'Finished';
 $string['statustodo'] = 'Needs attention';
 $string['statustosettle'] = 'Completed, not yet settled';
 $string['tasknotifycompleted'] = 'Notify about fully completed courses';
-$string['tasksendcredentials'] = 'Send credentials held back until the course starts';
+$string['tasksendcredentials'] = 'Send the credentials of orders that are due';
 $string['totalparticipants'] = 'Total Participants';
 $string['withoutparticipants'] = 'Show courses without participants';

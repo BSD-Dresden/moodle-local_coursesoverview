@@ -316,7 +316,11 @@ class display {
         $buttons = '';
         [$people, $senddate] = credentials::waiting((int) $order->id);
         if ($people) {
-            $a = (object) ['count' => $people, 'date' => helper::format_date($senddate)];
+            $a = (object) [
+                'count' => $people,
+                'date' => helper::format_date($senddate),
+                'time' => userdate($senddate, '%H:%M'),
+            ];
             $out .= html_writer::tag('p', get_string('orderboxwaiting', 'local_coursesoverview', $a));
 
             $url = new moodle_url('/local/coursesoverview/order.php', [

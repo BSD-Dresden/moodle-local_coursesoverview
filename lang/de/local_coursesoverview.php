@@ -93,7 +93,7 @@ $string['orderalreadyincourse'] = '{$a} ist bereits in diesem Kurs eingeschriebe
 $string['orderback'] = 'Zurück';
 $string['orderbox'] = 'Auftrag';
 $string['orderboxinfo'] = '{$a->company}, AB {$a->abnr}, angelegt am {$a->created}.';
-$string['orderboxwaiting'] = 'Zugangsdaten für {$a->count} Personen warten auf den {$a->date}.';
+$string['orderboxwaiting'] = 'Zugangsdaten für {$a->count} Personen warten auf den {$a->date}, {$a->time} Uhr.';
 $string['ordercheck'] = 'Gegen Moodle prüfen';
 $string['ordercheck_help'] = 'Jede Zeile ist jetzt mit den vorhandenen Konten abgeglichen. Rote Zeilen halten den Auftrag auf. '
     . 'Rollen lassen sich hier noch ändern, danach aktualisieren.';
@@ -117,8 +117,6 @@ $string['orderdelivery_help'] = 'Ob die Zugangsdaten an die Adressen aus der Lis
     . 'zurückkommen. Frei wählbar, auch wenn sich mehrere Personen eine Adresse teilen.';
 $string['orderdeliverydirect'] = 'An die Teilnehmer senden';
 $string['orderdeliverylist'] = 'Als Liste zurückgeben';
-$string['orderdirectqueued'] = 'Die Zugangsdaten gehen mit dem nächsten Lauf der geplanten Aufgabe raus, die neue Passwörter '
-    . 'verschickt.';
 $string['orderdone'] = 'Kurs „{$a->course}“ angelegt, {$a->created} Konten neu, {$a->reused} vorhandene Konten eingeschrieben.';
 $string['orderdownload'] = 'Zugangsdaten als Excel herunterladen';
 $string['orderduplicateemail'] = 'Diese Adresse steht {$a}-mal in der Liste.';
@@ -139,13 +137,31 @@ $string['orderfullname'] = 'Vollständiger Name';
 $string['ordergotocourse'] = 'Zum Kurs';
 $string['ordergotoparticipants'] = 'Zur Teilnehmerliste';
 $string['orderhasheader'] = 'Erste Zeile benennt die Spalten';
-$string['orderheld'] = 'Die Zugangsdaten für {$a->count} Personen gehen am {$a->date} raus. Bis dahin bleibt der Kurs für sie zu, '
-    . 'und es geht keine Mail raus.';
+$string['orderheld'] = 'Die Zugangsdaten für {$a->count} Personen gehen am {$a->date} um {$a->time} Uhr raus. Bis dahin geht keine '
+    . 'Mail raus, und der Kurs öffnet für sie erst am Kursbeginn.';
 $string['orderinvalidemail'] = '„{$a}“ ist keine Adresse.';
 $string['orderlist'] = 'Teilnehmerliste';
 $string['orderlist_help'] = 'Fügen Sie die Liste so ein, wie der Kunde sie geschickt hat, eine Person je Zeile.';
 $string['orderlistready'] = 'Die Passwörter unten werden nur jetzt angezeigt und nirgends gespeichert. Laden Sie die Liste '
     . 'herunter, bevor Sie die Seite verlassen.';
+$string['ordermailbody'] = 'Text';
+$string['ordermailbody_default'] = '<p>Guten Tag {firstname} {lastname},</p><p>{company} hat Sie zur Online-Unterweisung '
+    . '<strong>{module}</strong> auf {sitename} angemeldet. Die Unterweisung steht Ihnen ab sofort bis zum '
+    . '<strong>{enddate}</strong> zur Verfügung.</p><p>Ihre Zugangsdaten:<br>Benutzername: '
+    . '<strong>{username}</strong><br>Passwort: <strong>{password}</strong></p><p>Hier geht es direkt zur Unterweisung: '
+    . '{link}<br>Beim ersten Anmelden werden Sie gebeten, ein eigenes Passwort zu vergeben.</p><p>Bitte bearbeiten Sie alle '
+    . 'Lerninhalte und Teilprüfungen bis zum {enddate}. Sie müssen nicht alles an einem Stück erledigen, bereits abgeschlossene '
+    . 'Inhalte bleiben erhalten.</p><p>Bei Fragen erreichen Sie uns unter {supportemail}.</p><p>Mit freundlichen '
+    . 'Grüßen<br>{sitename}</p>';
+$string['ordermailbody_desc'] = 'Platzhalter: {firstname}, {lastname}, {username}, {password}, {course}, {module}, {company}, '
+    . '{startdate}, {enddate}, {link}, {sitename}, {supportemail}. {link} führt direkt in den Kurs, {supportemail} ist die '
+    . 'Support-Adresse aus den Website-Einstellungen. Eine eigene Signatur gehört mit in diesen Text.';
+$string['ordermailed'] = '{$a} Mails mit Zugangsdaten verschickt.';
+$string['ordermailfailed'] = 'Nicht jede Mail ging raus. Der stündliche Versand versucht es erneut.';
+$string['ordermailheading'] = 'Mail mit den Zugangsdaten';
+$string['ordermailsubject'] = 'Betreff';
+$string['ordermailsubject_default'] = 'Ihre Zugangsdaten zur Online-Unterweisung {module}';
+$string['ordermailsubject_desc'] = 'Dieselben Platzhalter wie im Text.';
 $string['ordermailtaken'] = 'Diese Adresse nutzen bereits {$a} andere Konten.';
 $string['ordermailtakenone'] = 'Diese Adresse nutzt bereits ein anderes Konto.';
 $string['ordermissingemail'] = 'Adresse fehlt.';
@@ -173,7 +189,7 @@ $string['orderpeople'] = 'Was gelesen wurde';
 $string['orderpeoplecount'] = '{$a->total} Personen, davon {$a->flawed} mit Hinweisen.';
 $string['orderrelease'] = 'Jetzt freischalten und senden';
 $string['orderreleaseconfirm'] = 'Die Einschreibungen öffnen sofort, und die Zugangsdaten für {$a->count} Personen gehen jetzt '
-    . 'raus statt am {$a->date}. Fortfahren?';
+    . 'raus statt am {$a->date} um {$a->time} Uhr. Fortfahren?';
 $string['orderreleased'] = 'Kurs freigeschaltet, {$a} Zugangsdaten verschickt.';
 $string['orderreuse'] = 'Vorhandenes Konto verwenden und nur einschreiben';
 $string['orderreused'] = 'Das vorhandene Konto wird weiterverwendet und bekommt keine neuen Zugangsdaten.';
@@ -185,6 +201,9 @@ $string['orderscheme_help'] = 'Die Adresse ist der einfachere Weg, geht aber nur
     . 'deshalb vorname.nachname.';
 $string['orderschemeemail'] = 'E-Mail-Adresse';
 $string['orderschemename'] = 'vorname.nachname';
+$string['ordersendtime'] = 'Versanduhrzeit';
+$string['ordersendtime_desc'] = 'Bei einem Kursbeginn in der Zukunft gehen die Zugangsdaten am Starttag zu dieser Uhrzeit raus, '
+    . 'genauer beim ersten stündlichen Lauf danach. Der Kurs selbst öffnet schon um 0 Uhr.';
 $string['ordershortname'] = 'Kurzname des Kurses';
 $string['orderstartdate'] = 'Kursbeginn';
 $string['orderstartdate_help'] = 'Ein Beginn in der Zukunft hält die Einschreibung zurück und die Zugangsdaten mit ihr.';
@@ -212,6 +231,6 @@ $string['statuspast'] = 'Beendet';
 $string['statustodo'] = 'Handlungsbedarf';
 $string['statustosettle'] = 'Abgeschlossen, noch nicht abgerechnet';
 $string['tasknotifycompleted'] = 'Meldung über vollständig abgeschlossene Kurse';
-$string['tasksendcredentials'] = 'Zurückgehaltene Zugangsdaten zum Kursbeginn verschicken';
+$string['tasksendcredentials'] = 'Fällige Zugangsdaten aus Aufträgen verschicken';
 $string['totalparticipants'] = 'Gesamtteilnehmer';
 $string['withoutparticipants'] = 'Kurse ohne Teilnehmer anzeigen';
