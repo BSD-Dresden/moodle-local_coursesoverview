@@ -41,6 +41,7 @@ class validator {
      * @param array $roles role per index, as the form posted it
      * @param array $reuse indexes whose existing account may be used again
      * @param int $courseid the course of an order that people are added to, zero for a new one
+     * @param emailpattern|null $pattern how the customer's addresses are built, if that is known
      * @return check[]
      */
     public static function run(
@@ -48,7 +49,8 @@ class validator {
         string $scheme,
         array $roles = [],
         array $reuse = [],
-        int $courseid = 0
+        int $courseid = 0,
+        ?emailpattern $pattern = null
     ): array {
         $checks = [];
         $usernames = [];
@@ -85,8 +87,42 @@ class validator {
 
         self::flag_duplicates($checks, $usernames, $emails, $scheme);
         self::flag_existing($checks, array_keys($usernames), array_keys($emails), $reuse, $courseid);
+        if ($pattern) {
+            self::flag_pattern($checks, $pattern, $emails);
+        }
 
         return $checks;
+    }
+
+    /**
+     * Mark the addresses that do not look the way the customer's addresses do.
+     *
+     * @param check[] $checks keyed by index, modified in place
+     * @param emailpattern $pattern
+     * @param array $emails address => list of indexes
+     */
+    protected static function flag_pattern(array $checks, emailpattern $pattern, array $emails): void {
+        foreach ($checks as $check) {
+            $person = $check->person;
+
+            // A missing name or a broken address has been reported already.
+            if ($person->problems()) {
+                continue;
+            }
+
+            // A wrong domain is said as such, it is the likelier slip.
+            $domain = substr($person->email, strrpos($person->email, '@') + 1);
+            if (!$pattern->domain_matches($domain)) {
+                $check->warnings[] = get_string('orderpatterndomain', 'local_coursesoverview', s($pattern->domain()));
+                continue;
+            }
+
+            // A mailbox several people share cannot carry all of their names.
+            $shared = count($emails[$person->email] ?? []) > 1;
+            if (!$shared && !$pattern->matches($person)) {
+                $check->warnings[] = get_string('orderpatternmismatch', 'local_coursesoverview', s($pattern->example($person)));
+            }
+        }
     }
 
     /**

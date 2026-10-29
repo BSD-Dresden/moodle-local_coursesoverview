@@ -121,6 +121,11 @@ $string['orderdownload'] = 'Download credentials as Excel';
 $string['orderduplicateemail'] = 'This address appears {$a} times in the list.';
 $string['orderduplicateusername'] = 'User name "{$a}" appears more than once in this list.';
 $string['orderduplicateusernamehint'] = 'For a shared address choose firstname.lastname as user names.';
+$string['orderemailpattern'] = 'Address pattern';
+$string['orderemailpattern_help'] = 'Optional. How the customer\'s addresses are built, for example '
+    . 'firstname.lastname@customer.com. Understood are firstname and lastname (or vorname and nachname), f and l for the initials '
+    . 'and * for anything; just the domain checks only the domain. Umlauts may be written either way. Addresses that do not fit '
+    . 'are marked in the check but do not stop the order.';
 $string['orderenddate'] = 'Course end';
 $string['ordererrorabnr'] = 'The order number is missing.';
 $string['ordererrorcategory'] = 'Module "{$a}" has no category, and its template course does not supply one either.';
@@ -135,6 +140,12 @@ $string['orderexistscourses'] = 'Enrolled in: {$a}.';
 $string['orderfullname'] = 'Full name';
 $string['ordergotocourse'] = 'Go to the course';
 $string['ordergotoparticipants'] = 'Go to the participant list';
+$string['ordergroupentry'] = '{$a->name} ({$a->count})';
+$string['ordergroupexisting'] = '{$a->name} ({$a->count}, already in the course)';
+$string['ordergroupfailed'] = '{$a} could not be put into their group.';
+$string['ordergroupheads'] = 'Lines without an address are group headings';
+$string['ordergroupsdone'] = '{$a->members} people put into {$a->groups} groups.';
+$string['ordergroupsline'] = 'Groups: {$a}';
 $string['orderhasheader'] = 'First line names the columns';
 $string['orderheld'] = 'The credentials for {$a->count} people go out on {$a->date} at {$a->time}. Until then no mail is sent, and '
     . 'the course only opens for them on its start day.';
@@ -183,6 +194,11 @@ $string['ordernousername'] = 'No user name can be made from this line.';
 $string['orderpattern'] = 'Pattern for the full course name';
 $string['orderpattern_desc'] = 'Placeholders: {module}, {company}, {abnr}, {shortname}. Leave empty to use the short name for '
     . 'both.';
+$string['orderpatterncount'] = '{$a->flagged} of {$a->total} addresses do not fit the pattern {$a->pattern}.';
+$string['orderpatterndomain'] = 'The domain does not fit the address pattern, expected @{$a}.';
+$string['orderpatternguess'] = 'Most addresses in the list follow {$a->pattern} ({$a->hits} of {$a->total}).';
+$string['orderpatternmismatch'] = 'Does not fit the address pattern, expected something like {$a}.';
+$string['orderpatternuse'] = 'Check against it';
 $string['orderpeople'] = 'What was read';
 $string['orderpeoplecount'] = '{$a->total} people, {$a->flawed} of them with notes.';
 $string['orderrelease'] = 'Open now and send';

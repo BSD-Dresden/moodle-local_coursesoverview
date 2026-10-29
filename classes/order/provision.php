@@ -16,6 +16,7 @@
 
 namespace local_coursesoverview\order;
 
+use core_text;
 use stdClass;
 
 /**
@@ -53,7 +54,8 @@ class provision {
     /**
      * Create the course, the accounts and the enrolments of a new order.
      *
-     * @param stdClass $order company, abnr, module, shortname, fullname, startdate, enddate, scheme, delivery
+     * @param stdClass $order company, abnr, module, shortname, fullname, startdate, enddate, scheme, delivery,
+     *      emailpattern
      * @param module $module
      * @param check[] $checks the lines, already checked and free of errors
      * @return stdClass see result()
@@ -145,7 +147,8 @@ class provision {
      * An empty account of what happened.
      *
      * @return stdClass courseid, orderid, created, reused, mailed, held and
-     *      when they are sent, errors, and the credentials of a list
+     *      when they are sent, groups used and people put into them, errors,
+     *      and the credentials of a list
      */
     protected static function result(): stdClass {
         return (object) [
@@ -156,6 +159,8 @@ class provision {
             'mailed' => 0,
             'held' => 0,
             'senddate' => 0,
+            'groups' => 0,
+            'grouped' => 0,
             'errors' => [],
             'credentials' => [],
         ];
@@ -206,6 +211,8 @@ class provision {
                 self::enrol_existing($instance, $batch, $check, $result);
             }
         }
+
+        self::assign_groups($course, $checks, $result);
 
         if ($batch->held) {
             $result->held = $result->created;
@@ -518,9 +525,54 @@ class provision {
                     'password' => $passwords[$check->username] ?? '',
                     'email' => $check->person->email,
                     'role' => $check->person->role,
+                    'group' => $check->person->group,
                 ];
             }
         }
+    }
+
+    /**
+     * Put everybody into the group the list gave them.
+     *
+     * Groups are matched by name regardless of case, so that people reported
+     * late join the group of the same name rather than a second one, and a
+     * group the template already brings along is used as it is.
+     *
+     * @param stdClass $course
+     * @param check[] $checks
+     * @param stdClass $result
+     */
+    protected static function assign_groups(stdClass $course, array $checks, stdClass $result): void {
+        global $CFG;
+
+        require_once($CFG->dirroot . '/group/lib.php');
+
+        $ids = [];
+        foreach (groups_get_all_groups($course->id) as $group) {
+            $ids[core_text::strtolower($group->name)] = (int) $group->id;
+        }
+
+        $used = [];
+        foreach ($checks as $check) {
+            $name = $check->person->group;
+            if ($name === '' || !$check->userid) {
+                continue;
+            }
+
+            $key = core_text::strtolower($name);
+            if (!isset($ids[$key])) {
+                $ids[$key] = (int) groups_create_group((object) ['courseid' => $course->id, 'name' => $name]);
+            }
+            $used[$key] = true;
+
+            if (groups_add_member($ids[$key], $check->userid)) {
+                $result->grouped++;
+            } else {
+                $result->errors[] = get_string('ordergroupfailed', 'local_coursesoverview', $check->person->name());
+            }
+        }
+
+        $result->groups = count($used);
     }
 
     /**
@@ -618,6 +670,7 @@ class provision {
             'enddate' => $order->enddate,
             'usernamescheme' => $order->scheme,
             'delivery' => $order->delivery,
+            'emailpattern' => $order->emailpattern,
             // Set once all of its mails have gone out.
             'senddate' => $mailed ? $batch->senddate : 0,
             'timesent' => 0,

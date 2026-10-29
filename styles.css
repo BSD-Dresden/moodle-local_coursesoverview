@@ -89,6 +89,11 @@
     background-color: #f5c6cb !important;
 }
 
+#coursesoverview-tables tbody tr.coursesoverview-warning td,
+#coursesoverview-tables tbody tr.coursesoverview-warning:hover td {
+    background-color: #fff3cd !important;
+}
+
 /* stylelint-enable declaration-no-important */
 
 /* Legend swatches. */

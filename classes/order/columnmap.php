@@ -54,6 +54,9 @@ class columnmap {
     /** @var string */
     const ROLE = 'role';
 
+    /** @var string the course group a person goes into */
+    const GROUP = 'group';
+
     /**
      * The column meanings as a select menu.
      *
@@ -69,6 +72,7 @@ class columnmap {
             self::EMAIL => get_string('colemail', 'local_coursesoverview'),
             self::NAMEMAIL => get_string('colnamemail', 'local_coursesoverview'),
             self::ROLE => get_string('colrole', 'local_coursesoverview'),
+            self::GROUP => get_string('group'),
         ];
     }
 
@@ -92,6 +96,9 @@ class columnmap {
         $titles = [
             self::EMAIL => '/mail|adresse|address/u',
             self::ROLE => '/rolle|role|funktion|function/u',
+            // Whole words only, so that a group heading such as "Gruppe 1"
+            // at the top of a list is not mistaken for a row of titles.
+            self::GROUP => '/^(gruppe|group|team|abteilung|department|bereich|standort)$/u',
             self::FIRSTNAME => '/vorname|firstname|first name|given/u',
             self::LASTNAME => '/nachname|familienname|lastname|last name|surname|^name$/u',
             self::FULLNAME => '/^(voller|full|ganzer) name$|teilnehmer|participant|person/u',
@@ -111,16 +118,24 @@ class columnmap {
      *
      * @param array[] $rows as returned by parser::rows()
      * @param bool $hasheader whether the first row names the columns
+     * @param array $headings row number => group name, rows that hold no person
      * @return array column index => type
      */
-    public static function suggest(array $rows, bool $hasheader): array {
+    public static function suggest(array $rows, bool $hasheader, array $headings = []): array {
         if (!$rows) {
             return [];
         }
 
         $width = count($rows[0]);
         $map = array_fill(0, $width, self::IGNORE);
-        $data = $hasheader ? array_slice($rows, 1) : $rows;
+
+        $data = [];
+        foreach ($rows as $index => $cells) {
+            if (($hasheader && $index === 0) || isset($headings[$index + 1])) {
+                continue;
+            }
+            $data[] = $cells;
+        }
 
         // A title beats anything the content might suggest.
         if ($hasheader) {
@@ -205,11 +220,13 @@ class columnmap {
      * @param array[] $rows as returned by parser::rows()
      * @param array $map column index => type
      * @param bool $hasheader whether the first row names the columns
+     * @param array $headings row number => group name, as parser::group_headings() finds them
      * @return participant[]
      */
-    public static function apply(array $rows, array $map, bool $hasheader): array {
+    public static function apply(array $rows, array $map, bool $hasheader, array $headings = []): array {
         $people = [];
         $number = 0;
+        $heading = '';
 
         foreach ($rows as $index => $cells) {
             $number++;
@@ -217,7 +234,14 @@ class columnmap {
                 continue;
             }
 
+            // Everybody below a heading belongs to it, until the next one.
+            if (isset($headings[$number])) {
+                $heading = $headings[$number];
+                continue;
+            }
+
             $person = new participant($number);
+            $person->group = $heading;
             $role = '';
 
             foreach ($cells as $column => $cell) {
@@ -243,6 +267,12 @@ class columnmap {
                         break;
                     case self::ROLE:
                         $role = $cell;
+                        break;
+                    case self::GROUP:
+                        // A group of its own in the row beats the heading above it.
+                        if ($cell !== '') {
+                            $person->group = core_text::substr($cell, 0, 254);
+                        }
                         break;
                 }
             }

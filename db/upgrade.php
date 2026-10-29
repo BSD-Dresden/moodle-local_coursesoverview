@@ -124,5 +124,17 @@ function xmldb_local_coursesoverview_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026102901, 'local', 'coursesoverview');
     }
 
+    if ($oldversion < 2026102903) {
+        // The customer's address pattern, so that a late report is checked
+        // against the same one.
+        $table = new xmldb_table('local_coursesoverview_order');
+        $field = new xmldb_field('emailpattern', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, '', 'delivery');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_plugin_savepoint(true, 2026102903, 'local', 'coursesoverview');
+    }
+
     return true;
 }

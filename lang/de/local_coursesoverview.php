@@ -122,6 +122,11 @@ $string['orderdownload'] = 'Zugangsdaten als Excel herunterladen';
 $string['orderduplicateemail'] = 'Diese Adresse steht {$a}-mal in der Liste.';
 $string['orderduplicateusername'] = 'Benutzername „{$a}“ kommt in dieser Liste mehrfach vor.';
 $string['orderduplicateusernamehint'] = 'Bei geteilten Adressen als Benutzernamen vorname.nachname wählen.';
+$string['orderemailpattern'] = 'Adressschema';
+$string['orderemailpattern_help'] = 'Optional. Wie der Kunde seine Adressen bildet, zum Beispiel vorname.nachname@kunde.de. '
+    . 'Verstanden werden vorname und nachname, v und n für die Anfangsbuchstaben und * für Beliebiges; nur die Domain prüft nur '
+    . 'die Domain. Umlaute dürfen als ae oder a geschrieben sein. Abweichende Adressen werden in der Prüfung markiert, halten den '
+    . 'Auftrag aber nicht auf.';
 $string['orderenddate'] = 'Kursende';
 $string['ordererrorabnr'] = 'Die AB-Nummer fehlt.';
 $string['ordererrorcategory'] = 'Für das Modul „{$a}“ ist kein Kursbereich hinterlegt, und der Vorlagenkurs liefert auch keinen.';
@@ -136,6 +141,12 @@ $string['orderexistscourses'] = 'Eingeschrieben in: {$a}.';
 $string['orderfullname'] = 'Vollständiger Name';
 $string['ordergotocourse'] = 'Zum Kurs';
 $string['ordergotoparticipants'] = 'Zur Teilnehmerliste';
+$string['ordergroupentry'] = '{$a->name} ({$a->count})';
+$string['ordergroupexisting'] = '{$a->name} ({$a->count}, schon im Kurs)';
+$string['ordergroupfailed'] = '{$a} konnte nicht in die Gruppe eingetragen werden.';
+$string['ordergroupheads'] = 'Zeilen ohne Adresse sind Gruppenüberschriften';
+$string['ordergroupsdone'] = '{$a->members} Personen auf {$a->groups} Gruppen verteilt.';
+$string['ordergroupsline'] = 'Gruppen: {$a}';
 $string['orderhasheader'] = 'Erste Zeile benennt die Spalten';
 $string['orderheld'] = 'Die Zugangsdaten für {$a->count} Personen gehen am {$a->date} um {$a->time} Uhr raus. Bis dahin geht keine '
     . 'Mail raus, und der Kurs öffnet für sie erst am Kursbeginn.';
@@ -185,6 +196,11 @@ $string['ordernousername'] = 'Aus dieser Zeile lässt sich kein Benutzername bil
 $string['orderpattern'] = 'Muster für den vollständigen Kursnamen';
 $string['orderpattern_desc'] = 'Platzhalter: {module}, {company}, {abnr}, {shortname}. Leer lassen, wenn der Kurzname für beides '
     . 'reichen soll.';
+$string['orderpatterncount'] = '{$a->flagged} von {$a->total} Adressen passen nicht zum Schema {$a->pattern}.';
+$string['orderpatterndomain'] = 'Die Domain passt nicht zum Adressschema, erwartet @{$a}.';
+$string['orderpatternguess'] = 'Die meisten Adressen der Liste folgen dem Schema {$a->pattern} ({$a->hits} von {$a->total}).';
+$string['orderpatternmismatch'] = 'Passt nicht zum Adressschema, erwartet etwa {$a}.';
+$string['orderpatternuse'] = 'Damit prüfen';
 $string['orderpeople'] = 'Was gelesen wurde';
 $string['orderpeoplecount'] = '{$a->total} Personen, davon {$a->flawed} mit Hinweisen.';
 $string['orderrelease'] = 'Jetzt freischalten und senden';

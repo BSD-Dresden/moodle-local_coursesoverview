@@ -16,6 +16,8 @@
 
 namespace local_coursesoverview\order;
 
+use core_text;
+
 /**
  * Turn a pasted participant list into rows and columns.
  *
@@ -83,6 +85,8 @@ class parser {
      * A tab wins outright, because nothing else puts one in a pasted list.
      * After that the candidate has to appear on every line, otherwise it is
      * punctuation inside a field rather than a separator between fields.
+     * Only the lines with an address count when there are any, because a
+     * group heading or a title on its own has nothing to separate.
      *
      * @param string $text
      * @return string one of the constants, never AUTO
@@ -91,6 +95,13 @@ class parser {
         $lines = self::lines($text);
         if (!$lines) {
             return self::TAB;
+        }
+
+        $people = array_filter($lines, function ($line) {
+            return strpos($line, '@') !== false;
+        });
+        if ($people) {
+            $lines = $people;
         }
 
         foreach ([self::TAB => "\t", self::SEMICOLON => ';', self::COMMA => ','] as $key => $character) {
@@ -173,6 +184,70 @@ class parser {
         }
 
         return false;
+    }
+
+    /**
+     * Whether a row is the heading of a group rather than a person.
+     *
+     * Some customers sort their list under headings, one line with the name
+     * of a department and the people below it. Such a line has a single
+     * filled cell and no address.
+     *
+     * @param string[] $cells one row as returned by rows()
+     * @return bool
+     */
+    public static function is_group_heading(array $cells): bool {
+        $filled = array_filter($cells, function ($cell) {
+            return $cell !== '';
+        });
+
+        return count($filled) === 1 && strpos(reset($filled), '@') === false;
+    }
+
+    /**
+     * The group a heading row names.
+     *
+     * @param string[] $cells one row for which is_group_heading() holds
+     * @return string
+     */
+    public static function group_name(array $cells): string {
+        $name = trim(implode('', $cells), " \t:");
+
+        // As long as the database takes it.
+        return core_text::substr($name, 0, 254);
+    }
+
+    /**
+     * The group headings of a list, by row number.
+     *
+     * Only a list that has addresses can have headings, otherwise every row
+     * of a list of names would be one.
+     *
+     * @param array[] $rows as returned by rows()
+     * @param bool $hasheader whether the first row names the columns
+     * @return array row number counted from one => group name
+     */
+    public static function group_headings(array $rows, bool $hasheader): array {
+        $addresses = false;
+        foreach ($rows as $cells) {
+            if (strpos(implode('', $cells), '@') !== false) {
+                $addresses = true;
+                break;
+            }
+        }
+        if (!$addresses) {
+            return [];
+        }
+
+        $headings = [];
+        foreach ($rows as $index => $cells) {
+            if (($hasheader && $index === 0) || !self::is_group_heading($cells)) {
+                continue;
+            }
+            $headings[$index + 1] = self::group_name($cells);
+        }
+
+        return $headings;
     }
 
     /**

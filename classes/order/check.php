@@ -51,6 +51,9 @@ class check {
     /** @var string[] what stops the order */
     public $errors = [];
 
+    /** @var string[] what looks wrong but may be right, such as an odd address */
+    public $warnings = [];
+
     /** @var string[] what is merely worth knowing */
     public $notes = [];
 

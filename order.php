@@ -34,6 +34,7 @@ use local_coursesoverview\helper;
 use local_coursesoverview\order\columnmap;
 use local_coursesoverview\order\credentials;
 use local_coursesoverview\order\display;
+use local_coursesoverview\order\emailpattern;
 use local_coursesoverview\order\module;
 use local_coursesoverview\order\parser;
 use local_coursesoverview\order\participant;
@@ -56,15 +57,22 @@ $enddate = optional_param('enddate', '', PARAM_TEXT);
 $scheme = optional_param('scheme', validator::SCHEME_EMAIL, PARAM_ALPHA);
 $delivery = optional_param('delivery', '', PARAM_ALPHA);
 
+// How the customer's addresses are built. Missing rather than empty means
+// a late report that takes it over from its order.
+$emailpattern = optional_param('emailpattern', null, PARAM_TEXT);
+$useguess = optional_param('useguess', 0, PARAM_BOOL);
+
 // The pasted list and how it is cut up.
 $list = optional_param('list', '', PARAM_RAW);
 $delimiter = optional_param('delimiter', parser::AUTO, PARAM_ALPHA);
 $hasheader = optional_param('hasheader', -1, PARAM_INT);
+$groupheads = optional_param('groupheads', -1, PARAM_INT);
 $map = optional_param_array('map', [], PARAM_ALPHA);
 
 // What the posted mapping was built from, so that a changed shape is noticed.
 $lastdelimiter = optional_param('lastdelimiter', '', PARAM_ALPHA);
 $lastheader = optional_param('lastheader', -1, PARAM_INT);
+$lastgroupheads = optional_param('lastgroupheads', -1, PARAM_INT);
 
 // The choices made per line in step three.
 $roles = optional_param_array('role', [], PARAM_ALPHA);
@@ -101,6 +109,7 @@ if ($action === 'credentials') {
     }
 
     $rolenames = participant::roles();
+    $grouped = display::has_groups($stored->credentials);
     $columns = [
         get_string('orderusername', 'local_coursesoverview'),
         get_string('orderstartpassword', 'local_coursesoverview'),
@@ -110,21 +119,25 @@ if ($action === 'credentials') {
         get_string('course'),
         get_string('role'),
     ];
+    if ($grouped) {
+        $columns[] = get_string('group');
+    }
 
     $rows = [];
     foreach ($stored->credentials as $entry) {
-        $rows[] = [
-            'values' => [
-                $entry->username,
-                $entry->password,
-                $entry->firstname,
-                $entry->lastname,
-                $entry->email,
-                $stored->shortname,
-                $rolenames[$entry->role] ?? $entry->role,
-            ],
-            'bgcolor' => null,
+        $values = [
+            $entry->username,
+            $entry->password,
+            $entry->firstname,
+            $entry->lastname,
+            $entry->email,
+            $stored->shortname,
+            $rolenames[$entry->role] ?? $entry->role,
         ];
+        if ($grouped) {
+            $values[] = $entry->group ?? '';
+        }
+        $rows[] = ['values' => $values, 'bgcolor' => null];
     }
 
     export::download(
@@ -165,6 +178,9 @@ if ($orderid) {
     if ($delivery === '') {
         $delivery = $existing->delivery;
     }
+    if ($emailpattern === null) {
+        $emailpattern = $existing->emailpattern;
+    }
     $startdate = date('Y-m-d', $course->startdate);
     $enddate = date('Y-m-d', $course->enddate);
 }
@@ -172,6 +188,7 @@ if ($orderid) {
 if (!array_key_exists($scheme, $schemes)) {
     $scheme = validator::SCHEME_EMAIL;
 }
+$emailpattern = trim((string) $emailpattern);
 if (!array_key_exists($delivery, $deliveries)) {
     $delivery = provision::DELIVERY_DIRECT;
 }
@@ -233,9 +250,11 @@ if ($step >= 2) {
 }
 
 $rows = [];
+$headings = [];
 $people = [];
 $checks = [];
 $blockers = [];
+$guess = null;
 
 if ($step >= 2) {
     $rows = parser::rows($list, $delimiter);
@@ -245,13 +264,23 @@ if ($step >= 2) {
         $hasheader = parser::looks_like_header($rows) ? 1 : 0;
     }
 
-    // A changed separator or header line makes the posted mapping meaningless.
-    $reshaped = ($lastdelimiter !== $delimiter) || ($lastheader !== $hasheader);
-    if ($reshaped || count($map) !== $width) {
-        $map = columnmap::suggest($rows, (bool) $hasheader);
+    // Groups are only ever read from a list that has headings, and the box
+    // in step two turns that off for a list that merely looks like it.
+    $headings = parser::group_headings($rows, (bool) $hasheader);
+    if ($groupheads < 0) {
+        $groupheads = $headings ? 1 : 0;
+    }
+    if (!$groupheads) {
+        $headings = [];
     }
 
-    $people = columnmap::apply($rows, $map, (bool) $hasheader);
+    // A changed separator or header line makes the posted mapping meaningless.
+    $reshaped = ($lastdelimiter !== $delimiter) || ($lastheader !== $hasheader) || ($lastgroupheads !== $groupheads);
+    if ($reshaped || count($map) !== $width) {
+        $map = columnmap::suggest($rows, (bool) $hasheader, $headings);
+    }
+
+    $people = columnmap::apply($rows, $map, (bool) $hasheader, $headings);
 
     if ($step >= 3 && (!columnmap::complete($map) || !$people)) {
         $step = 2;
@@ -267,7 +296,15 @@ if ($step >= 2 && $existing) {
 }
 
 if ($step >= 3) {
-    $checks = validator::run($people, $scheme, $roles, $reuse, $existing ? (int) $course->id : 0);
+    $guess = emailpattern::guess($people);
+    if ($useguess && $guess) {
+        $emailpattern = $guess->pattern;
+    }
+}
+$pattern = emailpattern::parse($emailpattern);
+
+if ($step >= 3) {
+    $checks = validator::run($people, $scheme, $roles, $reuse, $existing ? (int) $course->id : 0, $pattern);
 
     if (!$existing && $DB->record_exists('course', ['shortname' => $shortname])) {
         $blockers[] = get_string('ordercourseexists', 'local_coursesoverview', s($shortname));
@@ -287,6 +324,12 @@ if ($step >= 4) {
         $step = 3;
     } else if ($existing) {
         $result = provision::add($existing, $course, $checks, $delivery);
+
+        // The next late report of the same customer starts from this pattern.
+        $patterntext = $pattern ? $pattern->text() : '';
+        if ($patterntext !== $existing->emailpattern) {
+            $DB->set_field('local_coursesoverview_order', 'emailpattern', $patterntext, ['id' => $existing->id]);
+        }
     } else {
         $order = (object) [
             'company' => $company,
@@ -298,6 +341,7 @@ if ($step >= 4) {
             'enddate' => $endtime,
             'scheme' => $scheme,
             'delivery' => $delivery,
+            'emailpattern' => $pattern ? $pattern->text() : '',
         ];
 
         $result = provision::run($order, $module, $checks);
@@ -343,6 +387,7 @@ $carried = [
     'enddate' => $enddate,
     'scheme' => $scheme,
     'delivery' => $delivery,
+    'emailpattern' => $emailpattern,
     'list' => $list,
 ];
 
@@ -443,6 +488,21 @@ if ($step < 2) {
     );
 
     $form .= $field(
+        get_string('orderemailpattern', 'local_coursesoverview'),
+        html_writer::empty_tag('input', [
+            'type' => 'text',
+            'name' => 'emailpattern',
+            'id' => 'coursesoverview-emailpattern',
+            'value' => $emailpattern,
+            'size' => 40,
+            'class' => 'form-control',
+            'spellcheck' => 'false',
+        ]),
+        'coursesoverview-emailpattern',
+        get_string('orderemailpattern_help', 'local_coursesoverview')
+    );
+
+    $form .= $field(
         get_string('orderlist', 'local_coursesoverview'),
         html_writer::tag('textarea', s($list), [
             'name' => 'list',
@@ -471,6 +531,9 @@ $summary = [
     get_string('orderscheme', 'local_coursesoverview') => $schemes[$scheme],
     get_string('orderdelivery', 'local_coursesoverview') => $deliveries[$delivery],
 ];
+if ($pattern) {
+    $summary[get_string('orderemailpattern', 'local_coursesoverview')] = $pattern->text();
+}
 
 if ($result) {
     // Step four: what was created.
@@ -488,6 +551,10 @@ if ($result) {
 
     foreach ($result->errors as $error) {
         echo $OUTPUT->notification(s($error), 'warning');
+    }
+    if ($result->grouped) {
+        $a = (object) ['members' => $result->grouped, 'groups' => $result->groups];
+        echo $OUTPUT->notification(get_string('ordergroupsdone', 'local_coursesoverview', $a), 'info');
     }
 
     echo display::summary($summary);
@@ -546,7 +613,11 @@ if ($step === 2) {
     echo $OUTPUT->heading(get_string('ordercolumns', 'local_coursesoverview'), 3);
     echo html_writer::tag('p', get_string('ordercolumns_help', 'local_coursesoverview'));
 
-    $form = display::hidden($carried + ['lastdelimiter' => $delimiter, 'lastheader' => $hasheader]);
+    $form = display::hidden($carried + [
+        'lastdelimiter' => $delimiter,
+        'lastheader' => $hasheader,
+        'lastgroupheads' => $groupheads,
+    ]);
 
     $shape = display::step_button(2, get_string('orderupdate', 'local_coursesoverview'), 'btn-secondary');
     $shape .= html_writer::label(get_string('orderdelimiter', 'local_coursesoverview'), 'coursesoverview-delimiter', true, [
@@ -567,10 +638,19 @@ if ($step === 2) {
         get_string('orderhasheader', 'local_coursesoverview'),
         ['id' => 'coursesoverview-hasheader', 'class' => 'mr-2 me-2']
     );
+
+    $shape .= html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'groupheads', 'value' => 0]);
+    $shape .= html_writer::checkbox(
+        'groupheads',
+        1,
+        (bool) $groupheads,
+        get_string('ordergroupheads', 'local_coursesoverview'),
+        ['id' => 'coursesoverview-groupheads', 'class' => 'ml-3 ms-3 mr-2 me-2']
+    );
     $form .= html_writer::div($shape, 'mb-3');
 
     if ($rows) {
-        $form .= display::columns_table($rows, $map, (bool) $hasheader);
+        $form .= display::columns_table($rows, $map, (bool) $hasheader, $headings);
     } else {
         $form .= $OUTPUT->notification(get_string('ordernolines', 'local_coursesoverview'), 'error');
     }
@@ -589,6 +669,7 @@ if ($step === 2) {
         }
         $counts = (object) ['total' => count($people), 'flawed' => $flawed];
         $form .= html_writer::tag('p', get_string('orderpeoplecount', 'local_coursesoverview', $counts));
+        $form .= display::groups_line($people, array_values($headings));
         $form .= output::start_tables() . display::people_table($people) . output::end_tables();
     } else {
         $form .= $OUTPUT->notification(get_string('ordernopeople', 'local_coursesoverview'), 'warning');
@@ -615,16 +696,50 @@ foreach ($blockers as $blocker) {
 $carried += [
     'delimiter' => $delimiter,
     'hasheader' => $hasheader,
+    'groupheads' => $groupheads,
     'lastdelimiter' => $delimiter,
     'lastheader' => $hasheader,
+    'lastgroupheads' => $groupheads,
     'map' => $map,
 ];
 
+// The pattern can be changed right here, where its effect is seen.
+unset($carried['emailpattern']);
 $form = display::hidden($carried);
-$form .= html_writer::div(
-    display::step_button(3, get_string('orderupdate', 'local_coursesoverview'), 'btn-secondary'),
-    'mb-3'
+
+$patternrow = html_writer::label(
+    get_string('orderemailpattern', 'local_coursesoverview'),
+    'coursesoverview-emailpattern',
+    true,
+    ['class' => 'mr-2 me-2']
 );
+$patternrow .= html_writer::empty_tag('input', [
+    'type' => 'text',
+    'name' => 'emailpattern',
+    'id' => 'coursesoverview-emailpattern',
+    'value' => $emailpattern,
+    'size' => 40,
+    'class' => 'form-control d-inline-block w-auto mr-2 me-2',
+    'spellcheck' => 'false',
+]);
+$patternrow .= display::step_button(3, get_string('orderupdate', 'local_coursesoverview'), 'btn-secondary');
+$form .= html_writer::div($patternrow, 'mb-2');
+
+if ($guess && !$pattern) {
+    // The button posts the whole form, only to a URL that asks for the guess.
+    $useurl = new moodle_url($pageurl, ['useguess' => 1]);
+    $usebutton = html_writer::tag('button', get_string('orderpatternuse', 'local_coursesoverview'), [
+        'type' => 'submit',
+        'name' => 'step',
+        'value' => 3,
+        'formaction' => $useurl->out(false),
+        'class' => 'btn btn-link p-0 align-baseline',
+    ]);
+    $a = (object) ['pattern' => s($guess->pattern), 'hits' => $guess->hits, 'total' => $guess->total];
+    $form .= html_writer::tag('p', get_string('orderpatternguess', 'local_coursesoverview', $a) . ' ' . $usebutton, [
+        'class' => 'text-muted',
+    ]);
+}
 
 $stopped = 0;
 foreach ($checks as $check) {
@@ -634,6 +749,20 @@ foreach ($checks as $check) {
 }
 $counts = (object) ['total' => count($checks), 'blocked' => $stopped];
 $form .= html_writer::tag('p', get_string('ordercheckcount', 'local_coursesoverview', $counts));
+
+if ($pattern) {
+    $flagged = 0;
+    foreach ($checks as $check) {
+        if ($check->warnings) {
+            $flagged++;
+        }
+    }
+    $a = (object) ['flagged' => $flagged, 'total' => count($checks), 'pattern' => s($pattern->text())];
+    $form .= html_writer::tag('p', get_string('orderpatterncount', 'local_coursesoverview', $a));
+}
+
+$existinggroups = $existing ? array_column(groups_get_all_groups($course->id), 'name') : [];
+$form .= display::groups_line(array_column($checks, 'person'), [], $existinggroups);
 
 $form .= output::start_tables() . display::checks_table($checks) . output::end_tables();
 

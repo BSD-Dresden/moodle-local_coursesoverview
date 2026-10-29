@@ -16,6 +16,7 @@
 
 namespace local_coursesoverview\order;
 
+use core_text;
 use html_table;
 use html_table_row;
 use html_writer;
@@ -107,9 +108,10 @@ class display {
      * @param array[] $rows as returned by parser::rows()
      * @param array $map column index => type
      * @param bool $hasheader whether the first row names the columns
+     * @param array $headings row number => group name
      * @return string
      */
-    public static function columns_table(array $rows, array $map, bool $hasheader): string {
+    public static function columns_table(array $rows, array $map, bool $hasheader, array $headings = []): string {
         $width = count($rows[0]);
 
         $table = new html_table();
@@ -136,6 +138,8 @@ class display {
             // Set apart, so that it does not read as the first person.
             if ($hasheader && $number === 0) {
                 $row->attributes['class'] = 'text-muted font-italic fst-italic';
+            } else if (isset($headings[$number + 1])) {
+                $row->attributes['class'] = 'font-weight-bold fw-bold';
             }
 
             $table->data[] = $row;
@@ -152,6 +156,7 @@ class display {
      */
     public static function people_table(array $people): string {
         $roles = participant::roles();
+        $grouped = self::has_groups($people);
 
         $table = new html_table();
         $table->attributes['class'] = 'generaltable';
@@ -161,20 +166,28 @@ class display {
             get_string('lastname'),
             get_string('email'),
             get_string('role'),
-            get_string('ordernotes', 'local_coursesoverview'),
         ];
+        if ($grouped) {
+            $table->head[] = get_string('group');
+        }
+        $table->head[] = get_string('ordernotes', 'local_coursesoverview');
 
         foreach ($people as $person) {
             $problems = $person->problems();
 
-            $row = new html_table_row([
+            $cells = [
                 $person->rownumber,
                 s($person->firstname),
                 s($person->lastname),
                 s($person->email),
                 $roles[$person->role],
-                implode(' ', $problems),
-            ]);
+            ];
+            if ($grouped) {
+                $cells[] = s($person->group);
+            }
+            $cells[] = implode(' ', $problems);
+
+            $row = new html_table_row($cells);
             if ($problems) {
                 $row->attributes['class'] = 'coursesoverview-problem';
             }
@@ -192,6 +205,8 @@ class display {
      * @return string
      */
     public static function checks_table(array $checks): string {
+        $grouped = self::has_groups(array_column($checks, 'person'));
+
         $table = new html_table();
         $table->attributes['class'] = 'generaltable';
         $table->head = [
@@ -201,8 +216,11 @@ class display {
             get_string('lastname'),
             get_string('email'),
             get_string('role'),
-            get_string('ordernotes', 'local_coursesoverview'),
         ];
+        if ($grouped) {
+            $table->head[] = get_string('group');
+        }
+        $table->head[] = get_string('ordernotes', 'local_coursesoverview');
 
         foreach ($checks as $check) {
             $person = $check->person;
@@ -218,6 +236,9 @@ class display {
             $notes = [];
             foreach ($check->errors as $error) {
                 $notes[] = html_writer::div($error, 'text-danger');
+            }
+            foreach ($check->warnings as $warning) {
+                $notes[] = html_writer::div($warning);
             }
             foreach ($check->notes as $note) {
                 $notes[] = html_writer::div($note, 'text-muted');
@@ -237,17 +258,24 @@ class display {
                 $notes[] = html_writer::div($box, 'mt-1');
             }
 
-            $row = new html_table_row([
+            $cells = [
                 $person->rownumber,
                 s($check->username),
                 s($person->firstname),
                 s($person->lastname),
                 s($person->email),
                 $role,
-                implode('', $notes),
-            ]);
+            ];
+            if ($grouped) {
+                $cells[] = s($person->group);
+            }
+            $cells[] = implode('', $notes);
+
+            $row = new html_table_row($cells);
             if ($check->blocked()) {
                 $row->attributes['class'] = 'coursesoverview-problem';
+            } else if ($check->warnings) {
+                $row->attributes['class'] = 'coursesoverview-warning';
             }
 
             $table->data[] = $row;
@@ -264,6 +292,7 @@ class display {
      */
     public static function credentials_table(array $credentials): string {
         $roles = participant::roles();
+        $grouped = self::has_groups($credentials);
 
         $table = new html_table();
         $table->attributes['class'] = 'generaltable';
@@ -274,18 +303,74 @@ class display {
             get_string('email'),
             get_string('role'),
         ];
+        if ($grouped) {
+            $table->head[] = get_string('group');
+        }
 
         foreach ($credentials as $entry) {
-            $table->data[] = [
+            $cells = [
                 s($entry->username),
                 html_writer::tag('code', s($entry->password)),
                 s($entry->name),
                 s($entry->email),
                 $roles[$entry->role] ?? s($entry->role),
             ];
+            if ($grouped) {
+                $cells[] = s($entry->group);
+            }
+            $table->data[] = $cells;
         }
 
         return html_writer::table($table);
+    }
+
+    /**
+     * Whether anybody in a list has a group, which is when groups are shown at all.
+     *
+     * @param object[] $entries people or credentials, anything with a group
+     * @return bool
+     */
+    public static function has_groups(array $entries): bool {
+        foreach ($entries as $entry) {
+            if (($entry->group ?? '') !== '') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * The groups of a list with how many people go into each.
+     *
+     * A heading nobody follows shows up with nought, which is the sign of a
+     * person without an address read as a heading.
+     *
+     * @param participant[] $people
+     * @param string[] $headings group names from headings, people or not
+     * @param string[] $existing group names the course already has
+     * @return string nothing when the list has no groups
+     */
+    public static function groups_line(array $people, array $headings = [], array $existing = []): string {
+        $counts = array_fill_keys($headings, 0);
+        foreach ($people as $person) {
+            if ($person->group !== '') {
+                $counts[$person->group] = ($counts[$person->group] ?? 0) + 1;
+            }
+        }
+        if (!$counts) {
+            return '';
+        }
+
+        $known = array_map([core_text::class, 'strtolower'], $existing);
+        $entries = [];
+        foreach ($counts as $name => $count) {
+            $a = (object) ['name' => s($name), 'count' => $count];
+            $exists = in_array(core_text::strtolower((string) $name), $known, true);
+            $entries[] = get_string($exists ?'ordergroupexisting' : 'ordergroupentry', 'local_coursesoverview', $a);
+        }
+
+        return html_writer::tag('p', get_string('ordergroupsline', 'local_coursesoverview', implode(', ', $entries)));
     }
 
     /**

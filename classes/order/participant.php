@@ -53,6 +53,9 @@ class participant {
     /** @var string one of the ROLE_ constants */
     public $role = self::ROLE_PARTICIPANT;
 
+    /** @var string the course group this person goes into, empty for none */
+    public $group = '';
+
     /**
      * Start an empty person for one line of the list.
      *
