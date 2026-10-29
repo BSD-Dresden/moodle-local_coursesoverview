@@ -202,7 +202,9 @@ class credentials {
      * Start an order now rather than on its day.
      *
      * Credentials for a course that is still closed would only cause calls,
-     * so the enrolments of the order are opened at the same time.
+     * so the enrolments of the order are opened at the same time. The order
+     * itself starts today from then on, so that people reported later are
+     * let in straight away as well.
      *
      * @param stdClass $order
      * @return int how many credentials went out
@@ -211,6 +213,11 @@ class credentials {
         global $DB;
 
         $now = time();
+        if ($order->startdate > $now) {
+            // Start days are midnights everywhere else, and a time of day
+            // here would make a late report look like a later start.
+            $DB->set_field('local_coursesoverview_order', 'startdate', usergetmidnight($now), ['id' => $order->id]);
+        }
         $plugin = enrol_get_plugin('manual');
         $instance = $DB->get_record('enrol', ['courseid' => $order->courseid, 'enrol' => 'manual'], '*', IGNORE_MULTIPLE);
 

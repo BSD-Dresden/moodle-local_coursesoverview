@@ -106,7 +106,7 @@ class provision {
         $result->courseid = (int) $course->id;
         $result->orderid = (int) $order->id;
 
-        $start = max((int) $order->startdate, usergetmidnight(time()));
+        $start = max(usergetmidnight((int) $order->startdate), usergetmidnight(time()));
         $batch = self::batch($order->abnr, $delivery, $start);
         if (self::fill($course, $batch, $checks, $result)) {
             self::record_people($result->orderid, $checks, $batch);
