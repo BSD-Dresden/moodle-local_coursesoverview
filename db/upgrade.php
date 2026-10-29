@@ -79,5 +79,18 @@ function xmldb_local_coursesoverview_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026102800, 'local', 'coursesoverview');
     }
 
+    if ($oldversion < 2026102900) {
+        // Courses deleted before the observer existed left their orders
+        // pointing at nothing.
+        $DB->execute(
+            "UPDATE {local_coursesoverview_order}
+                SET courseid = NULL
+              WHERE courseid IS NOT NULL
+                    AND NOT EXISTS (SELECT 1 FROM {course} c WHERE c.id = {local_coursesoverview_order}.courseid)"
+        );
+
+        upgrade_plugin_savepoint(true, 2026102900, 'local', 'coursesoverview');
+    }
+
     return true;
 }
