@@ -47,12 +47,14 @@ $string['coursesoverview:view'] = 'Kursübersicht sehen';
 $string['deletechecked'] = 'Ich habe die Liste geprüft';
 $string['deleteconfirm'] = 'Kurs und aufgeführte Konten endgültig löschen';
 $string['deletedone'] = 'Kurs „{$a->course}“ gelöscht, {$a->users} Nutzerkonten entfernt.';
+$string['deletedone_one'] = 'Kurs „{$a->course}“ gelöscht, 1 Nutzerkonto entfernt.';
 $string['deleteheading'] = 'Kurs löschen: {$a}';
 $string['deleteirreversible'] = 'Das Löschen lässt sich nicht rückgängig machen. Prüfen Sie beide Listen.';
 $string['deletenothidden'] = 'Nur verborgene Kurse können hier gelöscht werden. Verbergen Sie den Kurs zuerst.';
 $string['deletenousers'] = 'Es wird kein Nutzerkonto gelöscht, nur der Kurs.';
 $string['deleteunchecked'] = 'Bitte bestätigen Sie zuerst, dass Sie die Liste geprüft haben.';
 $string['deleteusers'] = 'Diese {$a} Nutzerkonten werden endgültig gelöscht';
+$string['deleteusers_one'] = 'Dieses Nutzerkonto wird endgültig gelöscht';
 $string['delimiterauto'] = 'Selbst erkennen';
 $string['delimitercomma'] = 'Komma';
 $string['delimitersemicolon'] = 'Semikolon';
@@ -61,10 +63,12 @@ $string['delimitertab'] = 'Tabulator';
 $string['exportexcel'] = 'Nach Excel exportieren';
 $string['keepadmin'] = 'Administrator';
 $string['keepcourses'] = 'noch in {$a} weiteren Kursen eingeschrieben';
+$string['keepcourses_one'] = 'noch in einem weiteren Kurs eingeschrieben';
 $string['keepguest'] = 'Gastzugang';
 $string['keeprole'] = 'Rolle außerhalb dieses Kurses';
 $string['keepself'] = 'Ihr eigenes Konto';
 $string['keepusers'] = 'Diese {$a} bleiben erhalten';
+$string['keepusers_one'] = 'Dieses bleibt erhalten';
 $string['neworder'] = 'Auftrag anlegen';
 $string['nocourses'] = 'Derzeit keine laufenden Kurse.';
 $string['nocoursesmatch'] = 'Keine Kurse entsprechen dem Filter.';
@@ -86,8 +90,8 @@ $string['orderabnr'] = 'AB-Nummer';
 $string['orderadd_help'] = 'Kurs, Firma, AB-Nummer und Benutzernamen kommen aus dem Auftrag. Wie die Zugangsdaten der '
     . 'Nachgemeldeten rausgehen, lässt sich neu wählen.';
 $string['orderaddcreate'] = 'Konten anlegen und einschreiben';
-$string['orderaddeddone'] = 'In „{$a->course}“ nachgemeldet: {$a->created} Konten neu, {$a->reused} vorhandene Konten '
-    . 'eingeschrieben.';
+$string['orderaddeddone'] = 'In „{$a->course}“ nachgemeldet. Neue Konten: {$a->created}, vorhandene Konten eingeschrieben: '
+    . '{$a->reused}.';
 $string['orderaddheading'] = 'Teilnehmer nachmelden: {$a}';
 $string['orderaddpeople'] = 'Teilnehmer nachmelden';
 $string['orderalreadyincourse'] = '{$a} ist bereits in diesem Kurs eingeschrieben.';
@@ -95,10 +99,12 @@ $string['orderback'] = 'Zurück';
 $string['orderbox'] = 'Auftrag';
 $string['orderboxinfo'] = '{$a->company}, AB {$a->abnr}, angelegt am {$a->created}.';
 $string['orderboxwaiting'] = 'Zugangsdaten für {$a->count} Personen warten auf den {$a->date}, {$a->time} Uhr.';
+$string['orderboxwaiting_one'] = 'Zugangsdaten für 1 Person warten auf den {$a->date}, {$a->time} Uhr.';
 $string['ordercheck'] = 'Gegen Moodle prüfen';
 $string['ordercheck_help'] = 'Jede Zeile ist jetzt mit den vorhandenen Konten abgeglichen. Rote Zeilen halten den Auftrag auf. '
     . 'Rollen lassen sich hier noch ändern, danach aktualisieren.';
 $string['ordercheckcount'] = '{$a->total} Zeilen, davon halten {$a->blocked} den Auftrag auf.';
+$string['ordercheckcount_one'] = '1 Zeile, davon halten {$a->blocked} den Auftrag auf.';
 $string['ordercheckheading'] = 'Prüfung';
 $string['ordercolumn'] = 'Spalte {$a}';
 $string['ordercolumns'] = 'Was in den Spalten steht';
@@ -118,7 +124,7 @@ $string['orderdelivery_help'] = 'Ob die Zugangsdaten an die Adressen aus der Lis
     . 'zurückkommen. Frei wählbar, auch wenn sich mehrere Personen eine Adresse teilen.';
 $string['orderdeliverydirect'] = 'An die Teilnehmer senden';
 $string['orderdeliverylist'] = 'Als Liste zurückgeben';
-$string['orderdone'] = 'Kurs „{$a->course}“ angelegt, {$a->created} Konten neu, {$a->reused} vorhandene Konten eingeschrieben.';
+$string['orderdone'] = 'Kurs „{$a->course}“ angelegt. Neue Konten: {$a->created}, vorhandene Konten eingeschrieben: {$a->reused}.';
 $string['orderdownload'] = 'Zugangsdaten als Excel herunterladen';
 $string['orderduplicateemail'] = 'Diese Adresse steht {$a}-mal in der Liste.';
 $string['orderduplicateusername'] = 'Benutzername „{$a}“ kommt in dieser Liste mehrfach vor.';
@@ -147,10 +153,14 @@ $string['ordergroupexisting'] = '{$a->name} ({$a->count}, schon im Kurs)';
 $string['ordergroupfailed'] = '{$a} konnte nicht in die Gruppe eingetragen werden.';
 $string['ordergroupheads'] = 'Zeilen ohne Adresse sind Gruppenüberschriften';
 $string['ordergroupsdone'] = '{$a->members} Personen auf {$a->groups} Gruppen verteilt.';
+$string['ordergroupsdone_one'] = '1 Person in eine Gruppe eingeteilt.';
+$string['ordergroupsdone_onegroup'] = '{$a->members} Personen in eine Gruppe eingeteilt.';
 $string['ordergroupsline'] = 'Gruppen: {$a}';
 $string['orderhasheader'] = 'Erste Zeile benennt die Spalten';
 $string['orderheld'] = 'Die Zugangsdaten für {$a->count} Personen gehen am {$a->date} um {$a->time} Uhr raus. Bis dahin geht keine '
     . 'Mail raus, und der Kurs öffnet für sie erst am Kursbeginn.';
+$string['orderheld_one'] = 'Die Zugangsdaten für 1 Person gehen am {$a->date} um {$a->time} Uhr raus. Bis dahin geht keine Mail '
+    . 'raus, und der Kurs öffnet für sie erst am Kursbeginn.';
 $string['orderinvalidemail'] = '„{$a}“ ist keine Adresse.';
 $string['orderlist'] = 'Teilnehmerliste';
 $string['orderlist_help'] = 'Fügen Sie die Liste so ein, wie der Kunde sie geschickt hat, eine Person je Zeile.';
@@ -169,6 +179,7 @@ $string['ordermailbody_desc'] = 'Platzhalter: {firstname}, {lastname}, {username
     . '{startdate}, {enddate}, {link}, {sitename}, {supportemail}. {link} führt direkt in den Kurs, {supportemail} ist die '
     . 'Support-Adresse aus den Website-Einstellungen. Eine eigene Signatur gehört mit in diesen Text.';
 $string['ordermailed'] = '{$a} Mails mit Zugangsdaten verschickt.';
+$string['ordermailed_one'] = '1 Mail mit Zugangsdaten verschickt.';
 $string['ordermailfailed'] = 'Nicht jede Mail ging raus. Der stündliche Versand versucht es erneut.';
 $string['ordermailheading'] = 'Mail mit den Zugangsdaten';
 $string['ordermailsubject'] = 'Betreff';
@@ -198,16 +209,21 @@ $string['orderpattern'] = 'Muster für den vollständigen Kursnamen';
 $string['orderpattern_desc'] = 'Platzhalter: {module}, {company}, {abnr}, {shortname}. Leer lassen, wenn der Kurzname für beides '
     . 'reichen soll.';
 $string['orderpatterncount'] = '{$a->flagged} von {$a->total} Adressen passen nicht zum Schema {$a->pattern}.';
+$string['orderpatterncount_one'] = '1 von {$a->total} Adressen passt nicht zum Schema {$a->pattern}.';
 $string['orderpatterndomain'] = 'Die Domain passt nicht zum Adressschema, erwartet @{$a}.';
 $string['orderpatternguess'] = 'Die meisten Adressen der Liste folgen dem Schema {$a->pattern} ({$a->hits} von {$a->total}).';
 $string['orderpatternmismatch'] = 'Passt nicht zum Adressschema, erwartet etwa {$a}.';
 $string['orderpatternuse'] = 'Damit prüfen';
 $string['orderpeople'] = 'Was gelesen wurde';
 $string['orderpeoplecount'] = '{$a->total} Personen, davon {$a->flawed} mit Hinweisen.';
+$string['orderpeoplecount_one'] = '1 Person, davon {$a->flawed} mit Hinweisen.';
 $string['orderrelease'] = 'Jetzt freischalten und senden';
 $string['orderreleaseconfirm'] = 'Die Einschreibungen öffnen sofort, und die Zugangsdaten für {$a->count} Personen gehen jetzt '
     . 'raus statt am {$a->date} um {$a->time} Uhr. Fortfahren?';
-$string['orderreleased'] = 'Kurs freigeschaltet, {$a} Zugangsdaten verschickt.';
+$string['orderreleaseconfirm_one'] = 'Die Einschreibungen öffnen sofort, und die Zugangsdaten für 1 Person gehen jetzt raus statt '
+    . 'am {$a->date} um {$a->time} Uhr. Fortfahren?';
+$string['orderreleased'] = 'Kurs freigeschaltet, Zugangsdaten für {$a} Personen verschickt.';
+$string['orderreleased_one'] = 'Kurs freigeschaltet, Zugangsdaten für 1 Person verschickt.';
 $string['orderreuse'] = 'Vorhandenes Konto verwenden und nur einschreiben';
 $string['orderreused'] = 'Das vorhandene Konto wird weiterverwendet und bekommt keine neuen Zugangsdaten.';
 $string['orderreusehint'] = 'Ein vorhandenes Konto behalten darf nur ein Organisator.';

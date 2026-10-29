@@ -75,6 +75,27 @@ class helper {
     }
 
     /**
+     * A string of this plugin that states a number, in the singular for one.
+     *
+     * Moodle has no plural forms of its own, so a string that counts has a
+     * twin with the suffix _one where "1 Personen" would otherwise appear.
+     *
+     * @param string $identifier the plural string
+     * @param int $count the number that decides
+     * @param mixed $a what the string is given, the number itself when null
+     * @param string $suffix the twin to use for one
+     * @return string
+     */
+    public static function counted(string $identifier, int $count, $a = null, string $suffix = '_one'): string {
+        $component = 'local_coursesoverview';
+        if ($count === 1 && get_string_manager()->string_exists($identifier . $suffix, $component)) {
+            $identifier .= $suffix;
+        }
+
+        return get_string($identifier, $component, $a ?? $count);
+    }
+
+    /**
      * Read a date out of a date field.
      *
      * @param string $value as a browser sends it, "2026-10-28"

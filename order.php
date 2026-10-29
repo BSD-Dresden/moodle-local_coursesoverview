@@ -92,7 +92,7 @@ if ($action === 'release') {
 
     redirect(
         new moodle_url('/local/coursesoverview/participants.php', ['courseid' => $held->courseid]),
-        get_string('orderreleased', 'local_coursesoverview', $sent),
+        helper::counted('orderreleased', $sent),
         null,
         \core\output\notification::NOTIFY_SUCCESS
     );
@@ -554,7 +554,11 @@ if ($result) {
     }
     if ($result->grouped) {
         $a = (object) ['members' => $result->grouped, 'groups' => $result->groups];
-        echo $OUTPUT->notification(get_string('ordergroupsdone', 'local_coursesoverview', $a), 'info');
+        // One person is always in one group, several may still share one.
+        $grouped = $result->grouped === 1
+            ? helper::counted('ordergroupsdone', 1, $a)
+            : helper::counted('ordergroupsdone', $result->groups, $a, '_onegroup');
+        echo $OUTPUT->notification($grouped, 'info');
     }
 
     echo display::summary($summary);
@@ -587,9 +591,9 @@ if ($result) {
             'date' => helper::format_date($result->senddate),
             'time' => userdate($result->senddate, '%H:%M'),
         ];
-        echo $OUTPUT->notification(get_string('orderheld', 'local_coursesoverview', $a), 'info');
+        echo $OUTPUT->notification(helper::counted('orderheld', $result->held, $a), 'info');
     } else if ($delivery === provision::DELIVERY_DIRECT && $result->created) {
-        echo $OUTPUT->notification(get_string('ordermailed', 'local_coursesoverview', $result->mailed), 'info');
+        echo $OUTPUT->notification(helper::counted('ordermailed', $result->mailed), 'info');
         if ($result->mailed < $result->created) {
             echo $OUTPUT->notification(get_string('ordermailfailed', 'local_coursesoverview'), 'warning');
         }
@@ -668,7 +672,7 @@ if ($step === 2) {
             }
         }
         $counts = (object) ['total' => count($people), 'flawed' => $flawed];
-        $form .= html_writer::tag('p', get_string('orderpeoplecount', 'local_coursesoverview', $counts));
+        $form .= html_writer::tag('p', helper::counted('orderpeoplecount', $counts->total, $counts));
         $form .= display::groups_line($people, array_values($headings));
         $form .= output::start_tables() . display::people_table($people) . output::end_tables();
     } else {
@@ -748,7 +752,7 @@ foreach ($checks as $check) {
     }
 }
 $counts = (object) ['total' => count($checks), 'blocked' => $stopped];
-$form .= html_writer::tag('p', get_string('ordercheckcount', 'local_coursesoverview', $counts));
+$form .= html_writer::tag('p', helper::counted('ordercheckcount', $counts->total, $counts));
 
 if ($pattern) {
     $flagged = 0;
@@ -758,7 +762,7 @@ if ($pattern) {
         }
     }
     $a = (object) ['flagged' => $flagged, 'total' => count($checks), 'pattern' => s($pattern->text())];
-    $form .= html_writer::tag('p', get_string('orderpatterncount', 'local_coursesoverview', $a));
+    $form .= html_writer::tag('p', helper::counted('orderpatterncount', $flagged, $a));
 }
 
 $existinggroups = $existing ? array_column(groups_get_all_groups($course->id), 'name') : [];

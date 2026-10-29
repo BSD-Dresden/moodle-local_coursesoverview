@@ -26,6 +26,7 @@ require_once(__DIR__ . '/../../config.php');
 require_once($CFG->dirroot . '/course/lib.php');
 require_once($CFG->libdir . '/adminlib.php');
 
+use local_coursesoverview\helper;
 use local_coursesoverview\purge;
 
 $courseid = required_param('courseid', PARAM_INT);
@@ -82,7 +83,7 @@ if ($confirm && $checked && confirm_sesskey()) {
     $a = (object) ['course' => $coursename, 'users' => $deleted];
     redirect(
         $overviewurl,
-        get_string('deletedone', 'local_coursesoverview', $a),
+        helper::counted('deletedone', $deleted, $a),
         null,
         \core\output\notification::NOTIFY_SUCCESS
     );
@@ -101,7 +102,7 @@ if (empty($plan['delete'])) {
     echo html_writer::tag('p', get_string('deletenousers', 'local_coursesoverview'));
 } else {
     $count = count($plan['delete']);
-    echo html_writer::tag('h3', get_string('deleteusers', 'local_coursesoverview', $count));
+    echo html_writer::tag('h3', helper::counted('deleteusers', $count));
 
     $items = '';
     foreach ($plan['delete'] as $user) {
@@ -112,7 +113,7 @@ if (empty($plan['delete'])) {
 
 if (!empty($plan['keep'])) {
     $count = count($plan['keep']);
-    echo html_writer::tag('h3', get_string('keepusers', 'local_coursesoverview', $count));
+    echo html_writer::tag('h3', helper::counted('keepusers', $count));
 
     $items = '';
     foreach ($plan['keep'] as $entry) {

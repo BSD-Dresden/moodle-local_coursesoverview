@@ -406,7 +406,7 @@ class display {
                 'date' => helper::format_date($senddate),
                 'time' => userdate($senddate, '%H:%M'),
             ];
-            $out .= html_writer::tag('p', get_string('orderboxwaiting', 'local_coursesoverview', $a));
+            $out .= html_writer::tag('p', helper::counted('orderboxwaiting', $people, $a));
 
             $url = new moodle_url('/local/coursesoverview/order.php', [
                 'action' => 'release',
@@ -414,7 +414,7 @@ class display {
                 'sesskey' => sesskey(),
             ]);
             $button = new single_button($url, get_string('orderrelease', 'local_coursesoverview'), 'post');
-            $button->add_confirm_action(get_string('orderreleaseconfirm', 'local_coursesoverview', $a));
+            $button->add_confirm_action(helper::counted('orderreleaseconfirm', $people, $a));
             $buttons .= html_writer::div($OUTPUT->render($button), 'mr-2 me-2');
         }
 

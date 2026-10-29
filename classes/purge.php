@@ -73,7 +73,7 @@ class purge {
             } else if (!empty($outsideroles[$user->id])) {
                 $reason = get_string('keeprole', 'local_coursesoverview');
             } else if (!empty($othercourses[$user->id])) {
-                $reason = get_string('keepcourses', 'local_coursesoverview', $othercourses[$user->id]);
+                $reason = helper::counted('keepcourses', (int) $othercourses[$user->id]);
             }
 
             if ($reason === null) {

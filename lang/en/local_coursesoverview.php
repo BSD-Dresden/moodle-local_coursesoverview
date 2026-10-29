@@ -47,12 +47,14 @@ $string['coursesoverview:view'] = 'View the courses overview';
 $string['deletechecked'] = 'I have checked the list';
 $string['deleteconfirm'] = 'Permanently delete the course and the accounts listed';
 $string['deletedone'] = 'Course "{$a->course}" deleted, {$a->users} accounts removed.';
+$string['deletedone_one'] = 'Course "{$a->course}" deleted, 1 account removed.';
 $string['deleteheading'] = 'Delete course: {$a}';
 $string['deleteirreversible'] = 'Deleting cannot be undone. Check both lists.';
 $string['deletenothidden'] = 'Only hidden courses can be deleted here. Hide the course first.';
 $string['deletenousers'] = 'No account will be deleted, only the course.';
 $string['deleteunchecked'] = 'Please confirm that you have checked the list.';
 $string['deleteusers'] = 'These {$a} accounts will be permanently deleted';
+$string['deleteusers_one'] = 'This account will be permanently deleted';
 $string['delimiterauto'] = 'Work it out';
 $string['delimitercomma'] = 'Comma';
 $string['delimitersemicolon'] = 'Semicolon';
@@ -61,10 +63,12 @@ $string['delimitertab'] = 'Tab';
 $string['exportexcel'] = 'Export to Excel';
 $string['keepadmin'] = 'Administrator';
 $string['keepcourses'] = 'still enrolled in {$a} other courses';
+$string['keepcourses_one'] = 'still enrolled in one other course';
 $string['keepguest'] = 'Guest account';
 $string['keeprole'] = 'Holds a role outside this course';
 $string['keepself'] = 'Your own account';
 $string['keepusers'] = 'These {$a} are kept';
+$string['keepusers_one'] = 'This one is kept';
 $string['neworder'] = 'Create order';
 $string['nocourses'] = 'No ongoing courses at the moment.';
 $string['nocoursesmatch'] = 'No courses match the filter.';
@@ -86,8 +90,8 @@ $string['orderabnr'] = 'Order number';
 $string['orderadd_help'] = 'Course, company, order number and user names come from the order. How the credentials of the people '
     . 'reported late go out can be chosen anew.';
 $string['orderaddcreate'] = 'Create accounts and enrol';
-$string['orderaddeddone'] = 'Reported late to "{$a->course}": {$a->created} accounts created, {$a->reused} existing accounts '
-    . 'enrolled.';
+$string['orderaddeddone'] = 'Reported late to "{$a->course}". New accounts: {$a->created}, existing accounts enrolled: '
+    . '{$a->reused}.';
 $string['orderaddheading'] = 'Report participants late: {$a}';
 $string['orderaddpeople'] = 'Report participants late';
 $string['orderalreadyincourse'] = '{$a} is already enrolled in this course.';
@@ -95,10 +99,12 @@ $string['orderback'] = 'Back';
 $string['orderbox'] = 'Order';
 $string['orderboxinfo'] = '{$a->company}, order number {$a->abnr}, created {$a->created}.';
 $string['orderboxwaiting'] = 'Credentials for {$a->count} people are waiting for {$a->date}, {$a->time}.';
+$string['orderboxwaiting_one'] = 'Credentials for 1 person are waiting for {$a->date}, {$a->time}.';
 $string['ordercheck'] = 'Check against Moodle';
 $string['ordercheck_help'] = 'Every line has now been held against the existing accounts. Lines in red stop the order. Roles can '
     . 'still be changed here, then update.';
 $string['ordercheckcount'] = '{$a->total} lines, {$a->blocked} of them stop the order.';
+$string['ordercheckcount_one'] = '1 line, {$a->blocked} of them stop the order.';
 $string['ordercheckheading'] = 'Check';
 $string['ordercolumn'] = 'Column {$a}';
 $string['ordercolumns'] = 'What the columns hold';
@@ -117,7 +123,7 @@ $string['orderdelivery_help'] = 'Whether the credentials go to the addresses in 
     . 'free choice, also when several people share one address.';
 $string['orderdeliverydirect'] = 'Send to the participants';
 $string['orderdeliverylist'] = 'Hand back as a list';
-$string['orderdone'] = 'Course "{$a->course}" created, {$a->created} accounts created, {$a->reused} existing accounts enrolled.';
+$string['orderdone'] = 'Course "{$a->course}" created. New accounts: {$a->created}, existing accounts enrolled: {$a->reused}.';
 $string['orderdownload'] = 'Download credentials as Excel';
 $string['orderduplicateemail'] = 'This address appears {$a} times in the list.';
 $string['orderduplicateusername'] = 'User name "{$a}" appears more than once in this list.';
@@ -146,10 +152,14 @@ $string['ordergroupexisting'] = '{$a->name} ({$a->count}, already in the course)
 $string['ordergroupfailed'] = '{$a} could not be put into their group.';
 $string['ordergroupheads'] = 'Lines without an address are group headings';
 $string['ordergroupsdone'] = '{$a->members} people put into {$a->groups} groups.';
+$string['ordergroupsdone_one'] = '1 person put into a group.';
+$string['ordergroupsdone_onegroup'] = '{$a->members} people put into one group.';
 $string['ordergroupsline'] = 'Groups: {$a}';
 $string['orderhasheader'] = 'First line names the columns';
 $string['orderheld'] = 'The credentials for {$a->count} people go out on {$a->date} at {$a->time}. Until then no mail is sent, and '
     . 'the course only opens for them on its start day.';
+$string['orderheld_one'] = 'The credentials for 1 person go out on {$a->date} at {$a->time}. Until then no mail is sent, and the '
+    . 'course only opens for them on its start day.';
 $string['orderinvalidemail'] = '"{$a}" is not an address.';
 $string['orderlist'] = 'Participant list';
 $string['orderlist_help'] = 'Paste the list as the customer sent it, one person per line.';
@@ -167,6 +177,7 @@ $string['ordermailbody_desc'] = 'Placeholders: {firstname}, {lastname}, {usernam
     . '{startdate}, {enddate}, {link}, {sitename}, {supportemail}. {link} leads straight into the course, {supportemail} is the '
     . 'support address from the site settings. A signature of your own belongs in this text as well.';
 $string['ordermailed'] = '{$a} mails with credentials sent.';
+$string['ordermailed_one'] = '1 mail with credentials sent.';
 $string['ordermailfailed'] = 'Not every mail went out. The hourly run tries them again.';
 $string['ordermailheading'] = 'Mail with the credentials';
 $string['ordermailsubject'] = 'Subject';
@@ -196,16 +207,21 @@ $string['orderpattern'] = 'Pattern for the full course name';
 $string['orderpattern_desc'] = 'Placeholders: {module}, {company}, {abnr}, {shortname}. Leave empty to use the short name for '
     . 'both.';
 $string['orderpatterncount'] = '{$a->flagged} of {$a->total} addresses do not fit the pattern {$a->pattern}.';
+$string['orderpatterncount_one'] = '1 of {$a->total} addresses does not fit the pattern {$a->pattern}.';
 $string['orderpatterndomain'] = 'The domain does not fit the address pattern, expected @{$a}.';
 $string['orderpatternguess'] = 'Most addresses in the list follow {$a->pattern} ({$a->hits} of {$a->total}).';
 $string['orderpatternmismatch'] = 'Does not fit the address pattern, expected something like {$a}.';
 $string['orderpatternuse'] = 'Check against it';
 $string['orderpeople'] = 'What was read';
 $string['orderpeoplecount'] = '{$a->total} people, {$a->flawed} of them with notes.';
+$string['orderpeoplecount_one'] = '1 person, {$a->flawed} of them with notes.';
 $string['orderrelease'] = 'Open now and send';
 $string['orderreleaseconfirm'] = 'The enrolments open at once and the credentials for {$a->count} people go out now instead of on '
     . '{$a->date} at {$a->time}. Continue?';
-$string['orderreleased'] = 'Course opened, {$a} credentials sent.';
+$string['orderreleaseconfirm_one'] = 'The enrolments open at once and the credentials for 1 person go out now instead of on '
+    . '{$a->date} at {$a->time}. Continue?';
+$string['orderreleased'] = 'Course opened, credentials for {$a} people sent.';
+$string['orderreleased_one'] = 'Course opened, credentials for 1 person sent.';
 $string['orderreuse'] = 'Use the existing account and only enrol it';
 $string['orderreused'] = 'The existing account is used again and gets no new credentials.';
 $string['orderreusehint'] = 'Only an organiser may keep an existing account.';
