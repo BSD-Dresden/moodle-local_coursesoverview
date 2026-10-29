@@ -213,10 +213,11 @@ class credentials {
         global $DB;
 
         $now = time();
+        $today = usergetmidnight($now);
         if ($order->startdate > $now) {
             // Start days are midnights everywhere else, and a time of day
             // here would make a late report look like a later start.
-            $DB->set_field('local_coursesoverview_order', 'startdate', usergetmidnight($now), ['id' => $order->id]);
+            $DB->set_field('local_coursesoverview_order', 'startdate', $today, ['id' => $order->id]);
         }
         $plugin = enrol_get_plugin('manual');
         $instance = $DB->get_record('enrol', ['courseid' => $order->courseid, 'enrol' => 'manual'], '*', IGNORE_MULTIPLE);
@@ -225,7 +226,10 @@ class credentials {
             foreach ($DB->get_records('local_coursesoverview_orderuser', ['orderid' => $order->id]) as $row) {
                 $enrolment = $DB->get_record('user_enrolments', ['enrolid' => $instance->id, 'userid' => $row->userid]);
                 if ($enrolment && $enrolment->timestart > $now) {
-                    $plugin->update_user_enrol($instance, $row->userid, null, $now);
+                    // Midnight rather than this second: Moodle rounds the time
+                    // it checks enrolments against to a hundred seconds, which
+                    // would keep people out for up to a minute after this.
+                    $plugin->update_user_enrol($instance, $row->userid, null, $today);
                 }
             }
         }
