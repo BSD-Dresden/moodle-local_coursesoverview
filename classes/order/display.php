@@ -367,7 +367,7 @@ class display {
         foreach ($counts as $name => $count) {
             $a = (object) ['name' => s($name), 'count' => $count];
             $exists = in_array(core_text::strtolower((string) $name), $known, true);
-            $entries[] = get_string($exists ?'ordergroupexisting' : 'ordergroupentry', 'local_coursesoverview', $a);
+            $entries[] = get_string($exists ? 'ordergroupexisting' : 'ordergroupentry', 'local_coursesoverview', $a);
         }
 
         return html_writer::tag('p', get_string('ordergroupsline', 'local_coursesoverview', implode(', ', $entries)));
