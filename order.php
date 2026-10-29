@@ -83,7 +83,7 @@ if ($action === 'credentials') {
 
     $rolenames = participant::roles();
     $columns = [
-        get_string('username'),
+        get_string('orderusername', 'local_coursesoverview'),
         get_string('orderstartpassword', 'local_coursesoverview'),
         get_string('firstname'),
         get_string('lastname'),
@@ -491,7 +491,7 @@ if ($step === 2) {
     $form .= html_writer::div($shape, 'mb-3');
 
     if ($rows) {
-        $form .= display::columns_table($rows, $map);
+        $form .= display::columns_table($rows, $map, (bool) $hasheader);
     } else {
         $form .= $OUTPUT->notification(get_string('ordernolines', 'local_coursesoverview'), 'error');
     }

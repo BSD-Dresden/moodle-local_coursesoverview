@@ -40,9 +40,16 @@ class validator {
      * @param string $scheme one of the SCHEME_ constants
      * @param array $roles role per index, as the form posted it
      * @param array $reuse indexes whose existing account may be used again
+     * @param int $courseid the course of an order that people are added to, zero for a new one
      * @return check[]
      */
-    public static function run(array $people, string $scheme, array $roles = [], array $reuse = []): array {
+    public static function run(
+        array $people,
+        string $scheme,
+        array $roles = [],
+        array $reuse = [],
+        int $courseid = 0
+    ): array {
         $checks = [];
         $usernames = [];
         $emails = [];
@@ -53,16 +60,21 @@ class validator {
             }
 
             $check = new check($person, $index);
-            $check->username = self::username($person, $scheme);
-
-            foreach ($person->problems() as $problem) {
+            $problems = $person->problems();
+            foreach ($problems as $problem) {
                 $check->errors[] = $problem;
             }
 
-            if ($check->username === '') {
-                $check->errors[] = get_string('ordernousername', 'local_coursesoverview');
-            } else {
+            // A broken address makes no user name either, and the line
+            // already says why. Showing one built from the wreckage would
+            // only suggest that something sensible is going to happen.
+            $usable = $scheme !== self::SCHEME_EMAIL || validate_email($person->email);
+            $check->username = $usable ? self::username($person, $scheme) : '';
+
+            if ($check->username !== '') {
                 $usernames[$check->username][] = $index;
+            } else if (!$problems) {
+                $check->errors[] = get_string('ordernousername', 'local_coursesoverview');
             }
             if ($person->email !== '') {
                 $emails[$person->email][] = $index;
@@ -71,8 +83,8 @@ class validator {
             $checks[$index] = $check;
         }
 
-        self::flag_duplicates($checks, $usernames, $emails);
-        self::flag_existing($checks, array_keys($usernames), array_keys($emails), $reuse);
+        self::flag_duplicates($checks, $usernames, $emails, $scheme);
+        self::flag_existing($checks, array_keys($usernames), array_keys($emails), $reuse, $courseid);
 
         return $checks;
     }
@@ -106,14 +118,23 @@ class validator {
      * @param check[] $checks keyed by index, modified in place
      * @param array $usernames user name => list of indexes
      * @param array $emails address => list of indexes
+     * @param string $scheme
      */
-    protected static function flag_duplicates(array $checks, array $usernames, array $emails): void {
+    protected static function flag_duplicates(array $checks, array $usernames, array $emails, string $scheme): void {
         foreach ($usernames as $username => $indexes) {
             if (count($indexes) < 2) {
                 continue;
             }
+
+            // With addresses as user names this is a shared mailbox, and the
+            // way out is the other scheme.
+            $message = get_string('orderduplicateusername', 'local_coursesoverview', s($username));
+            if ($scheme === self::SCHEME_EMAIL) {
+                $message .= ' ' . get_string('orderduplicateusernamehint', 'local_coursesoverview');
+            }
+
             foreach ($indexes as $index) {
-                $checks[$index]->errors[] = get_string('orderduplicateusername', 'local_coursesoverview', s($username));
+                $checks[$index]->errors[] = $message;
             }
         }
 
@@ -136,8 +157,15 @@ class validator {
      * @param string[] $usernames
      * @param string[] $emails
      * @param array $reuse indexes the form allows to be used again
+     * @param int $courseid the course people are added to, zero for a new one
      */
-    protected static function flag_existing(array $checks, array $usernames, array $emails, array $reuse): void {
+    protected static function flag_existing(
+        array $checks,
+        array $usernames,
+        array $emails,
+        array $reuse,
+        int $courseid
+    ): void {
         $accounts = self::accounts($usernames);
         $mailcounts = self::mailcounts($emails);
         // The accounts are keyed by user name, the enrolments are found by id.
@@ -146,38 +174,59 @@ class validator {
         foreach ($checks as $index => $check) {
             if ($check->username !== '' && isset($accounts[$check->username])) {
                 $account = $accounts[$check->username];
+                $enrolled = $courses[$account->id] ?? [];
                 $check->existing = $account;
 
-                $a = (object) [
-                    'username' => s($check->username),
-                    'name' => s(fullname($account)),
-                    'created' => helper::format_date($account->timecreated, '?'),
-                ];
-                $message = get_string('orderexists', 'local_coursesoverview', $a);
-
-                if (!empty($courses[$account->id])) {
-                    $shortnames = array_slice($courses[$account->id], 0, 3);
-                    $message .= ' ' . get_string(
-                        'orderexistscourses',
-                        'local_coursesoverview',
-                        s(implode(', ', $shortnames))
-                    );
-                }
-
-                if (!$check->may_reuse()) {
-                    $check->errors[] = $message . ' ' . get_string('orderreusehint', 'local_coursesoverview');
-                } else if (!empty($reuse[$index])) {
-                    $check->reuse = true;
-                    $check->notes[] = $message . ' ' . get_string('orderreused', 'local_coursesoverview');
+                if ($courseid && isset($enrolled[$courseid])) {
+                    // Reported twice, which no box can make right.
+                    $check->errors[] = get_string('orderalreadyincourse', 'local_coursesoverview', s(fullname($account)));
                 } else {
-                    $check->errors[] = $message;
+                    self::flag_account($check, $account, $enrolled, !empty($reuse[$index]));
                 }
             }
 
+            // The account the line collides with is not one of the others.
             $email = $check->person->email;
-            if ($email !== '' && !empty($mailcounts[$email])) {
-                $check->notes[] = get_string('ordermailtaken', 'local_coursesoverview', $mailcounts[$email]);
+            $others = $mailcounts[$email] ?? 0;
+            if ($check->existing && core_text::strtolower($check->existing->email) === $email) {
+                $others--;
             }
+            if ($others === 1) {
+                $check->notes[] = get_string('ordermailtakenone', 'local_coursesoverview');
+            } else if ($others > 1) {
+                $check->notes[] = get_string('ordermailtaken', 'local_coursesoverview', $others);
+            }
+        }
+    }
+
+    /**
+     * Say what speaks against creating an account that already exists.
+     *
+     * @param check $check modified in place
+     * @param \stdClass $account the account that carries the user name
+     * @param array $enrolled course id => short name of the account's courses
+     * @param bool $reuse whether the form allows the account to be used again
+     */
+    protected static function flag_account(check $check, \stdClass $account, array $enrolled, bool $reuse): void {
+        $a = (object) [
+            'username' => s($check->username),
+            'name' => s(fullname($account)),
+            'created' => helper::format_date($account->timecreated, '?'),
+        ];
+        $message = get_string('orderexists', 'local_coursesoverview', $a);
+
+        if ($enrolled) {
+            $shortnames = array_slice(array_values($enrolled), 0, 3);
+            $message .= ' ' . get_string('orderexistscourses', 'local_coursesoverview', s(implode(', ', $shortnames)));
+        }
+
+        if (!$check->may_reuse()) {
+            $check->errors[] = $message . ' ' . get_string('orderreusehint', 'local_coursesoverview');
+        } else if ($reuse) {
+            $check->reuse = true;
+            $check->notes[] = $message . ' ' . get_string('orderreused', 'local_coursesoverview');
+        } else {
+            $check->errors[] = $message;
         }
     }
 
@@ -228,12 +277,13 @@ class validator {
         [$insql, $params] = $DB->get_in_or_equal($emails, SQL_PARAMS_NAMED, 'e');
         $params['mnet'] = $CFG->mnet_localhost_id;
 
-        $sql = "SELECT email, COUNT(id) AS accounts
+        // Addresses are stored as typed, the list has them in lower case.
+        $sql = "SELECT LOWER(email) AS email, COUNT(id) AS accounts
                   FROM {user}
                  WHERE deleted = 0
                        AND mnethostid = :mnet
-                       AND email $insql
-              GROUP BY email";
+                       AND LOWER(email) $insql
+              GROUP BY LOWER(email)";
 
         $counts = [];
         foreach ($DB->get_records_sql($sql, $params) as $record) {
@@ -247,7 +297,7 @@ class validator {
      * Which courses these accounts are enrolled in.
      *
      * @param int[] $userids
-     * @return array user id => list of course short names
+     * @return array user id => (course id => course short name)
      */
     protected static function courses(array $userids): array {
         global $DB;
@@ -258,7 +308,7 @@ class validator {
 
         [$insql, $params] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED, 'id');
 
-        $sql = "SELECT ue.id, ue.userid, c.shortname
+        $sql = "SELECT ue.id, ue.userid, c.id AS courseid, c.shortname
                   FROM {user_enrolments} ue
                   JOIN {enrol} e ON e.id = ue.enrolid
                   JOIN {course} c ON c.id = e.courseid
@@ -267,7 +317,7 @@ class validator {
 
         $courses = [];
         foreach ($DB->get_records_sql($sql, $params) as $record) {
-            $courses[$record->userid][] = $record->shortname;
+            $courses[$record->userid][$record->courseid] = $record->shortname;
         }
 
         return $courses;

@@ -103,9 +103,10 @@ class display {
      *
      * @param array[] $rows as returned by parser::rows()
      * @param array $map column index => type
+     * @param bool $hasheader whether the first row names the columns
      * @return string
      */
-    public static function columns_table(array $rows, array $map): string {
+    public static function columns_table(array $rows, array $map, bool $hasheader): string {
         $width = count($rows[0]);
 
         $table = new html_table();
@@ -126,8 +127,15 @@ class display {
         }
 
         $table->data[] = $selects;
-        foreach (array_slice($rows, 0, 5) as $cells) {
-            $table->data[] = array_map('s', $cells);
+        foreach (array_slice($rows, 0, 5) as $number => $cells) {
+            $row = new html_table_row(array_map('s', $cells));
+
+            // Set apart, so that it does not read as the first person.
+            if ($hasheader && $number === 0) {
+                $row->attributes['class'] = 'text-muted font-italic fst-italic';
+            }
+
+            $table->data[] = $row;
         }
 
         return html_writer::table($table);
@@ -185,7 +193,7 @@ class display {
         $table->attributes['class'] = 'generaltable';
         $table->head = [
             get_string('orderrow', 'local_coursesoverview'),
-            get_string('username'),
+            get_string('orderusername', 'local_coursesoverview'),
             get_string('firstname'),
             get_string('lastname'),
             get_string('email'),
@@ -257,7 +265,7 @@ class display {
         $table = new html_table();
         $table->attributes['class'] = 'generaltable';
         $table->head = [
-            get_string('username'),
+            get_string('orderusername', 'local_coursesoverview'),
             get_string('password'),
             get_string('fullname'),
             get_string('email'),
