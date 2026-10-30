@@ -42,6 +42,7 @@ class validator {
      * @param array $reuse indexes whose existing account may be used again
      * @param int $courseid the course of an order that people are added to, zero for a new one
      * @param emailpattern|null $pattern how the customer's addresses are built, if that is known
+     * @param array $skip indexes that are left out of the order
      * @return check[]
      */
     public static function run(
@@ -50,7 +51,8 @@ class validator {
         array $roles = [],
         array $reuse = [],
         int $courseid = 0,
-        ?emailpattern $pattern = null
+        ?emailpattern $pattern = null,
+        array $skip = []
     ): array {
         $checks = [];
         $usernames = [];
@@ -62,6 +64,16 @@ class validator {
             }
 
             $check = new check($person, $index);
+
+            // A line left out is neither checked nor something the others
+            // can collide with, so that leaving out one of two duplicates
+            // clears the other.
+            if (!empty($skip[$index])) {
+                $check->skip = true;
+                $checks[$index] = $check;
+                continue;
+            }
+
             $problems = $person->problems();
             foreach ($problems as $problem) {
                 $check->errors[] = $problem;
@@ -106,7 +118,7 @@ class validator {
             $person = $check->person;
 
             // A missing name or a broken address has been reported already.
-            if ($person->problems()) {
+            if ($check->skip || $person->problems()) {
                 continue;
             }
 
@@ -208,6 +220,10 @@ class validator {
         $courses = $accounts ? self::courses(array_column($accounts, 'id')) : [];
 
         foreach ($checks as $index => $check) {
+            if ($check->skip) {
+                continue;
+            }
+
             if ($check->username !== '' && isset($accounts[$check->username])) {
                 $account = $accounts[$check->username];
                 $enrolled = $courses[$account->id] ?? [];

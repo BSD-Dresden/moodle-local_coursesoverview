@@ -40,6 +40,40 @@ $string['completedparticipants'] = 'Abgeschlossene Teilnehmer';
 $string['completiondisabled'] = 'Die Abschlussverfolgung ist in diesem Kurs deaktiviert.';
 $string['completionrate'] = 'Abschlussquote (%)';
 $string['completionstatus'] = 'Abschlussstatus';
+$string['correct'] = 'Korrigieren';
+$string['correctafter'] = 'Nachher';
+$string['correctback'] = 'Zurück zur Teilnehmerseite';
+$string['correctbacklist'] = 'Zurück zu den Personen des Auftrags';
+$string['correctbefore'] = 'Vorher';
+$string['correctcheck'] = 'Prüfen';
+$string['correctheading'] = 'Angaben korrigieren: {$a}';
+$string['correctheld'] = 'Die Zugangsdaten gehen weiter wie geplant am {$a->date} um {$a->time} Uhr raus, an die korrigierte '
+    . 'Adresse.';
+$string['correctlist_help'] = 'Alle Personen, die dieser Auftrag angelegt oder eingeschrieben hat. Falsch übermittelte Namen oder '
+    . 'Adressen werden hier korrigiert, ohne das Konto zu löschen: Einschreibung, Gruppen und Fortschritt bleiben erhalten.';
+$string['correctloggedin'] = 'Diese Person hat sich schon angemeldet und muss künftig den neuen Benutzernamen {$a} verwenden.';
+$string['correctmailed'] = 'Neue Zugangsdaten an {$a} verschickt.';
+$string['correctmailfailed'] = 'Die Mail konnte nicht verschickt werden. Der stündliche Vorgang versucht es erneut.';
+$string['correctnothing'] = 'Es hat sich nichts geändert, und es sollen keine neuen Zugangsdaten raus.';
+$string['correctpassword'] = 'Das Passwort unten wird nur jetzt angezeigt und nirgends gespeichert. Geben Sie es weiter, bevor Sie '
+    . 'die Seite verlassen.';
+$string['correctpeople'] = 'Angaben korrigieren';
+$string['correctpersonheading'] = 'Angaben von {$a} korrigieren';
+$string['correctresend'] = 'Zugangsdaten';
+$string['correctresend_help'] = 'Neue Zugangsdaten ersetzen das bisherige Passwort. Nur behalten, wenn die alten angekommen sind.';
+$string['correctresenddirect'] = 'Neue Zugangsdaten an die korrigierte Adresse senden';
+$string['correctresendlist'] = 'Neue Zugangsdaten hier anzeigen';
+$string['correctresendnone'] = 'Zugangsdaten behalten';
+$string['correctreused'] = 'Das Konto bestand schon vor diesem Auftrag und bekommt hier keine neuen Zugangsdaten.';
+$string['correctsave'] = 'Speichern';
+$string['correctsaved'] = 'Angaben von {$a} korrigiert.';
+$string['correctstate'] = 'Zugangsdaten';
+$string['correctstatedue'] = 'Noch nicht verschickt';
+$string['correctstatelist'] = 'Als Liste zurückgegeben';
+$string['correctstatereused'] = 'Vorhandenes Konto';
+$string['correctstatesent'] = 'Verschickt am {$a}';
+$string['correctstatewaiting'] = 'Warten auf den {$a->date}, {$a->time} Uhr';
+$string['correcttaken'] = 'Der Benutzername {$a} gehört bereits zu einem anderen Konto.';
 $string['coursehidden'] = 'Kurs „{$a}“ wurde verborgen.';
 $string['courseshown'] = 'Kurs „{$a}“ ist wieder sichtbar.';
 $string['coursesoverview:createorder'] = 'Auftrag samt zugehörigem Kurs anlegen';
@@ -94,6 +128,7 @@ $string['orderaddeddone'] = 'In „{$a->course}“ nachgemeldet. Neue Konten: {$
     . '{$a->reused}.';
 $string['orderaddheading'] = 'Teilnehmer nachmelden: {$a}';
 $string['orderaddpeople'] = 'Teilnehmer nachmelden';
+$string['orderallskipped'] = 'Alle Zeilen sind ausgelassen, es gibt nichts anzulegen.';
 $string['orderalreadyincourse'] = '{$a} ist bereits in diesem Kurs eingeschrieben.';
 $string['orderback'] = 'Zurück';
 $string['orderbox'] = 'Auftrag';
@@ -102,7 +137,8 @@ $string['orderboxwaiting'] = 'Zugangsdaten für {$a->count} Personen warten auf 
 $string['orderboxwaiting_one'] = 'Zugangsdaten für 1 Person warten auf den {$a->date}, {$a->time} Uhr.';
 $string['ordercheck'] = 'Gegen Moodle prüfen';
 $string['ordercheck_help'] = 'Jede Zeile ist jetzt mit den vorhandenen Konten abgeglichen. Rote Zeilen halten den Auftrag auf. '
-    . 'Rollen lassen sich hier noch ändern, danach aktualisieren.';
+    . 'Rollen lassen sich hier noch ändern, und Zeilen, die nicht angelegt werden sollen, lassen sich auslassen; danach '
+    . 'aktualisieren.';
 $string['ordercheckcount'] = '{$a->total} Zeilen, davon halten {$a->blocked} den Auftrag auf.';
 $string['ordercheckcount_one'] = '1 Zeile, davon halten {$a->blocked} den Auftrag auf.';
 $string['ordercheckheading'] = 'Prüfung';
@@ -238,12 +274,16 @@ $string['ordersendtime'] = 'Versanduhrzeit';
 $string['ordersendtime_desc'] = 'Bei einem Kursbeginn in der Zukunft gehen die Zugangsdaten am Starttag zu dieser Uhrzeit raus, '
     . 'genauer beim ersten stündlichen Lauf danach. Der Kurs selbst öffnet schon um 0 Uhr.';
 $string['ordershortname'] = 'Kurzname des Kurses';
+$string['orderskip'] = 'Auslassen';
+$string['orderskipped'] = 'Ausgelassen, für diese Zeile wird nichts angelegt.';
+$string['orderskippedcount'] = '{$a} Zeilen werden ausgelassen.';
+$string['orderskippedcount_one'] = '1 Zeile wird ausgelassen.';
 $string['orderstartdate'] = 'Kursbeginn';
 $string['orderstartdate_help'] = 'Ein Beginn in der Zukunft hält die Einschreibung zurück und die Zugangsdaten mit ihr.';
 $string['orderstartpassword'] = 'Start-Passwort';
 $string['orderupdate'] = 'Aktualisieren';
 $string['orderusername'] = 'Benutzername';
-$string['orderwithoutcourse'] = 'Der Kurs dieses Auftrags existiert nicht mehr, nachmelden ist nicht möglich.';
+$string['orderwithoutcourse'] = 'Der Kurs dieses Auftrags existiert nicht mehr.';
 $string['organiser'] = 'Organisator';
 $string['organisers'] = 'Organisatoren';
 $string['overview'] = 'Kursübersicht';

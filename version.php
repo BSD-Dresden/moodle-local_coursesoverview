@@ -25,8 +25,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_coursesoverview';
-$plugin->version   = 2026102904; // YYYYMMDDXX.
+$plugin->version   = 2026103000; // YYYYMMDDXX.
 $plugin->requires  = 2024100700; // Moodle 4.5.
 $plugin->supported = [405, 502];
 $plugin->maturity  = MATURITY_BETA;
-$plugin->release   = '0.17';
+$plugin->release   = '0.18';

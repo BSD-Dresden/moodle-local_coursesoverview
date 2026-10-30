@@ -211,6 +211,7 @@ class display {
         $table->attributes['class'] = 'generaltable';
         $table->head = [
             get_string('orderrow', 'local_coursesoverview'),
+            get_string('orderskip', 'local_coursesoverview'),
             get_string('orderusername', 'local_coursesoverview'),
             get_string('firstname'),
             get_string('lastname'),
@@ -233,7 +234,19 @@ class display {
                 ['class' => 'custom-select form-select', 'aria-label' => get_string('role')]
             );
 
+            // Customers send lists with the odd person who is not meant to be
+            // there, and leaving them out here saves going back to step one.
+            $skip = html_writer::empty_tag('input', [
+                'type' => 'checkbox',
+                'name' => 'skip[' . $check->index . ']',
+                'value' => 1,
+                'aria-label' => get_string('orderskip', 'local_coursesoverview'),
+            ] + ($check->skip ? ['checked' => 'checked'] : []));
+
             $notes = [];
+            if ($check->skip) {
+                $notes[] = html_writer::div(get_string('orderskipped', 'local_coursesoverview'), 'text-muted');
+            }
             foreach ($check->errors as $error) {
                 $notes[] = html_writer::div($error, 'text-danger');
             }
@@ -260,6 +273,7 @@ class display {
 
             $cells = [
                 $person->rownumber,
+                $skip,
                 s($check->username),
                 s($person->firstname),
                 s($person->lastname),
@@ -272,7 +286,9 @@ class display {
             $cells[] = implode('', $notes);
 
             $row = new html_table_row($cells);
-            if ($check->blocked()) {
+            if ($check->skip) {
+                $row->attributes['class'] = 'text-muted';
+            } else if ($check->blocked()) {
                 $row->attributes['class'] = 'coursesoverview-problem';
             } else if ($check->warnings) {
                 $row->attributes['class'] = 'coursesoverview-warning';
@@ -420,6 +436,11 @@ class display {
 
         $addurl = new moodle_url('/local/coursesoverview/order.php', ['orderid' => $order->id]);
         $buttons .= html_writer::link($addurl, get_string('orderaddpeople', 'local_coursesoverview'), [
+            'class' => 'btn btn-secondary mr-2 me-2',
+        ]);
+
+        $correcturl = new moodle_url('/local/coursesoverview/correct.php', ['orderid' => $order->id]);
+        $buttons .= html_writer::link($correcturl, get_string('correctpeople', 'local_coursesoverview'), [
             'class' => 'btn btn-secondary',
         ]);
         $out .= html_writer::div($buttons, 'd-flex align-items-start');

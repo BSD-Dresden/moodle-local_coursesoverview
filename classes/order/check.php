@@ -45,6 +45,9 @@ class check {
     /** @var bool the existing account is deliberately used again */
     public $reuse = false;
 
+    /** @var bool the line is deliberately left out of the order */
+    public $skip = false;
+
     /** @var int the account this line ended up with, once the order went through */
     public $userid = 0;
 
@@ -71,10 +74,12 @@ class check {
     /**
      * Whether this line stops the order from going through.
      *
+     * A line that is left out stops nothing, whatever is wrong with it.
+     *
      * @return bool
      */
     public function blocked(): bool {
-        return (bool) $this->errors;
+        return !$this->skip && $this->errors;
     }
 
     /**

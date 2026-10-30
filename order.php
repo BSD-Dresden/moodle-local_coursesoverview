@@ -77,6 +77,7 @@ $lastgroupheads = optional_param('lastgroupheads', -1, PARAM_INT);
 // The choices made per line in step three.
 $roles = optional_param_array('role', [], PARAM_ALPHA);
 $reuse = optional_param_array('reuse', [], PARAM_BOOL);
+$skip = optional_param_array('skip', [], PARAM_BOOL);
 
 admin_externalpage_setup('localcoursesovervieworder');
 require_capability('local/coursesoverview:createorder', context_system::instance());
@@ -303,11 +304,20 @@ if ($step >= 3) {
 }
 $pattern = emailpattern::parse($emailpattern);
 
+// The lines that go into the order, without those left out.
+$active = [];
+
 if ($step >= 3) {
-    $checks = validator::run($people, $scheme, $roles, $reuse, $existing ? (int) $course->id : 0, $pattern);
+    $checks = validator::run($people, $scheme, $roles, $reuse, $existing ? (int) $course->id : 0, $pattern, $skip);
+    $active = array_filter($checks, function ($check) {
+        return !$check->skip;
+    });
 
     if (!$existing && $DB->record_exists('course', ['shortname' => $shortname])) {
         $blockers[] = get_string('ordercourseexists', 'local_coursesoverview', s($shortname));
+    }
+    if (!$active) {
+        $blockers[] = get_string('orderallskipped', 'local_coursesoverview');
     }
 }
 
@@ -323,7 +333,7 @@ if ($step >= 4) {
     if ($blocked) {
         $step = 3;
     } else if ($existing) {
-        $result = provision::add($existing, $course, $checks, $delivery);
+        $result = provision::add($existing, $course, $active, $delivery);
 
         // The next late report of the same customer starts from this pattern.
         $patterntext = $pattern ? $pattern->text() : '';
@@ -344,7 +354,7 @@ if ($step >= 4) {
             'emailpattern' => $pattern ? $pattern->text() : '',
         ];
 
-        $result = provision::run($order, $module, $checks);
+        $result = provision::run($order, $module, $active);
 
         // Without a course nothing happened, and the checked list is still
         // the best place to be.
@@ -754,6 +764,11 @@ foreach ($checks as $check) {
 $counts = (object) ['total' => count($checks), 'blocked' => $stopped];
 $form .= html_writer::tag('p', helper::counted('ordercheckcount', $counts->total, $counts));
 
+$skipped = count($checks) - count($active);
+if ($skipped) {
+    $form .= html_writer::tag('p', helper::counted('orderskippedcount', $skipped));
+}
+
 if ($pattern) {
     $flagged = 0;
     foreach ($checks as $check) {
@@ -761,12 +776,12 @@ if ($pattern) {
             $flagged++;
         }
     }
-    $a = (object) ['flagged' => $flagged, 'total' => count($checks), 'pattern' => s($pattern->text())];
+    $a = (object) ['flagged' => $flagged, 'total' => count($active), 'pattern' => s($pattern->text())];
     $form .= html_writer::tag('p', helper::counted('orderpatterncount', $flagged, $a));
 }
 
 $existinggroups = $existing ? array_column(groups_get_all_groups($course->id), 'name') : [];
-$form .= display::groups_line(array_column($checks, 'person'), [], $existinggroups);
+$form .= display::groups_line(array_column($active, 'person'), [], $existinggroups);
 
 $form .= output::start_tables() . display::checks_table($checks) . output::end_tables();
 
