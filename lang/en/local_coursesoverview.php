@@ -294,7 +294,14 @@ $string['ordersnomatch'] = 'No order matches the search.';
 $string['ordersnone'] = 'No orders yet.';
 $string['ordersorganisers'] = 'Organisers';
 $string['ordersparticipants'] = 'Participants';
+$string['ordersremove'] = 'Remove entry';
+$string['ordersremoveconfirm'] = 'Remove the order {$a->shortname} of {$a->company} (order number {$a->abnr}) from the list for '
+    . 'good? Accounts and courses are not affected.';
+$string['ordersremovecourse'] = 'The course of this order still exists. Only orders whose course has been deleted can be removed '
+    . 'from the list.';
+$string['ordersremoved'] = 'Order {$a} removed from the list.';
 $string['orderssearch'] = 'Company, order number or short name';
+$string['ordersstarts'] = 'starts on {$a}';
 $string['orderstartdate'] = 'Course start';
 $string['orderstartdate_help'] = 'A start in the future holds back the enrolment, and the credentials with it.';
 $string['orderstartpassword'] = 'Start password';

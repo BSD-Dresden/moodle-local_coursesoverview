@@ -38,11 +38,44 @@ use local_coursesoverview\output;
 
 $search = trim(optional_param('search', '', PARAM_TEXT));
 $download = optional_param('download', '', PARAM_ALPHA);
+$remove = optional_param('remove', 0, PARAM_INT);
+$confirm = optional_param('confirm', 0, PARAM_BOOL);
 
 $filterparams = $search !== '' ? ['search' => $search] : [];
 admin_externalpage_setup('localcoursesoverviewhistory', '', $filterparams);
 
 $pageurl = new moodle_url('/local/coursesoverview/orders.php', $filterparams);
+
+// Taking an order off the list, which only works once its course is gone.
+// Test orders are what this is for, a real one is worth keeping.
+if ($remove) {
+    require_sesskey();
+    $order = $DB->get_record('local_coursesoverview_order', ['id' => $remove], '*', MUST_EXIST);
+    if ($order->courseid && $DB->record_exists('course', ['id' => $order->courseid])) {
+        throw new moodle_exception('ordersremovecourse', 'local_coursesoverview', $pageurl->out(false));
+    }
+
+    if ($confirm) {
+        $DB->delete_records('local_coursesoverview_orderuser', ['orderid' => $order->id]);
+        $DB->delete_records('local_coursesoverview_order', ['id' => $order->id]);
+        redirect(
+            $pageurl,
+            get_string('ordersremoved', 'local_coursesoverview', s($order->shortname)),
+            null,
+            \core\output\notification::NOTIFY_SUCCESS
+        );
+    }
+
+    $a = (object) ['shortname' => s($order->shortname), 'company' => s($order->company), 'abnr' => s($order->abnr)];
+    echo $OUTPUT->header();
+    echo $OUTPUT->confirm(
+        get_string('ordersremoveconfirm', 'local_coursesoverview', $a),
+        new moodle_url($pageurl, ['remove' => $order->id, 'confirm' => 1, 'sesskey' => sesskey()]),
+        $pageurl
+    );
+    echo $OUTPUT->footer();
+    die();
+}
 
 $params = [];
 $where = '';
@@ -114,6 +147,12 @@ foreach ($orders as $order) {
     }
     $completion = ($total !== null && $completed !== null) ? $completed . ' / ' . $total : '';
 
+    // Before its start a course has nobody in it, and "0 / 0" would read as
+    // an order without people.
+    if ($course && !$total && $course->startdate > time()) {
+        $completion = get_string('ordersstarts', 'local_coursesoverview', helper::format_date($course->startdate));
+    }
+
     if ($course) {
         $courseurl = new moodle_url('/local/coursesoverview/participants.php', ['courseid' => $course->id]);
         $coursecell = html_writer::link($courseurl, s($course->shortname));
@@ -167,6 +206,16 @@ foreach ($orders as $order) {
 
     $cells = array_map('s', $values);
     $cells[4] = $coursecell;
+
+    // Screen only, the export has no use for it.
+    $cells[] = '';
+    if (!$course) {
+        $removeurl = new moodle_url($pageurl, ['remove' => $order->id, 'sesskey' => sesskey()]);
+        $cells[count($cells) - 1] = html_writer::link($removeurl, get_string('ordersremove', 'local_coursesoverview'), [
+            'class' => 'text-danger',
+        ]);
+    }
+
     $table[] = ['values' => $values, 'cells' => $cells];
 }
 
@@ -229,7 +278,7 @@ echo output::export_button($pageurl);
 
 $htmltable = new html_table();
 $htmltable->attributes['class'] = 'generaltable';
-$htmltable->head = $columns;
+$htmltable->head = array_merge($columns, ['']);
 foreach ($table as $entry) {
     $htmltable->data[] = $entry['cells'];
 }

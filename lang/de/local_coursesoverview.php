@@ -297,7 +297,14 @@ $string['ordersnomatch'] = 'Kein Auftrag passt zur Suche.';
 $string['ordersnone'] = 'Noch keine Aufträge.';
 $string['ordersorganisers'] = 'Organisatoren';
 $string['ordersparticipants'] = 'Teilnehmer';
+$string['ordersremove'] = 'Eintrag entfernen';
+$string['ordersremoveconfirm'] = 'Den Auftrag {$a->shortname} von {$a->company} (AB-Nummer {$a->abnr}) endgültig aus der Liste '
+    . 'entfernen? Konten und Kurse sind davon nicht betroffen.';
+$string['ordersremovecourse'] = 'Der Kurs dieses Auftrags existiert noch. Nur Aufträge, deren Kurs gelöscht ist, lassen sich aus '
+    . 'der Liste entfernen.';
+$string['ordersremoved'] = 'Auftrag {$a} aus der Liste entfernt.';
 $string['orderssearch'] = 'Firma, AB-Nummer oder Kurzname';
+$string['ordersstarts'] = 'beginnt am {$a}';
 $string['orderstartdate'] = 'Kursbeginn';
 $string['orderstartdate_help'] = 'Ein Beginn in der Zukunft hält die Einschreibung zurück und die Zugangsdaten mit ihr.';
 $string['orderstartpassword'] = 'Start-Passwort';

@@ -163,7 +163,6 @@ echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('correctpersonheading', 'local_coursesoverview', s(fullname($user))));
 
 if ($result) {
-
     if ($result->saved) {
         echo $OUTPUT->notification(get_string('correctsaved', 'local_coursesoverview', s(fullname($user))), 'success');
     }
