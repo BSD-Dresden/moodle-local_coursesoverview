@@ -329,9 +329,16 @@ foreach ($checks as $check) {
 }
 
 $result = null;
+$refused = false;
 if ($step >= 4) {
     if ($blocked) {
+        // The button is never disabled, so that boxes ticked in step three
+        // count straight away. What still stops the order is said here.
+        // Problems of the order as a whole have messages of their own.
         $step = 3;
+        $refused = (bool) array_filter($checks, function ($check) {
+            return $check->blocked();
+        });
     } else if ($existing) {
         $result = provision::add($existing, $course, $active, $delivery);
 
@@ -703,6 +710,9 @@ if ($step === 2) {
 echo $OUTPUT->heading(get_string('ordercheckheading', 'local_coursesoverview'), 3);
 echo html_writer::tag('p', get_string('ordercheck_help', 'local_coursesoverview'));
 
+if ($refused) {
+    echo $OUTPUT->notification(get_string('orderrefused', 'local_coursesoverview'), 'error');
+}
 foreach ($blockers as $blocker) {
     echo $OUTPUT->notification(s($blocker), 'error');
 }
@@ -786,9 +796,12 @@ $form .= display::groups_line(array_column($active, 'person'), [], $existinggrou
 $form .= output::start_tables() . display::checks_table($checks) . output::end_tables();
 
 $buttons = display::step_button(2, get_string('orderback', 'local_coursesoverview'), 'btn-secondary');
+// Boxes and roles are changed down here, so updating belongs down here as
+// well, not only up beside the address pattern.
+$buttons .= display::step_button(3, get_string('orderupdate', 'local_coursesoverview'), 'btn-secondary');
 // A late report creates no course, only accounts.
 $createlabel = get_string($existing ? 'orderaddcreate' : 'ordercreate', 'local_coursesoverview');
-$buttons .= display::step_button(4, $createlabel, 'btn-primary', $blocked);
+$buttons .= display::step_button(4, $createlabel, 'btn-primary');
 $form .= html_writer::div($buttons, 'mt-3');
 
 echo html_writer::tag('form', $form, ['method' => 'post', 'action' => $pageurl->out(false)]);

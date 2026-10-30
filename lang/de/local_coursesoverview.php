@@ -137,8 +137,8 @@ $string['orderboxwaiting'] = 'Zugangsdaten für {$a->count} Personen warten auf 
 $string['orderboxwaiting_one'] = 'Zugangsdaten für 1 Person warten auf den {$a->date}, {$a->time} Uhr.';
 $string['ordercheck'] = 'Gegen Moodle prüfen';
 $string['ordercheck_help'] = 'Jede Zeile ist jetzt mit den vorhandenen Konten abgeglichen. Rote Zeilen halten den Auftrag auf. '
-    . 'Rollen lassen sich hier noch ändern, und Zeilen, die nicht angelegt werden sollen, lassen sich auslassen; danach '
-    . 'aktualisieren.';
+    . 'Rollen lassen sich hier noch ändern, und Zeilen, die nicht angelegt werden sollen, lassen sich auslassen; beides gilt beim '
+    . 'Anlegen sofort.';
 $string['ordercheckcount'] = '{$a->total} Zeilen, davon halten {$a->blocked} den Auftrag auf.';
 $string['ordercheckcount_one'] = '1 Zeile, davon halten {$a->blocked} den Auftrag auf.';
 $string['ordercheckheading'] = 'Prüfung';
@@ -253,6 +253,8 @@ $string['orderpatternuse'] = 'Damit prüfen';
 $string['orderpeople'] = 'Was gelesen wurde';
 $string['orderpeoplecount'] = '{$a->total} Personen, davon {$a->flawed} mit Hinweisen.';
 $string['orderpeoplecount_one'] = '1 Person, davon {$a->flawed} mit Hinweisen.';
+$string['orderrefused'] = 'Es wurde noch nichts angelegt. Die roten Zeilen unten halten den Auftrag weiter auf: in der Liste '
+    . 'korrigieren oder auslassen.';
 $string['orderrelease'] = 'Jetzt freischalten und senden';
 $string['orderreleaseconfirm'] = 'Die Einschreibungen öffnen sofort, und die Zugangsdaten für {$a->count} Personen gehen jetzt '
     . 'raus statt am {$a->date} um {$a->time} Uhr. Fortfahren?';

@@ -136,7 +136,8 @@ $string['orderboxwaiting'] = 'Credentials for {$a->count} people are waiting for
 $string['orderboxwaiting_one'] = 'Credentials for 1 person are waiting for {$a->date}, {$a->time}.';
 $string['ordercheck'] = 'Check against Moodle';
 $string['ordercheck_help'] = 'Every line has now been checked against the existing accounts. Red lines stop the order. Roles can '
-    . 'still be changed here, and lines that are not meant to be created can be left out; then update.';
+    . 'still be changed here, and lines that are not meant to be created can be left out; the order takes both into account '
+    . 'straight away.';
 $string['ordercheckcount'] = '{$a->total} lines, {$a->blocked} of them stop the order.';
 $string['ordercheckcount_one'] = '1 line, {$a->blocked} of them stop the order.';
 $string['ordercheckheading'] = 'Check';
@@ -249,6 +250,8 @@ $string['orderpatternuse'] = 'Check against it';
 $string['orderpeople'] = 'What was read';
 $string['orderpeoplecount'] = '{$a->total} people, {$a->flawed} of them with notes.';
 $string['orderpeoplecount_one'] = '1 person, {$a->flawed} of them with notes.';
+$string['orderrefused'] = 'Nothing has been created yet. The red lines below still stop the order: correct them in the list or '
+    . 'leave them out.';
 $string['orderrelease'] = 'Open now and send';
 $string['orderreleaseconfirm'] = 'The enrolments open at once and the credentials for {$a->count} people go out now instead of on '
     . '{$a->date} at {$a->time}. Continue?';
