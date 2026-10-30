@@ -64,8 +64,11 @@ if ($action === 'schedule') {
     $changes = ['id' => $order->id];
     foreach ($kinds as $kind) {
         $field = 'reminder' . $kind;
-        $typed[$kind] = optional_param($field, '', PARAM_TEXT);
-        if (optional_param($field . 'default', 0, PARAM_BOOL)) {
+        $typed[$kind] = trim(optional_param($field, '', PARAM_TEXT));
+
+        // Days typed in count, whatever the box says. Only an empty field
+        // falls back to the settings, or to none without the box.
+        if ($typed[$kind] === '' && optional_param($field . 'default', 0, PARAM_BOOL)) {
             $changes[$field] = null;
             continue;
         }
@@ -181,7 +184,7 @@ foreach ($kinds as $kind) {
     }
     $usesdefault = reminder::uses_default($order, $kind);
     if ($action === 'schedule') {
-        $usesdefault = optional_param($field . 'default', 0, PARAM_BOOL);
+        $usesdefault = $typed[$kind] === '' && optional_param($field . 'default', 0, PARAM_BOOL);
     }
 
     $block = html_writer::tag('label', get_string($field, 'local_coursesoverview'), [
@@ -193,7 +196,8 @@ foreach ($kinds as $kind) {
         1,
         (bool) $usesdefault,
         get_string('reminderdefault', 'local_coursesoverview', $default),
-        ['id' => 'coursesoverview-' . $field . 'default']
+        ['id' => 'coursesoverview-' . $field . 'default'],
+        ['class' => 'ml-1 ms-1']
     );
     $block .= html_writer::div($check, 'mb-1');
     $block .= html_writer::empty_tag('input', [
@@ -252,7 +256,7 @@ if (!$people) {
             $completed = get_string('reminderopen', 'local_coursesoverview');
 
             $plan = reminder::plan($order, $course, $person->joined, $sent[$userid] ?? [], $now);
-            $due = reminder::next($plan);
+            $due = reminder::next($plan, $sent[$userid] ?? []);
             if ($due) {
                 $a = (object) ['date' => helper::format_date($due), 'time' => userdate($due, '%H:%M')];
                 $next = get_string('remindernextat', 'local_coursesoverview', $a);

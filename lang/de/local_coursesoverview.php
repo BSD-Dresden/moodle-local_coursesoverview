@@ -322,12 +322,13 @@ $string['remind_help'] = 'Erinnert werden nur Teilnehmer, die den Kurs noch nich
 $string['reminderafter'] = 'Tage nach der Einschreibung';
 $string['reminderafter_desc'] = 'Zahlen mit Komma getrennt, z. B. 14, 28. Gezählt ab der Einschreibung jeder einzelnen Person, '
     . 'passend für Kurse, in die über lange Zeit nach und nach Leute kommen. Leer für keine.';
-$string['reminderafter_help'] = 'Gezählt ab der Einschreibung jeder einzelnen Person. Zahlen mit Komma getrennt, leer für keine.';
+$string['reminderafter_help'] = 'Gezählt ab der Einschreibung jeder einzelnen Person. Zahlen mit Komma getrennt. Eingetragene Tage '
+    . 'gelten statt der Einstellungen, ein leeres Feld ohne Haken heißt keine.';
 $string['reminderbefore'] = 'Tage vor dem Kursende';
 $string['reminderbefore_desc'] = 'Zahlen mit Komma getrennt, z. B. 14, 3. Gezählt vom jeweils aktuellen Kursende, ein verlängerter '
     . 'Kurs erinnert also erneut. Leer für keine.';
 $string['reminderbefore_help'] = 'Gezählt vom aktuellen Kursende, nach einer Verlängerung beginnt es neu. Zahlen mit Komma '
-    . 'getrennt, leer für keine.';
+    . 'getrennt. Eingetragene Tage gelten statt der Einstellungen, ein leeres Feld ohne Haken heißt keine.';
 $string['reminderbody'] = 'Text';
 $string['reminderbody_default'] = '<p>Guten Tag {firstname} {lastname},</p><p>Ihre Online-Unterweisung <strong>{module}</strong> '
     . 'auf {sitename} ist noch nicht abgeschlossen. Sie steht Ihnen noch bis zum <strong>{enddate}</strong> zur '

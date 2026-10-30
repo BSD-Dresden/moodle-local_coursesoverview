@@ -323,14 +323,26 @@ class reminder {
     /**
      * The next reminder somebody is going to get.
      *
+     * A reminder that falls within two days of the last one waits until they
+     * are over, and is dropped if its time to go out has passed by then.
+     *
      * @param stdClass[] $plan from plan()
+     * @param stdClass[] $sent the reminders the person has had
      * @return int its time, zero for none
      */
-    public static function next(array $plan): int {
+    public static function next(array $plan, array $sent): int {
+        $latest = $sent ? end($sent) : null;
+        $blocked = $latest ? (int) $latest->timesent + self::GAP : 0;
+
         foreach ($plan as $step) {
-            if ($step->status === self::STATUS_PLANNED || $step->status === self::STATUS_DUE) {
-                return $step->due;
+            if ($step->status !== self::STATUS_PLANNED && $step->status !== self::STATUS_DUE) {
+                continue;
             }
+            if ($blocked >= $step->due + self::WINDOW) {
+                continue;
+            }
+
+            return max($step->due, $blocked);
         }
 
         return 0;

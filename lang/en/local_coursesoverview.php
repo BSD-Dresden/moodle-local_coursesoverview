@@ -319,12 +319,13 @@ $string['remind_help'] = 'Only participants who have not completed the course ar
 $string['reminderafter'] = 'Days after enrolment';
 $string['reminderafter_desc'] = 'Numbers separated by commas, for example 14, 28. Counted from each person\'s own enrolment, which '
     . 'suits courses that take people in over a long time. Empty for none.';
-$string['reminderafter_help'] = 'Counted from each person\'s own enrolment. Numbers separated by commas, empty for none.';
+$string['reminderafter_help'] = 'Counted from each person\'s own enrolment. Numbers separated by commas. Days typed here count '
+    . 'instead of the settings, an empty field without the tick means none.';
 $string['reminderbefore'] = 'Days before the course ends';
 $string['reminderbefore_desc'] = 'Numbers separated by commas, for example 14, 3. Counted from the course end as it is at the '
     . 'time, so an extended course reminds again. Empty for none.';
 $string['reminderbefore_help'] = 'Counted from the current course end, after an extension it starts again. Numbers separated by '
-    . 'commas, empty for none.';
+    . 'commas. Days typed here count instead of the settings, an empty field without the tick means none.';
 $string['reminderbody'] = 'Text';
 $string['reminderbody_default'] = '<p>Dear {firstname} {lastname},</p><p>you have not completed the online instruction '
     . '<strong>{module}</strong> on {sitename} yet. It is available to you until <strong>{enddate}</strong>.</p><p>This link takes '
