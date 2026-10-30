@@ -153,13 +153,16 @@ if ($action === 'save' && !$correction->errors) {
     }
 }
 
+if ($result) {
+    // The account as it is now, after the correction, down to the heading.
+    $user = $DB->get_record('user', ['id' => $userid], '*', MUST_EXIST);
+}
+
 $pageurl = new moodle_url($listurl, ['userid' => $userid]);
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('correctpersonheading', 'local_coursesoverview', s(fullname($user))));
 
 if ($result) {
-    // The account as it is now, after the correction.
-    $user = $DB->get_record('user', ['id' => $userid], '*', MUST_EXIST);
 
     if ($result->saved) {
         echo $OUTPUT->notification(get_string('correctsaved', 'local_coursesoverview', s(fullname($user))), 'success');
