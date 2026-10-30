@@ -40,6 +40,12 @@ if ($hassiteconfig || has_capability('local/coursesoverview:createorder', contex
         new moodle_url('/local/coursesoverview/order.php'),
         'local/coursesoverview:createorder'
     ));
+    $ADMIN->add('courses', new admin_externalpage(
+        'localcoursesoverviewhistory',
+        get_string('orders', 'local_coursesoverview'),
+        new moodle_url('/local/coursesoverview/orders.php'),
+        'local/coursesoverview:createorder'
+    ));
 }
 
 if ($hassiteconfig) {

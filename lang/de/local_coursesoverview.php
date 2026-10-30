@@ -267,19 +267,37 @@ $string['orderreused'] = 'Das vorhandene Konto wird weiterverwendet und bekommt 
 $string['orderreusehint'] = 'Ein vorhandenes Konto behalten darf nur ein Organisator.';
 $string['orderrow'] = 'Zeile';
 $string['orderruntime'] = 'Laufzeit';
+$string['orders'] = 'Aufträge';
+$string['orders_help'] = 'Alle Aufträge, die über „Auftrag anlegen“ entstanden sind, auch nach dem Löschen ihres Kurses. Bei '
+    . 'gelöschten Kursen stehen die Abschlüsse, die der Kurs kurz vor dem Löschen hatte.';
 $string['orderscheme'] = 'Benutzernamen';
 $string['orderscheme_help'] = 'Die Adresse ist der einfachere Weg, geht aber nur einmal je Person. Ein geteiltes Postfach braucht '
     . 'deshalb vorname.nachname.';
 $string['orderschemeemail'] = 'E-Mail-Adresse';
 $string['orderschemename'] = 'vorname.nachname';
+$string['orderscompleted'] = 'Abgeschlossen';
+$string['orderscreated'] = 'Angelegt';
+$string['orderscreator'] = 'Angelegt von';
+$string['ordersdeleted'] = '{$a->shortname} (gelöscht am {$a->date})';
+$string['ordersdeletedundated'] = '{$a->shortname} (gelöscht)';
+$string['ordersdelivery'] = 'Zugangsdaten';
+$string['ordersdeliveryboth'] = 'Mail und Liste';
+$string['ordersdeliverylist'] = 'Liste';
+$string['ordersdeliverymail'] = 'Mail';
 $string['ordersendtime'] = 'Versanduhrzeit';
 $string['ordersendtime_desc'] = 'Bei einem Kursbeginn in der Zukunft gehen die Zugangsdaten am Starttag zu dieser Uhrzeit raus, '
     . 'genauer beim ersten stündlichen Lauf danach. Der Kurs selbst öffnet schon um 0 Uhr.';
+$string['ordersfile'] = 'Auftraege';
 $string['ordershortname'] = 'Kurzname des Kurses';
 $string['orderskip'] = 'Auslassen';
 $string['orderskipped'] = 'Ausgelassen, für diese Zeile wird nichts angelegt.';
 $string['orderskippedcount'] = '{$a} Zeilen werden ausgelassen.';
 $string['orderskippedcount_one'] = '1 Zeile wird ausgelassen.';
+$string['ordersnomatch'] = 'Kein Auftrag passt zur Suche.';
+$string['ordersnone'] = 'Noch keine Aufträge.';
+$string['ordersorganisers'] = 'Organisatoren';
+$string['ordersparticipants'] = 'Teilnehmer';
+$string['orderssearch'] = 'Firma, AB-Nummer oder Kurzname';
 $string['orderstartdate'] = 'Kursbeginn';
 $string['orderstartdate_help'] = 'Ein Beginn in der Zukunft hält die Einschreibung zurück und die Zugangsdaten mit ihr.';
 $string['orderstartpassword'] = 'Start-Passwort';

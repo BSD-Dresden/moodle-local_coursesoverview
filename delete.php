@@ -27,6 +27,7 @@ require_once($CFG->dirroot . '/course/lib.php');
 require_once($CFG->libdir . '/adminlib.php');
 
 use local_coursesoverview\helper;
+use local_coursesoverview\order\history;
 use local_coursesoverview\purge;
 
 $courseid = required_param('courseid', PARAM_INT);
@@ -68,6 +69,10 @@ $PAGE->set_heading($SITE->fullname);
 $plan = purge::plan($courseid, $context);
 
 if ($confirm && $checked && confirm_sesskey()) {
+    // The accounts go first, and the completions with them, so the numbers
+    // an order keeps are taken before anything is removed.
+    history::freeze($course);
+
     $deleted = 0;
 
     foreach ($plan['delete'] as $user) {

@@ -264,19 +264,37 @@ $string['orderreused'] = 'The existing account is used again and gets no new cre
 $string['orderreusehint'] = 'Only an organiser may keep an existing account.';
 $string['orderrow'] = 'Line';
 $string['orderruntime'] = 'Runtime';
+$string['orders'] = 'Orders';
+$string['orders_help'] = 'Every order made with "New order", also after its course has been deleted. Completions of a deleted '
+    . 'course are the ones it had just before it was deleted.';
 $string['orderscheme'] = 'User names';
 $string['orderscheme_help'] = 'The address is the simpler choice, but it only works once per person. A shared mailbox therefore '
     . 'needs firstname.lastname.';
 $string['orderschemeemail'] = 'Email address';
 $string['orderschemename'] = 'firstname.lastname';
+$string['orderscompleted'] = 'Completed';
+$string['orderscreated'] = 'Created';
+$string['orderscreator'] = 'Created by';
+$string['ordersdeleted'] = '{$a->shortname} (deleted on {$a->date})';
+$string['ordersdeletedundated'] = '{$a->shortname} (deleted)';
+$string['ordersdelivery'] = 'Credentials';
+$string['ordersdeliveryboth'] = 'Mail and list';
+$string['ordersdeliverylist'] = 'List';
+$string['ordersdeliverymail'] = 'Mail';
 $string['ordersendtime'] = 'Send time';
 $string['ordersendtime_desc'] = 'When a course starts later, its credentials go out at this time on the start day, more precisely '
     . 'with the first hourly run after it. The course itself opens at midnight.';
+$string['ordersfile'] = 'Orders';
 $string['ordershortname'] = 'Course short name';
 $string['orderskip'] = 'Leave out';
 $string['orderskipped'] = 'Left out, nothing is created for this line.';
 $string['orderskippedcount'] = '{$a} lines are left out.';
 $string['orderskippedcount_one'] = '1 line is left out.';
+$string['ordersnomatch'] = 'No order matches the search.';
+$string['ordersnone'] = 'No orders yet.';
+$string['ordersorganisers'] = 'Organisers';
+$string['ordersparticipants'] = 'Participants';
+$string['orderssearch'] = 'Company, order number or short name';
 $string['orderstartdate'] = 'Course start';
 $string['orderstartdate_help'] = 'A start in the future holds back the enrolment, and the credentials with it.';
 $string['orderstartpassword'] = 'Start password';

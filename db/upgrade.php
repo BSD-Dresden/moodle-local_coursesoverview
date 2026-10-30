@@ -136,5 +136,23 @@ function xmldb_local_coursesoverview_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026102903, 'local', 'coursesoverview');
     }
 
+    if ($oldversion < 2026103002) {
+        // The final numbers of an order, kept when its course is deleted so
+        // that the list of orders can still show them.
+        $table = new xmldb_table('local_coursesoverview_order');
+        $fields = [
+            new xmldb_field('timefrozen', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'timecreated'),
+            new xmldb_field('finaltotal', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'timefrozen'),
+            new xmldb_field('finalcompleted', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'finaltotal'),
+        ];
+        foreach ($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+
+        upgrade_plugin_savepoint(true, 2026103002, 'local', 'coursesoverview');
+    }
+
     return true;
 }
