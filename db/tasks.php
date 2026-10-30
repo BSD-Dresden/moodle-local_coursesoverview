@@ -45,4 +45,14 @@ $tasks = [
         'dayofweek' => '*',
         'month' => '*',
     ],
+    [
+        // Hourly for the same reason, a few minutes after the credentials.
+        'classname' => 'local_coursesoverview\task\send_reminders',
+        'blocking' => 0,
+        'minute' => '10',
+        'hour' => '*',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*',
+    ],
 ];

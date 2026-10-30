@@ -316,6 +316,67 @@ $string['organisers'] = 'Organisatoren';
 $string['overview'] = 'Kursübersicht';
 $string['pluginname'] = 'Online-Unterweisungen';
 $string['progressheader'] = 'Abschnitte abgeschlossen / Gesamt';
+$string['remind_help'] = 'Erinnert werden nur Teilnehmer, die den Kurs noch nicht abgeschlossen haben. Automatische Erinnerungen '
+    . 'gehen zur Versanduhrzeit der Zugangsdaten raus. Wer in den letzten zwei Tagen eine Erinnerung bekommen hat, auch eine von '
+    . 'Hand, bekommt keine automatische, zwei Erinnerungen am selben Tag ergeben also eine Mail.';
+$string['reminderafter'] = 'Tage nach der Einschreibung';
+$string['reminderafter_desc'] = 'Zahlen mit Komma getrennt, z. B. 14, 28. Gezählt ab der Einschreibung jeder einzelnen Person, '
+    . 'passend für Kurse, in die über lange Zeit nach und nach Leute kommen. Leer für keine.';
+$string['reminderafter_help'] = 'Gezählt ab der Einschreibung jeder einzelnen Person. Zahlen mit Komma getrennt, leer für keine.';
+$string['reminderbefore'] = 'Tage vor dem Kursende';
+$string['reminderbefore_desc'] = 'Zahlen mit Komma getrennt, z. B. 14, 3. Gezählt vom jeweils aktuellen Kursende, ein verlängerter '
+    . 'Kurs erinnert also erneut. Leer für keine.';
+$string['reminderbefore_help'] = 'Gezählt vom aktuellen Kursende, nach einer Verlängerung beginnt es neu. Zahlen mit Komma '
+    . 'getrennt, leer für keine.';
+$string['reminderbody'] = 'Text';
+$string['reminderbody_default'] = '<p>Guten Tag {firstname} {lastname},</p><p>Ihre Online-Unterweisung <strong>{module}</strong> '
+    . 'auf {sitename} ist noch nicht abgeschlossen. Sie steht Ihnen noch bis zum <strong>{enddate}</strong> zur '
+    . 'Verfügung.</p><p>Hier geht es direkt zur Unterweisung: {link}<br>Ihr Benutzername: <strong>{username}</strong></p><p>Falls '
+    . 'Sie Ihr Passwort vergessen haben, können Sie es auf der Anmeldeseite zurücksetzen. Bei Fragen erreichen Sie uns unter '
+    . '{supportemail}.</p><p>Mit freundlichen Grüßen<br>{sitename}</p>';
+$string['reminderbody_desc'] = 'Platzhalter: {firstname}, {lastname}, {username}, {course}, {module}, {company}, {startdate}, '
+    . '{enddate}, {daysleft}, {link}, {sitename}, {supportemail}. {daysleft} ist die Zahl der Tage bis zum Kursende.';
+$string['reminderboxafter'] = '{$a} Tage nach der Einschreibung';
+$string['reminderboxbefore'] = '{$a} Tage vor Kursende';
+$string['reminderboxinfo'] = 'Erinnerungen: {$a}.';
+$string['reminderboxnone'] = 'Keine automatischen Erinnerungen.';
+$string['remindercompleted'] = 'Abgeschlossen';
+$string['reminderconfirm'] = '{$a} Personen bekommen jetzt eine Erinnerung.';
+$string['reminderconfirm_one'] = '1 Person bekommt jetzt eine Erinnerung.';
+$string['reminderdefault'] = 'Wie in den Einstellungen ({$a})';
+$string['reminderfailed'] = 'Nicht jede Mail ging raus.';
+$string['reminderhad'] = 'Erinnert';
+$string['reminderheading'] = 'Erinnerungen';
+$string['reminderheading_desc'] = 'Erinnerungen an Teilnehmer, die ihren Kurs noch nicht abgeschlossen haben, nur in Kursen aus '
+    . 'Aufträgen. Jeder Kurs kann auf seiner Erinnerungsseite eigene Tage bekommen. Aufträge von vor den Erinnerungen haben keine, '
+    . 'bis sie dort eingeschaltet werden.';
+$string['reminderinvaliddays'] = '„{$a}“ ist keine Liste von Tagen. Erlaubt sind Zahlen von 1 bis 999, mit Komma getrennt.';
+$string['reminderjoined'] = 'Eingeschrieben';
+$string['reminderkindafter'] = '{$a->date}, {$a->days} Tage nach der Einschreibung';
+$string['reminderkindafter_one'] = '{$a->date}, 1 Tag nach der Einschreibung';
+$string['reminderkindbefore'] = '{$a->date}, {$a->days} Tage vor Kursende';
+$string['reminderkindbefore_one'] = '{$a->date}, 1 Tag vor Kursende';
+$string['reminderkindmanual'] = '{$a->date}, von Hand';
+$string['remindernext'] = 'Nächste Erinnerung';
+$string['remindernextat'] = '{$a->date}, {$a->time} Uhr';
+$string['remindernobody'] = 'Niemand ausgewählt, der noch offen ist.';
+$string['remindernoend'] = 'keins';
+$string['remindernone'] = 'keine';
+$string['remindernopeople'] = 'Niemand zu erinnern: Der Kurs hat keine Teilnehmer oder keine Abschlussverfolgung.';
+$string['reminderopen'] = 'offen';
+$string['reminderpeople'] = 'Teilnehmer';
+$string['reminderpreview'] = 'So sieht die Mail für {$a} aus:';
+$string['reminders'] = 'Erinnerungen';
+$string['reminderschedule'] = 'Zeitplan';
+$string['reminderscheduled'] = 'Erinnerungen gespeichert.';
+$string['remindersend'] = 'Erinnerung senden';
+$string['remindersendnow'] = 'Jetzt senden';
+$string['remindersent'] = '{$a} Erinnerungen verschickt.';
+$string['remindersent_one'] = '1 Erinnerung verschickt.';
+$string['remindersubject'] = 'Betreff';
+$string['remindersubject_default'] = 'Erinnerung: Online-Unterweisung {module}';
+$string['remindersubject_desc'] = 'Dieselben Platzhalter wie im Text.';
+$string['remindheading'] = 'Erinnerungen: {$a}';
 $string['roleboth'] = 'Organisator und Teilnehmer';
 $string['roleorganiser'] = 'Organisator';
 $string['roleparticipant'] = 'Teilnehmer';
@@ -333,5 +394,6 @@ $string['statustosettle'] = 'Abgeschlossen, noch nicht abgerechnet';
 $string['statusupcoming'] = 'Beginnt später';
 $string['tasknotifycompleted'] = 'Meldung über vollständig abgeschlossene Kurse';
 $string['tasksendcredentials'] = 'Fällige Zugangsdaten aus Aufträgen verschicken';
+$string['tasksendreminders'] = 'Fällige Erinnerungen aus Aufträgen verschicken';
 $string['totalparticipants'] = 'Gesamtteilnehmer';
 $string['withoutparticipants'] = 'Kurse ohne Teilnehmer anzeigen';

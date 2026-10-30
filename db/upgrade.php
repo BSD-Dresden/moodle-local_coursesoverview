@@ -154,5 +154,43 @@ function xmldb_local_coursesoverview_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026103002, 'local', 'coursesoverview');
     }
 
+    if ($oldversion < 2026103100) {
+        // Reminders for people who have not completed their course yet.
+        $table = new xmldb_table('local_coursesoverview_order');
+        $fields = [
+            new xmldb_field('reminderafter', XMLDB_TYPE_CHAR, '100', null, null, null, null, 'finalcompleted'),
+            new xmldb_field('reminderbefore', XMLDB_TYPE_CHAR, '100', null, null, null, null, 'reminderafter'),
+        ];
+        foreach ($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+                // The courses of earlier orders still remind through an
+                // activity of their own, and a second mail would only
+                // confuse. They are switched on one by one.
+                $DB->set_field('local_coursesoverview_order', $field->getName(), '');
+            }
+        }
+
+        $table = new xmldb_table('local_coursesoverview_reminder');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('orderid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('kind', XMLDB_TYPE_CHAR, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('days', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('base', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timesent', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('usersent', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('orderid', XMLDB_KEY_FOREIGN, ['orderid'], 'local_coursesoverview_order', ['id']);
+        $table->add_key('userid', XMLDB_KEY_FOREIGN, ['userid'], 'user', ['id']);
+        $table->add_index('orderid-userid', XMLDB_INDEX_NOTUNIQUE, ['orderid', 'userid']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        upgrade_plugin_savepoint(true, 2026103100, 'local', 'coursesoverview');
+    }
+
     return true;
 }

@@ -56,6 +56,7 @@ if ($remove) {
     }
 
     if ($confirm) {
+        $DB->delete_records('local_coursesoverview_reminder', ['orderid' => $order->id]);
         $DB->delete_records('local_coursesoverview_orderuser', ['orderid' => $order->id]);
         $DB->delete_records('local_coursesoverview_order', ['id' => $order->id]);
         redirect(
@@ -179,7 +180,9 @@ foreach ($orders as $order) {
 
     $module = module::get($order->module);
     $counts = $people[$order->id] ?? ['participants' => 0, 'organisers' => 0];
-    $runtime = helper::format_date($order->startdate, '') . ' - ' . helper::format_date($order->enddate, '');
+    // A course that was extended ends later than its order said.
+    $enddate = $course ? $course->enddate : $order->enddate;
+    $runtime = helper::format_date($order->startdate, '') . ' - ' . helper::format_date($enddate, '');
     // The account that made the order may be gone by now.
     $creator = '';
     if ($order->creatorlastname !== null) {

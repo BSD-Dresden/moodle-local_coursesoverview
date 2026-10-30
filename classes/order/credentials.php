@@ -148,15 +148,36 @@ class credentials {
             $body = get_string('ordermailbody_default', 'local_coursesoverview');
         }
 
+        return self::fill($subject, $body, $user, $order, $course, ['{password}' => $password]);
+    }
+
+    /**
+     * Fill in the placeholders of a mail about a course of an order.
+     *
+     * @param string $subject plain text
+     * @param string $body html
+     * @param stdClass $user
+     * @param stdClass $order
+     * @param stdClass $course
+     * @param string[] $extra placeholders of this mail only, plain text
+     * @return string[] subject and body as html
+     */
+    public static function fill(
+        string $subject,
+        string $body,
+        stdClass $user,
+        stdClass $order,
+        stdClass $course,
+        array $extra = []
+    ): array {
         $module = module::get($order->module);
         $link = (new moodle_url('/course/view.php', ['id' => $course->id]))->out(false);
         $supportemail = \core_user::get_support_user()->email;
 
-        $values = [
+        $values = $extra + [
             '{firstname}' => $user->firstname,
             '{lastname}' => $user->lastname,
             '{username}' => $user->username,
-            '{password}' => $password,
             '{course}' => $course->fullname,
             '{module}' => $module ? $module->name : $order->module,
             '{company}' => $order->company,

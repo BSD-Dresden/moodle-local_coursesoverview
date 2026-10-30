@@ -441,8 +441,28 @@ class display {
 
         $correcturl = new moodle_url('/local/coursesoverview/correct.php', ['orderid' => $order->id]);
         $buttons .= html_writer::link($correcturl, get_string('correctpeople', 'local_coursesoverview'), [
+            'class' => 'btn btn-secondary mr-2 me-2',
+        ]);
+
+        $remindurl = new moodle_url('/local/coursesoverview/remind.php', ['orderid' => $order->id]);
+        $buttons .= html_writer::link($remindurl, get_string('reminders', 'local_coursesoverview'), [
             'class' => 'btn btn-secondary',
         ]);
+
+        // The reminders this order sends, without asking who is still open,
+        // which the page behind the button does.
+        $schedule = [];
+        foreach ([reminder::AFTER, reminder::BEFORE] as $kind) {
+            $days = reminder::days($order, $kind);
+            if ($days) {
+                $schedule[] = get_string('reminderbox' . $kind, 'local_coursesoverview', reminder::text($days, $kind));
+            }
+        }
+        if ($schedule) {
+            $out .= html_writer::tag('p', get_string('reminderboxinfo', 'local_coursesoverview', implode('; ', $schedule)));
+        } else {
+            $out .= html_writer::tag('p', get_string('reminderboxnone', 'local_coursesoverview'));
+        }
         $out .= html_writer::div($buttons, 'd-flex align-items-start');
 
         return html_writer::div($out, 'card card-body mb-3');

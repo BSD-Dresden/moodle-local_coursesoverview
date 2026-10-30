@@ -119,5 +119,43 @@ if ($hassiteconfig) {
         get_string('ordermailbody_default', 'local_coursesoverview')
     ));
 
+    $settings->add(new admin_setting_heading(
+        'local_coursesoverview/reminderheading',
+        get_string('reminderheading', 'local_coursesoverview'),
+        get_string('reminderheading_desc', 'local_coursesoverview')
+    ));
+
+    // Numbers separated by commas, an empty field sends none of the kind.
+    $settings->add(new admin_setting_configtext(
+        'local_coursesoverview/reminderafter',
+        get_string('reminderafter', 'local_coursesoverview'),
+        get_string('reminderafter_desc', 'local_coursesoverview'),
+        \local_coursesoverview\order\reminder::DEFAULT_AFTER,
+        '/^[\d,;\s]*$/'
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'local_coursesoverview/reminderbefore',
+        get_string('reminderbefore', 'local_coursesoverview'),
+        get_string('reminderbefore_desc', 'local_coursesoverview'),
+        \local_coursesoverview\order\reminder::DEFAULT_BEFORE,
+        '/^[\d,;\s]*$/'
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'local_coursesoverview/remindersubject',
+        get_string('remindersubject', 'local_coursesoverview'),
+        get_string('remindersubject_desc', 'local_coursesoverview'),
+        get_string('remindersubject_default', 'local_coursesoverview'),
+        PARAM_TEXT
+    ));
+
+    $settings->add(new admin_setting_confightmleditor(
+        'local_coursesoverview/reminderbody',
+        get_string('reminderbody', 'local_coursesoverview'),
+        get_string('reminderbody_desc', 'local_coursesoverview'),
+        get_string('reminderbody_default', 'local_coursesoverview')
+    ));
+
     $ADMIN->add('courses', $settings);
 }

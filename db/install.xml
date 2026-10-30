@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/coursesoverview/db" VERSION="20261028" COMMENT="Orders handled by this plugin."
+<XMLDB PATH="local/coursesoverview/db" VERSION="20261031" COMMENT="Orders handled by this plugin."
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -24,6 +24,8 @@
         <FIELD NAME="timefrozen" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="When the course was about to be deleted and its final numbers were kept. Zero while it exists."/>
         <FIELD NAME="finaltotal" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="People the course tracked for completion just before it was deleted."/>
         <FIELD NAME="finalcompleted" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Of those, how many had completed it. Empty when completion was off."/>
+        <FIELD NAME="reminderafter" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="Days after somebody's enrolment a reminder goes out. Empty for the days in the settings."/>
+        <FIELD NAME="reminderbefore" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="Days before the course ends a reminder goes out. Empty for the days in the settings."/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -53,6 +55,26 @@
       </KEYS>
       <INDEXES>
         <INDEX NAME="senddate-timesent" UNIQUE="false" FIELDS="senddate, timesent" COMMENT="Read by the task that mails the credentials."/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_coursesoverview_reminder" COMMENT="Reminders sent to participants of an order who had not completed its course.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="kind" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="after, before or manual."/>
+        <FIELD NAME="days" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="The days the reminder was set to. Zero when sent by hand."/>
+        <FIELD NAME="base" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="The enrolment or course end the days counted from, so that an extended course reminds again."/>
+        <FIELD NAME="timesent" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="usersent" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Who sent it by hand. Zero for the scheduled task."/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="orderid" TYPE="foreign" FIELDS="orderid" REFTABLE="local_coursesoverview_order" REFFIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="orderid-userid" UNIQUE="false" FIELDS="orderid, userid"/>
       </INDEXES>
     </TABLE>
   </TABLES>

@@ -313,6 +313,67 @@ $string['organisers'] = 'Organisers';
 $string['overview'] = 'Courses overview';
 $string['pluginname'] = 'Online instructions';
 $string['progressheader'] = 'Sections completed / total';
+$string['remind_help'] = 'Only participants who have not completed the course are reminded. Automatic reminders go out at the send '
+    . 'time of the credentials. Somebody who had a reminder in the last two days, also one sent by hand, gets no automatic one, so '
+    . 'two reminders on the same day make one mail.';
+$string['reminderafter'] = 'Days after enrolment';
+$string['reminderafter_desc'] = 'Numbers separated by commas, for example 14, 28. Counted from each person\'s own enrolment, which '
+    . 'suits courses that take people in over a long time. Empty for none.';
+$string['reminderafter_help'] = 'Counted from each person\'s own enrolment. Numbers separated by commas, empty for none.';
+$string['reminderbefore'] = 'Days before the course ends';
+$string['reminderbefore_desc'] = 'Numbers separated by commas, for example 14, 3. Counted from the course end as it is at the '
+    . 'time, so an extended course reminds again. Empty for none.';
+$string['reminderbefore_help'] = 'Counted from the current course end, after an extension it starts again. Numbers separated by '
+    . 'commas, empty for none.';
+$string['reminderbody'] = 'Text';
+$string['reminderbody_default'] = '<p>Dear {firstname} {lastname},</p><p>you have not completed the online instruction '
+    . '<strong>{module}</strong> on {sitename} yet. It is available to you until <strong>{enddate}</strong>.</p><p>This link takes '
+    . 'you straight to the instruction: {link}<br>Your user name: <strong>{username}</strong></p><p>If you have forgotten your '
+    . 'password, you can reset it on the login page. If you have any questions, contact us at {supportemail}.</p><p>Kind '
+    . 'regards<br>{sitename}</p>';
+$string['reminderbody_desc'] = 'Placeholders: {firstname}, {lastname}, {username}, {course}, {module}, {company}, {startdate}, '
+    . '{enddate}, {daysleft}, {link}, {sitename}, {supportemail}. {daysleft} is the number of days until the course ends.';
+$string['reminderboxafter'] = '{$a} days after enrolment';
+$string['reminderboxbefore'] = '{$a} days before the end';
+$string['reminderboxinfo'] = 'Reminders: {$a}.';
+$string['reminderboxnone'] = 'No automatic reminders.';
+$string['remindercompleted'] = 'Completed';
+$string['reminderconfirm'] = '{$a} people get a reminder now.';
+$string['reminderconfirm_one'] = '1 person gets a reminder now.';
+$string['reminderdefault'] = 'As in the settings ({$a})';
+$string['reminderfailed'] = 'Not every mail went out.';
+$string['reminderhad'] = 'Reminded';
+$string['reminderheading'] = 'Reminders';
+$string['reminderheading_desc'] = 'Reminders for participants who have not completed their course, only in courses of orders. Each '
+    . 'course can have its own days on its reminder page. Orders made before reminders existed have none until they are switched '
+    . 'on there.';
+$string['reminderinvaliddays'] = '"{$a}" is not a list of days. Use numbers from 1 to 999, separated by commas.';
+$string['reminderjoined'] = 'Enrolled';
+$string['reminderkindafter'] = '{$a->date}, {$a->days} days after enrolment';
+$string['reminderkindafter_one'] = '{$a->date}, 1 day after enrolment';
+$string['reminderkindbefore'] = '{$a->date}, {$a->days} days before the end';
+$string['reminderkindbefore_one'] = '{$a->date}, 1 day before the end';
+$string['reminderkindmanual'] = '{$a->date}, by hand';
+$string['remindernext'] = 'Next reminder';
+$string['remindernextat'] = '{$a->date}, {$a->time}';
+$string['remindernobody'] = 'Nobody who is still open was selected.';
+$string['remindernoend'] = 'none';
+$string['remindernone'] = 'none';
+$string['remindernopeople'] = 'Nobody to remind: the course has no participants or does not track completion.';
+$string['reminderopen'] = 'open';
+$string['reminderpeople'] = 'Participants';
+$string['reminderpreview'] = 'This is the mail for {$a}:';
+$string['reminders'] = 'Reminders';
+$string['reminderschedule'] = 'Schedule';
+$string['reminderscheduled'] = 'Reminders saved.';
+$string['remindersend'] = 'Send reminder';
+$string['remindersendnow'] = 'Send now';
+$string['remindersent'] = '{$a} reminders sent.';
+$string['remindersent_one'] = '1 reminder sent.';
+$string['remindersubject'] = 'Subject';
+$string['remindersubject_default'] = 'Reminder: online instruction {module}';
+$string['remindersubject_desc'] = 'The same placeholders as in the text.';
+$string['remindheading'] = 'Reminders: {$a}';
 $string['roleboth'] = 'Organiser and participant';
 $string['roleorganiser'] = 'Organiser';
 $string['roleparticipant'] = 'Participant';
@@ -330,5 +391,6 @@ $string['statustosettle'] = 'Completed, not yet settled';
 $string['statusupcoming'] = 'Starts later';
 $string['tasknotifycompleted'] = 'Notify about fully completed courses';
 $string['tasksendcredentials'] = 'Send the credentials of orders that are due';
+$string['tasksendreminders'] = 'Send due reminders of orders';
 $string['totalparticipants'] = 'Total Participants';
 $string['withoutparticipants'] = 'Show courses without participants';
