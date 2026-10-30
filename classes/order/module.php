@@ -42,6 +42,9 @@ class module {
     /** @var string prefix of the generated course short name, also the key of the module */
     public $prefix;
 
+    /** @var string what the mails call the module, its name unless the settings give a title */
+    public $title;
+
     /** @var stdClass|null|false the template course once it has been looked up */
     protected $templatecourse = false;
 
@@ -52,19 +55,22 @@ class module {
      * @param string $template
      * @param int $categoryid
      * @param string $prefix
+     * @param string $title empty for the name
      */
-    protected function __construct(string $name, string $template, int $categoryid, string $prefix) {
+    protected function __construct(string $name, string $template, int $categoryid, string $prefix, string $title = '') {
         $this->name = $name;
         $this->template = $template;
         $this->categoryid = $categoryid;
         $this->prefix = $prefix;
+        $this->title = $title !== '' ? $title : $name;
     }
 
     /**
      * Every configured module, keyed by prefix.
      *
-     * One line per module: name, template short name, category id, prefix.
-     * An empty category id means the category the template course sits in.
+     * One line per module: name, template short name, category id, prefix,
+     * and optionally the title the mails use. An empty category id means the
+     * category the template course sits in.
      *
      * @return module[]
      */
@@ -88,7 +94,7 @@ class module {
                 continue;
             }
 
-            $modules[$prefix] = new self($name, $template, (int) $category, $prefix);
+            $modules[$prefix] = new self($name, $template, (int) $category, $prefix, $parts[4] ?? '');
         }
 
         return $modules;

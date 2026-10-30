@@ -208,9 +208,10 @@ $string['ordermailbody_default'] = '<p>Dear {firstname} {lastname},</p><p>{compa
     . 'own.</p><p>Please complete all learning units and part tests by {enddate}. You do not have to do everything in one go, what '
     . 'you have completed is kept.</p><p>If you have any questions, contact us at {supportemail}.</p><p>Kind '
     . 'regards<br>{sitename}</p>';
-$string['ordermailbody_desc'] = 'Placeholders: {firstname}, {lastname}, {username}, {password}, {course}, {module}, {company}, '
-    . '{startdate}, {enddate}, {link}, {sitename}, {supportemail}. {link} leads straight into the course, {supportemail} is the '
-    . 'support address from the site settings. A signature of your own belongs in this text as well.';
+$string['ordermailbody_desc'] = 'Placeholders: {firstname}, {lastname}, {username}, {password}, {course}, {module}, {title}, '
+    . '{company}, {startdate}, {enddate}, {link}, {sitename}, {supportemail}. {title} is the title of the module from the module '
+    . 'list, or its name when it has none. {link} leads straight into the course, {supportemail} is the support address from the '
+    . 'site settings. A signature of your own belongs in this text as well.';
 $string['ordermailed'] = '{$a} mails with credentials sent.';
 $string['ordermailed_one'] = '1 mail with credentials sent.';
 $string['ordermailfailed'] = 'Not every mail went out. The hourly run tries them again.';
@@ -226,9 +227,11 @@ $string['ordermissingname'] = 'Name incomplete.';
 $string['ordermissingnamecolumn'] = 'No column holds the surname.';
 $string['ordermodule'] = 'Module';
 $string['ordermodules'] = 'Modules that can be ordered';
-$string['ordermodules_desc'] = 'One module per line, four fields separated by a vertical bar: name, short name of the template '
-    . 'course, category id, prefix of the generated course short name. An empty category id puts the new course where its template '
-    . 'sits.<br />Example: <code>Grundmodul | OJU_Vorlage_GM | 12 | OJU_GM</code>';
+$string['ordermodules_desc'] = 'One module per line, fields separated by a vertical bar: name, short name of the template course, '
+    . 'category id, prefix of the generated course short name, and optionally a title for the mails. An empty category id puts the '
+    . 'new course where its template sits. The name appears in the form, the list of orders and through {module} in the course '
+    . 'name, the title only in the mails through {title}.<br />Example: <code>Grundmodul | OJU_Vorlage_GM | 12 | OJU_GM | Sicheres '
+    . 'Arbeiten an elektrischen Anlagen</code>';
 $string['ordermonths'] = 'Runtime in months';
 $string['ordermonths_desc'] = 'Prefills the course end when an order is created, and can be changed per order.';
 $string['ordernolines'] = 'Nothing could be read from the pasted list.';
@@ -332,8 +335,9 @@ $string['reminderbody_default'] = '<p>Dear {firstname} {lastname},</p><p>you hav
     . 'you straight to the instruction: {link}<br>Your user name: <strong>{username}</strong></p><p>If you have forgotten your '
     . 'password, you can reset it on the login page. If you have any questions, contact us at {supportemail}.</p><p>Kind '
     . 'regards<br>{sitename}</p>';
-$string['reminderbody_desc'] = 'Placeholders: {firstname}, {lastname}, {username}, {course}, {module}, {company}, {startdate}, '
-    . '{enddate}, {daysleft}, {link}, {sitename}, {supportemail}. {daysleft} is the number of days until the course ends.';
+$string['reminderbody_desc'] = 'Placeholders: {firstname}, {lastname}, {username}, {course}, {module}, {title}, {company}, '
+    . '{startdate}, {enddate}, {daysleft}, {link}, {sitename}, {supportemail}. {title} is the title of the module from the module '
+    . 'list, or its name when it has none. {daysleft} is the number of days until the course ends.';
 $string['reminderboxafter'] = '{$a} days after enrolment';
 $string['reminderboxbefore'] = '{$a} days before the end';
 $string['reminderboxinfo'] = 'Reminders: {$a}.';

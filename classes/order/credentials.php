@@ -180,6 +180,7 @@ class credentials {
             '{username}' => $user->username,
             '{course}' => $course->fullname,
             '{module}' => $module ? $module->name : $order->module,
+            '{title}' => $module ? $module->title : $order->module,
             '{company}' => $order->company,
             '{startdate}' => helper::format_date($course->startdate, ''),
             '{enddate}' => helper::format_date($course->enddate, ''),

@@ -211,9 +211,10 @@ $string['ordermailbody_default'] = '<p>Guten Tag {firstname} {lastname},</p><p>{
     . 'Lerninhalte und Teilprüfungen bis zum {enddate}. Sie müssen nicht alles an einem Stück erledigen, bereits abgeschlossene '
     . 'Inhalte bleiben erhalten.</p><p>Bei Fragen erreichen Sie uns unter {supportemail}.</p><p>Mit freundlichen '
     . 'Grüßen<br>{sitename}</p>';
-$string['ordermailbody_desc'] = 'Platzhalter: {firstname}, {lastname}, {username}, {password}, {course}, {module}, {company}, '
-    . '{startdate}, {enddate}, {link}, {sitename}, {supportemail}. {link} führt direkt in den Kurs, {supportemail} ist die '
-    . 'Support-Adresse aus den Website-Einstellungen. Eine eigene Signatur gehört mit in diesen Text.';
+$string['ordermailbody_desc'] = 'Platzhalter: {firstname}, {lastname}, {username}, {password}, {course}, {module}, {title}, '
+    . '{company}, {startdate}, {enddate}, {link}, {sitename}, {supportemail}. {title} ist der Titel des Moduls aus der Modulliste, '
+    . 'ohne Titel sein Name. {link} führt direkt in den Kurs, {supportemail} ist die Support-Adresse aus den '
+    . 'Website-Einstellungen. Eine eigene Signatur gehört mit in diesen Text.';
 $string['ordermailed'] = '{$a} Mails mit Zugangsdaten verschickt.';
 $string['ordermailed_one'] = '1 Mail mit Zugangsdaten verschickt.';
 $string['ordermailfailed'] = 'Nicht jede Mail ging raus. Der stündliche Versand versucht es erneut.';
@@ -229,9 +230,11 @@ $string['ordermissingname'] = 'Name unvollständig.';
 $string['ordermissingnamecolumn'] = 'Keine Spalte enthält den Nachnamen.';
 $string['ordermodule'] = 'Modul';
 $string['ordermodules'] = 'Bestellbare Module';
-$string['ordermodules_desc'] = 'Ein Modul je Zeile, vier Felder durch einen senkrechten Strich getrennt: Name, Kurzname des '
-    . 'Vorlagenkurses, ID des Kursbereichs, Präfix des erzeugten Kurznamens. Ohne Kursbereich landet der neue Kurs dort, wo seine '
-    . 'Vorlage liegt.<br />Beispiel: <code>Grundmodul | OJU_Vorlage_GM | 12 | OJU_GM</code>';
+$string['ordermodules_desc'] = 'Ein Modul je Zeile, Felder durch einen senkrechten Strich getrennt: Name, Kurzname des '
+    . 'Vorlagenkurses, ID des Kursbereichs, Präfix des erzeugten Kurznamens und wahlweise ein Titel für die Mails. Ohne '
+    . 'Kursbereich landet der neue Kurs dort, wo seine Vorlage liegt. Der Name erscheint im Formular, in der Auftragsübersicht und '
+    . 'über {module} im Kursnamen, der Titel nur in den Mails über {title}.<br />Beispiel: <code>Grundmodul | OJU_Vorlage_GM | 12 '
+    . '| OJU_GM | Sicheres Arbeiten an elektrischen Anlagen</code>';
 $string['ordermonths'] = 'Laufzeit in Monaten';
 $string['ordermonths_desc'] = 'Füllt das Kursende beim Anlegen vor und bleibt je Auftrag änderbar.';
 $string['ordernolines'] = 'Aus der eingefügten Liste ließ sich nichts lesen.';
@@ -335,8 +338,9 @@ $string['reminderbody_default'] = '<p>Guten Tag {firstname} {lastname},</p><p>Ih
     . 'Verfügung.</p><p>Hier geht es direkt zur Unterweisung: {link}<br>Ihr Benutzername: <strong>{username}</strong></p><p>Falls '
     . 'Sie Ihr Passwort vergessen haben, können Sie es auf der Anmeldeseite zurücksetzen. Bei Fragen erreichen Sie uns unter '
     . '{supportemail}.</p><p>Mit freundlichen Grüßen<br>{sitename}</p>';
-$string['reminderbody_desc'] = 'Platzhalter: {firstname}, {lastname}, {username}, {course}, {module}, {company}, {startdate}, '
-    . '{enddate}, {daysleft}, {link}, {sitename}, {supportemail}. {daysleft} ist die Zahl der Tage bis zum Kursende.';
+$string['reminderbody_desc'] = 'Platzhalter: {firstname}, {lastname}, {username}, {course}, {module}, {title}, {company}, '
+    . '{startdate}, {enddate}, {daysleft}, {link}, {sitename}, {supportemail}. {title} ist der Titel des Moduls aus der '
+    . 'Modulliste, ohne Titel sein Name. {daysleft} ist die Zahl der Tage bis zum Kursende.';
 $string['reminderboxafter'] = '{$a} Tage nach der Einschreibung';
 $string['reminderboxbefore'] = '{$a} Tage vor Kursende';
 $string['reminderboxinfo'] = 'Erinnerungen: {$a}.';
