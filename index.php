@@ -17,9 +17,9 @@
 /**
  * Overview of all courses, with their orders and how many completed them.
  *
- * One row per course. A course made by an order carries the order's company,
- * order number, module and how the credentials went out; a course without one
- * leaves those cells empty. Orders whose course is gone show up under the
+ * One row per course. A course made by an order shows how the credentials went
+ * out, the export adds company, order number and module; a course without an
+ * order leaves those cells empty. Search also finds company and order number. Orders whose course is gone show up under the
  * state "deleted", with the numbers kept from just before the deletion.
  *
  * @package    local_coursesoverview
@@ -55,7 +55,7 @@ $withoutparticipants = optional_param('withoutparticipants', 0, PARAM_BOOL);
 // the courses gets the overview as it was before orders existed.
 $canorders = has_capability('local/coursesoverview:createorder', context_system::instance());
 
-$sortcolumns = ['fullname', 'company', 'abnr', 'module', 'startdate', 'enddate', 'completed', 'total'];
+$sortcolumns = ['fullname', 'startdate', 'enddate', 'completed', 'total'];
 $sort = helper::validate_sort($sort, $sortcolumns, 'enddate');
 $descending = ($dir !== 'asc');
 $dir = $descending ? 'desc' : 'asc';
@@ -306,9 +306,6 @@ foreach ($courses as $course) {
     $rows[] = [
         'sort' => [
             'fullname' => $coursename,
-            'company' => $company,
-            'abnr' => $abnr,
-            'module' => $module,
             'startdate' => (int) $course->startdate,
             'enddate' => (int) $course->enddate,
             'completed' => (int) $completedparticipants,
@@ -317,9 +314,6 @@ foreach ($courses as $course) {
         'state' => $coursestate,
         'cells' => [
             'course' => $coursename,
-            'company' => s($company),
-            'abnr' => s($abnr),
-            'module' => s($module),
             'startdate' => helper::format_date($course->startdate),
             'enddate' => helper::format_date($course->enddate),
             'completion' => $completioncell,
@@ -380,9 +374,6 @@ if ($state === 'deleted' && !$category && $origin !== 'none') {
         $rows[] = [
             'sort' => [
                 'fullname' => $coursetext,
-                'company' => $order->company,
-                'abnr' => $order->abnr,
-                'module' => $module,
                 'startdate' => (int) $order->startdate,
                 'enddate' => (int) $order->enddate,
                 'completed' => (int) $completed,
@@ -391,9 +382,6 @@ if ($state === 'deleted' && !$category && $origin !== 'none') {
             'state' => 'deleted',
             'cells' => [
                 'course' => html_writer::span(s($coursetext), 'text-muted'),
-                'company' => s($order->company),
-                'abnr' => s($order->abnr),
-                'module' => s($module),
                 'startdate' => helper::format_date($order->startdate),
                 'enddate' => helper::format_date($order->enddate),
                 'completion' => $completioncell,
@@ -511,11 +499,10 @@ echo output::legend(['overdue', 'endingsoon', 'tosettle', 'done']);
 $completedheader = output::sort_header($completedlabel, 'completed', $sort, $descending, $baseurl);
 $totalheader = output::sort_header($totallabel, 'total', $sort, $descending, $baseurl);
 
+// Company, order number and module only go to the export; on screen the
+// course name tells them and the search finds them, the table stays narrow.
 $head = $keep([
     'course' => output::sort_header(get_string('course'), 'fullname', $sort, $descending, $baseurl),
-    'company' => output::sort_header(get_string('ordercompany', 'local_coursesoverview'), 'company', $sort, $descending, $baseurl),
-    'abnr' => output::sort_header(get_string('orderabnr', 'local_coursesoverview'), 'abnr', $sort, $descending, $baseurl),
-    'module' => output::sort_header(get_string('ordermodule', 'local_coursesoverview'), 'module', $sort, $descending, $baseurl),
     'startdate' => output::sort_header(get_string('startdate'), 'startdate', $sort, $descending, $baseurl),
     'enddate' => output::sort_header(get_string('enddate'), 'enddate', $sort, $descending, $baseurl),
     'completion' => $completedheader . ' / ' . $totalheader,

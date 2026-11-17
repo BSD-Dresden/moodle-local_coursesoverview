@@ -104,14 +104,13 @@ if ($hassiteconfig) {
         'moodle/site:config'
     );
 
-    // The minutes live under their own name in the same plugin. Core shows the default as hour.':'.minute,
-    // so the minute is a string to read 7:00 instead of 7:0; saving casts it to a number anyway.
-    $settings->add(new admin_setting_configtime(
+    // The minutes live under their own name in the same plugin, shown with two digits.
+    $settings->add(new \local_coursesoverview\admin_setting_time(
         'local_coursesoverview/ordersendhour',
         'ordersendminute',
         get_string('ordersendtime', 'local_coursesoverview'),
         get_string('ordersendtime_desc', 'local_coursesoverview'),
-        ['h' => 7, 'm' => '00']
+        ['h' => 7, 'm' => 0]
     ));
 
     $settings->add(new admin_setting_configtext(

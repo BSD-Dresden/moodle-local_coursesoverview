@@ -88,8 +88,9 @@ Die Schwelle für „endet demnächst" steht als Konstante `ENDING_SOON` in
 ## Aufträge in der Übersicht
 
 Wer `local/coursesoverview:createorder` besitzt, sieht zu jedem Kurs aus einem
-Auftrag dessen Firma, AB-Nummer, Modul und wie die Zugangsdaten verschickt
-wurden; die Suche findet auch Firma und AB-Nummer. Kurse ohne Auftrag lassen
+Auftrag, wie die Zugangsdaten verschickt wurden. Firma, AB-Nummer und Modul
+stehen nur im Excel-Export, damit die Tabelle schmal bleibt; die Suche findet
+Firma und AB-Nummer trotzdem. Kurse ohne Auftrag lassen
 diese Felder leer, der Filter „Herkunft“ trennt beides. Aufträge, deren Kurs
 gelöscht ist, stehen unter dem Status „Gelöscht“ mit den Zahlen von kurz vor
 dem Löschen. Wer nur `local/coursesoverview:view` hat, sieht die Übersicht ohne
@@ -175,6 +176,7 @@ Die Aufgabe läuft stündlich, einstellbar unter **Server → Geplante Aufgaben*
 ## Aufbau
 
 ```
+classes/admin_setting_time.php  Uhrzeit-Einstellung mit zweistelligen Minuten
 classes/certificate.php  Teilnahmebestätigungen auf der PDF-Vorlage
 classes/certificate_pdf.php  FPDI mit ausgetauschtem Seiteninhalt
 classes/done.php      Als erledigt markierte Kurse
