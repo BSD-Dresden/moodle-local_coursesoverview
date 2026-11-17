@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Certificates of attendance: all of a course as one ZIP, or a preview of a template.
+ * Certificates of attendance: all of a course as one ZIP, one person's as a PDF, or a preview of a template.
  *
  * One PDF per person who completed the course, each with their own completion
  * date. Our own business like the orders, so not for customers' organisers,
@@ -32,6 +32,7 @@ require_once(__DIR__ . '/../../config.php');
 use local_coursesoverview\certificate;
 
 $courseid = optional_param('courseid', 0, PARAM_INT);
+$userid = optional_param('userid', 0, PARAM_INT);
 $preview = optional_param('preview', -1, PARAM_INT);
 
 require_login();
@@ -56,9 +57,18 @@ if ($itemid === null) {
 }
 
 $people = certificate::people($course);
+if ($userid) {
+    // Only somebody who completed the course has a certificate to make.
+    $people = array_values(array_filter($people, function ($person) use ($userid) {
+        return (int) $person->id === $userid;
+    }));
+}
 if (!$people) {
     throw new moodle_exception('certificatenone', 'local_coursesoverview', $returnurl->out(false));
 }
 
 \core\session\manager::write_close();
+if ($userid) {
+    certificate::send_single($course, $itemid, $people[0]);
+}
 certificate::send($course, $itemid, $people);

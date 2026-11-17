@@ -119,8 +119,10 @@ einem Raster. Word auf dem Server nach PDF umzuwandeln bräuchte LibreOffice.
 
 Auf der Seite **Abschlussstatus** und in der Meldung nach „Erledigt“ steht
 dann ein Link, der für jede Person mit Abschluss ein eigenes PDF mit ihrem
-Abschlussdatum erzeugt und alle zusammen als ZIP liefert. Nur mit
-`local/coursesoverview:createorder`, Organisatoren der Kunden sehen ihn nicht.
+Abschlussdatum erzeugt und alle zusammen als ZIP liefert. Neben jedem
+Abschlussdatum in der Tabelle steht außerdem ein PDF-Symbol für die
+Bestätigung dieser einen Person. Beides nur mit
+`local/coursesoverview:createorder`, Organisatoren der Kunden sehen beides nicht.
 Kurse ohne Auftrag und Module ohne eigene Vorlage nehmen die allgemeine.
 
 ## Kurs mit Teilnehmern löschen
@@ -193,7 +195,7 @@ participants.php      Abschlussstatus eines Kurses
 delete.php            Bestätigung und Löschung von Kurs samt Konten
 lib.php               Eintrag im Kursmenü, Löschen auf der Profilseite
 orders.php            Eintrag eines gelöschten Auftrags entfernen
-certificate.php       Teilnahmebestätigungen eines Kurses als ZIP
+certificate.php       Teilnahmebestätigungen eines Kurses als ZIP oder einzeln
 settings.php          Admin-Baum und Einstellungen
 styles.css            Zeilenfarben
 ```

@@ -190,10 +190,7 @@ class certificate {
      * @return string empty without a template or without anybody who completed
      */
     public static function link(stdClass $course, string $class = ''): string {
-        if (!has_capability('local/coursesoverview:createorder', context_system::instance())) {
-            return '';
-        }
-        if (self::template($course->id) === null) {
+        if (!self::available($course->id)) {
             return '';
         }
         $count = count(self::people($course));
@@ -215,6 +212,57 @@ class certificate {
      */
     public static function send(stdClass $course, int $itemid, array $people): void {
         $dir = make_request_directory();
+        $make = self::maker($course, $itemid, $dir);
+
+        $zippath = $dir . '/certificates.zip';
+        $zip = new ZipArchive();
+        if ($zip->open($zippath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            throw new \moodle_exception('certificatefailed', 'local_coursesoverview');
+        }
+
+        $names = [];
+        foreach ($people as $person) {
+            [$name, $pdf] = $make($person);
+            // Two people of the same name each keep their own file.
+            $unique = $name;
+            for ($n = 2; isset($names[$unique]); $n++) {
+                $unique = $name . ' ' . $n;
+            }
+            $names[$unique] = true;
+            $zip->addFromString($unique . '.pdf', $pdf);
+        }
+        $zip->close();
+
+        $zipname = clean_filename(get_string('certificatezip', 'local_coursesoverview', $course->shortname)) . '.zip';
+        send_file($zippath, $zipname, 0, 0, false, true, 'application/zip');
+        die();
+    }
+
+    /**
+     * Make the PDF of one person and send it.
+     *
+     * @param stdClass $course
+     * @param int $itemid template item
+     * @param stdClass $person one of people()
+     */
+    public static function send_single(stdClass $course, int $itemid, stdClass $person): void {
+        $make = self::maker($course, $itemid, make_request_directory());
+        [$name, $pdf] = $make($person);
+        send_file($pdf, $name . '.pdf', 0, 0, true, true, 'application/pdf');
+        die();
+    }
+
+    /**
+     * What makes the certificate of one person of a course.
+     *
+     * Reads the template once, so that a ZIP for many people does not.
+     *
+     * @param stdClass $course
+     * @param int $itemid template item
+     * @param string $dir where the template may be copied to
+     * @return callable person => [file name without extension, PDF]
+     */
+    protected static function maker(stdClass $course, int $itemid, string $dir): callable {
         $template = self::template_path($itemid, $dir);
         $found = pdf_placeholders::find($template);
         $positions = self::positions($itemid);
@@ -229,14 +277,7 @@ class certificate {
             'company' => $order ? $order->company : '',
         ];
 
-        $zippath = $dir . '/certificates.zip';
-        $zip = new ZipArchive();
-        if ($zip->open($zippath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            throw new \moodle_exception('certificatefailed', 'local_coursesoverview');
-        }
-
-        $names = [];
-        foreach ($people as $person) {
+        return function (stdClass $person) use ($template, $found, $positions, $common): array {
             $values = $common + [
                 'name' => fullname($person),
                 'firstname' => $person->firstname,
@@ -244,22 +285,38 @@ class certificate {
                 'date' => userdate($person->timecompleted, '%d.%m.%Y'),
             ];
             $pdf = self::render($template, self::fields($found['placeholders'], $positions, $values), $found['content']);
-
-            // Two people of the same name each keep their own file.
             $personname = $person->lastname . ' ' . $person->firstname;
             $name = clean_filename(get_string('certificatefile', 'local_coursesoverview', $personname));
-            $unique = $name;
-            for ($n = 2; isset($names[$unique]); $n++) {
-                $unique = $name . ' ' . $n;
-            }
-            $names[$unique] = true;
-            $zip->addFromString($unique . '.pdf', $pdf);
-        }
-        $zip->close();
 
-        $zipname = clean_filename(get_string('certificatezip', 'local_coursesoverview', $course->shortname)) . '.zip';
-        send_file($zippath, $zipname, 0, 0, false, true, 'application/zip');
-        die();
+            return [$name, $pdf];
+        };
+    }
+
+    /**
+     * A link to the certificate of one person, for the completion status.
+     *
+     * @param int $courseid
+     * @param int $userid
+     * @return string
+     */
+    public static function single_link(int $courseid, int $userid): string {
+        global $OUTPUT;
+
+        $url = new \moodle_url('/local/coursesoverview/certificate.php', ['courseid' => $courseid, 'userid' => $userid]);
+        $label = get_string('certificatesingle', 'local_coursesoverview');
+
+        return \html_writer::link($url, $OUTPUT->pix_icon('f/pdf', $label), ['title' => $label]);
+    }
+
+    /**
+     * Whether the current user may make certificates for a course, and it has a template.
+     *
+     * @param int $courseid
+     * @return bool
+     */
+    public static function available(int $courseid): bool {
+        return has_capability('local/coursesoverview:createorder', context_system::instance())
+            && self::template($courseid) !== null;
     }
 
     /**

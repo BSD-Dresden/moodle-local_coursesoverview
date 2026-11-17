@@ -132,6 +132,9 @@ $accesssincebyuser = $DB->get_records_sql_menu($sql, ['courseid' => $courseid]);
 // managers hold it there, a role granted inside a single course does not.
 $maylinkprofiles = has_capability('moodle/user:viewuseractivitiesreport', context_user::instance($USER->id));
 
+// A certificate of one's own beside each completion date, for whoever makes them.
+$singlecertificates = \local_coursesoverview\certificate::available($courseid);
+
 // Build one row per participant.
 $rowsbyuser = [];
 
@@ -161,6 +164,10 @@ foreach ($participants as $user) {
     $date = $completedtime ?: (int) ($lastaccessbyuser[$user->id] ?? 0);
 
     $profileurl = new moodle_url('/user/view.php', ['id' => $user->id, 'course' => $courseid]);
+    $datecell = helper::format_date($date);
+    if ($singlecertificates && $completedtime) {
+        $datecell .= ' ' . \local_coursesoverview\certificate::single_link($courseid, $user->id);
+    }
 
     $rowsbyuser[$user->id] = [
         'sort' => [
@@ -176,7 +183,7 @@ foreach ($participants as $user) {
             $maylinkprofiles ? html_writer::link($profileurl, s($user->lastname)) : s($user->lastname),
             s($user->email),
             $progress,
-            helper::format_date($date),
+            $datecell,
         ],
         // The export mirrors the compact on-screen columns: one name, one
         // progress figure, one date -- plus the enrolment date, which is of

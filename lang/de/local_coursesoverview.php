@@ -62,6 +62,7 @@ $string['certificatesample'] = 'Beispieltext';
 $string['certificatesamplefirstname'] = 'Erika';
 $string['certificatesamplelastname'] = 'Mustermann';
 $string['certificatesamplename'] = 'Erika Mustermann';
+$string['certificatesingle'] = 'Teilnahmebestätigung als PDF';
 $string['certificatetemplate'] = 'Vorlage (PDF)';
 $string['certificatezip'] = 'Teilnahmebestätigungen {$a}';
 $string['colemail'] = 'E-Mail-Adresse';
