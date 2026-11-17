@@ -60,6 +60,7 @@ $string['certificatesample'] = 'Sample text';
 $string['certificatesamplefirstname'] = 'Jane';
 $string['certificatesamplelastname'] = 'Doe';
 $string['certificatesamplename'] = 'Jane Doe';
+$string['certificateshort'] = 'Certificate';
 $string['certificatesingle'] = 'Certificate of attendance as PDF';
 $string['certificatetemplate'] = 'Template (PDF)';
 $string['certificatezip'] = 'Certificates {$a}';

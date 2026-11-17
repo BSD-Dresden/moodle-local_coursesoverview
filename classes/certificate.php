@@ -304,8 +304,14 @@ class certificate {
 
         $url = new \moodle_url('/local/coursesoverview/certificate.php', ['courseid' => $courseid, 'userid' => $userid]);
         $label = get_string('certificatesingle', 'local_coursesoverview');
+        $icon = $OUTPUT->pix_icon('f/pdf', '', 'moodle', ['class' => 'me-1']);
+        $text = $icon . get_string('certificateshort', 'local_coursesoverview');
 
-        return \html_writer::link($url, $OUTPUT->pix_icon('f/pdf', $label), ['title' => $label]);
+        return \html_writer::link($url, $text, [
+            'title' => $label,
+            'aria-label' => $label,
+            'class' => 'btn btn-sm btn-outline-primary ms-2 py-0',
+        ]);
     }
 
     /**

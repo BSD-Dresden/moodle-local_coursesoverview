@@ -120,7 +120,7 @@ einem Raster. Word auf dem Server nach PDF umzuwandeln bräuchte LibreOffice.
 Auf der Seite **Abschlussstatus** und in der Meldung nach „Erledigt“ steht
 dann ein Link, der für jede Person mit Abschluss ein eigenes PDF mit ihrem
 Abschlussdatum erzeugt und alle zusammen als ZIP liefert. Neben jedem
-Abschlussdatum in der Tabelle steht außerdem ein PDF-Symbol für die
+Abschlussdatum in der Tabelle steht außerdem ein Knopf „TB“ für die
 Bestätigung dieser einen Person. Beides nur mit
 `local/coursesoverview:createorder`, Organisatoren der Kunden sehen beides nicht.
 Kurse ohne Auftrag und Module ohne eigene Vorlage nehmen die allgemeine.
