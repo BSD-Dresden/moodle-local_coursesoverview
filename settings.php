@@ -24,8 +24,15 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+// A tab of its own right after "General". Moodle folds a category into "General" while it is a short branch,
+// fewer than eight entries and none of them a category, so the settings below are a category of their own.
+$ADMIN->add('root', new admin_category(
+    'localcoursesoverviewcategory',
+    get_string('admincategory', 'local_coursesoverview')
+), 'users');
+
 if ($hassiteconfig || has_capability('local/coursesoverview:view', context_system::instance())) {
-    $ADMIN->add('courses', new admin_externalpage(
+    $ADMIN->add('localcoursesoverviewcategory', new admin_externalpage(
         'localcoursesoverview',
         get_string('overview', 'local_coursesoverview'),
         new moodle_url('/local/coursesoverview/index.php'),
@@ -34,13 +41,13 @@ if ($hassiteconfig || has_capability('local/coursesoverview:view', context_syste
 }
 
 if ($hassiteconfig || has_capability('local/coursesoverview:createorder', context_system::instance())) {
-    $ADMIN->add('courses', new admin_externalpage(
+    $ADMIN->add('localcoursesoverviewcategory', new admin_externalpage(
         'localcoursesovervieworder',
         get_string('neworder', 'local_coursesoverview'),
         new moodle_url('/local/coursesoverview/order.php'),
         'local/coursesoverview:createorder'
     ));
-    $ADMIN->add('courses', new admin_externalpage(
+    $ADMIN->add('localcoursesoverviewcategory', new admin_externalpage(
         'localcoursesoverviewhistory',
         get_string('orders', 'local_coursesoverview'),
         new moodle_url('/local/coursesoverview/orders.php'),
@@ -49,9 +56,15 @@ if ($hassiteconfig || has_capability('local/coursesoverview:createorder', contex
 }
 
 if ($hassiteconfig) {
+    $ADMIN->add('localcoursesoverviewcategory', new admin_category(
+        'localcoursesoverviewsettingscategory',
+        get_string('settings', 'local_coursesoverview')
+    ));
+
+    // The page keeps its old name, order.php links to it for the modules.
     $settings = new admin_settingpage(
         'localcoursesoverviewsettings',
-        get_string('settings', 'local_coursesoverview'),
+        get_string('settingsorders', 'local_coursesoverview'),
         'moodle/site:config'
     );
 
@@ -89,11 +102,13 @@ if ($hassiteconfig) {
         PARAM_INT
     ));
 
-    $settings->add(new admin_setting_heading(
-        'local_coursesoverview/ordermailheading',
+    $ADMIN->add('localcoursesoverviewsettingscategory', $settings);
+
+    $settings = new admin_settingpage(
+        'localcoursesoverviewmail',
         get_string('ordermailheading', 'local_coursesoverview'),
-        ''
-    ));
+        'moodle/site:config'
+    );
 
     // The minutes live under their own name in the same plugin.
     $settings->add(new admin_setting_configtime(
@@ -119,9 +134,18 @@ if ($hassiteconfig) {
         get_string('ordermailbody_default', 'local_coursesoverview')
     ));
 
+    $ADMIN->add('localcoursesoverviewsettingscategory', $settings);
+
+    $settings = new admin_settingpage(
+        'localcoursesoverviewreminders',
+        get_string('reminderheading', 'local_coursesoverview'),
+        'moodle/site:config'
+    );
+
+    // The page title already says "Reminders", the heading only carries the explanation.
     $settings->add(new admin_setting_heading(
         'local_coursesoverview/reminderheading',
-        get_string('reminderheading', 'local_coursesoverview'),
+        '',
         get_string('reminderheading_desc', 'local_coursesoverview')
     ));
 
@@ -157,5 +181,5 @@ if ($hassiteconfig) {
         get_string('reminderbody_default', 'local_coursesoverview')
     ));
 
-    $ADMIN->add('courses', $settings);
+    $ADMIN->add('localcoursesoverviewsettingscategory', $settings);
 }

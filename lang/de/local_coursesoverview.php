@@ -25,6 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['accesssince'] = 'Zugang seit';
+$string['admincategory'] = 'Schulungsverwaltung';
 $string['applyfilters'] = 'Filtern';
 $string['backtooverview'] = 'Zurück zur Kursübersicht';
 $string['colemail'] = 'E-Mail-Adresse';
@@ -385,7 +386,8 @@ $string['remindheading'] = 'Erinnerungen: {$a}';
 $string['roleboth'] = 'Organisator und Teilnehmer';
 $string['roleorganiser'] = 'Organisator';
 $string['roleparticipant'] = 'Teilnehmer';
-$string['settings'] = 'Online-Unterweisungen: Einstellungen';
+$string['settings'] = 'Einstellungen';
+$string['settingsorders'] = 'Aufträge und Module';
 $string['statusactive'] = 'Laufend';
 $string['statuscompleted'] = 'Abgeschlossen';
 $string['statusendingsoon'] = 'Endet demnächst, nicht abgeschlossen';

@@ -42,7 +42,7 @@ Nach `local/coursesoverview` entpacken, dann:
 php admin/cli/upgrade.php --non-interactive
 ```
 
-Aufruf über **Website-Administration → Kurse → Kursübersicht**. Der
+Aufruf über **Website-Administration → Schulungsverwaltung → Kursübersicht**. Der
 Abschlussstatus eines einzelnen Kurses steht zusätzlich in dessen Kursmenü
 unter **Mehr**, für alle, die die Berechtigung in diesem Kurs besitzen.
 
@@ -113,7 +113,7 @@ entfernt. Beides ist nicht rückgängig zu machen.
 
 Eine geplante Aufgabe meldet per E-Mail, sobald ein Kurs in den grünen Zustand
 wechselt — also sobald der letzte Teilnehmer fertig ist. Empfänger eintragen
-unter **Website-Administration → Kurse → Kursübersicht: Einstellungen**; ohne
+unter **Website-Administration → Schulungsverwaltung → Einstellungen → Aufträge und Module**; ohne
 Eintrag passiert nichts. Die Adressen brauchen kein Moodle-Konto.
 
 Zwei Eigenheiten:
