@@ -304,7 +304,8 @@ class certificate {
 
         $url = new \moodle_url('/local/coursesoverview/certificate.php', ['courseid' => $courseid, 'userid' => $userid]);
         $label = get_string('certificatesingle', 'local_coursesoverview');
-        $icon = $OUTPUT->pix_icon('f/pdf', '', 'moodle', ['class' => 'me-1']);
+        // A font icon takes the colour of the button's text, a file icon would stay grey.
+        $icon = $OUTPUT->pix_icon('t/download', '', 'moodle', ['class' => 'me-1']);
         $text = $icon . get_string('certificateshort', 'local_coursesoverview');
 
         return \html_writer::link($url, $text, [
