@@ -37,5 +37,6 @@ class observer {
         global $DB;
 
         $DB->set_field('local_coursesoverview_order', 'courseid', null, ['courseid' => $event->objectid]);
+        done::forget((int) $event->objectid);
     }
 }

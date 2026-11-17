@@ -49,7 +49,9 @@ class helper {
             'overdue' => '#f5c6cb',
             'endingsoon' => '#fff3cd',
             'tosettle' => '#d4edda',
-            'hidden' => '#e0e0e0',
+            'done' => '#e0e0e0',
+            'hidden' => null,
+            'deleted' => null,
             // Ended, but the completion rate is unknown: stated, not coloured.
             'past' => null,
             'active' => null,
@@ -117,8 +119,9 @@ class helper {
     /**
      * Determine the highlight state of a course row.
      *
-     * Hidden wins over everything: hiding a course is the manual marker for
-     * "settled, may eventually be deleted", so it must never be nagged about.
+     * Done wins over everything: marking a course done says its completions
+     * have been handed on, so it must never be nagged about again. A hidden
+     * course that is not done, a template for instance, is merely hidden.
      * A course that starts later and has nobody in it yet is waiting for its
      * people, whose enrolments only begin on its start day. Everybody being
      * done comes next, whether or not the course has ended:
@@ -132,14 +135,20 @@ class helper {
      * @param int|null $completed participants that completed, null if unknown
      * @param int $total tracked participants
      * @param int $now
+     * @param bool $done whether the course is marked as done
      * @return string state key
      */
     public static function course_state(
         stdClass $course,
         ?int $completed,
         int $total,
-        int $now
+        int $now,
+        bool $done = false
     ): string {
+        if ($done) {
+            return 'done';
+        }
+
         if ($course->visible == 0) {
             return 'hidden';
         }
@@ -177,7 +186,7 @@ class helper {
      * @return array filter key => label
      */
     public static function filter_states(): array {
-        $states = ['todo', 'overdue', 'endingsoon', 'tosettle', 'upcoming', 'active', 'past', 'hidden'];
+        $states = ['todo', 'overdue', 'endingsoon', 'tosettle', 'upcoming', 'active', 'past', 'done', 'hidden', 'deleted'];
 
         $options = [];
         foreach ($states as $state) {

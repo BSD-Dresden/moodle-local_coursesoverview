@@ -25,9 +25,45 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['accesssince'] = 'Zugang seit';
-$string['admincategory'] = 'Schulungsverwaltung';
+$string['actiondone'] = 'Erledigt';
+$string['actionrelease'] = 'Wieder freigeben';
 $string['applyfilters'] = 'Filtern';
 $string['backtooverview'] = 'Zurück zur Kursübersicht';
+$string['certificatebold'] = 'Ohne Platzhalter: Name und Datum fett';
+$string['certificatebutton'] = 'Teilnahmebestätigungen ({$a})';
+$string['certificatedefault'] = 'Allgemeine Vorlage';
+$string['certificatedefault_desc'] = 'Für Module ohne eigene Vorlage und für Kurse ohne Auftrag. Leer lassen, wenn es ' .
+    'dort keine Bestätigungen geben soll.';
+$string['certificatefailed'] = 'Die Teilnahmebestätigungen konnten nicht erstellt werden. Ist die Vorlage ein PDF?';
+$string['certificatefile'] = 'Teilnahmebestätigung {$a}';
+$string['certificatefontsize'] = 'Ohne Platzhalter: Schriftgröße in Punkt';
+$string['certificatemodule'] = 'Vorlage für {$a}';
+$string['certificatemodule_desc'] = 'Statt der allgemeinen Vorlage. Leer lassen für die allgemeine.';
+$string['certificatenone'] = 'In diesem Kurs hat noch niemand abgeschlossen.';
+$string['certificatenotemplate'] = 'Für diesen Kurs ist keine Vorlage für Teilnahmebestätigungen hinterlegt.';
+$string['certificatepos'] = 'Ohne Platzhalter: Position von Name und Datum';
+$string['certificatepos_desc'] = 'Nur für Vorlagen ohne Platzhalter. Vier Zahlen in Millimetern von der linken oberen ' .
+    'Ecke: Name nach rechts und nach unten, dann Datum nach rechts und nach unten. Gemessen bis zur Grundlinie, also ' .
+    'der Unterkante der Buchstaben ohne Unterlängen. Beispiel: 18,5 84,8 30,8 142,4';
+$string['certificatepos_module_desc'] = 'Wie bei der allgemeinen Vorlage. Leer lassen, um deren Position zu nehmen.';
+$string['certificatepreview'] = 'Vorschau mit Raster öffnen';
+$string['certificatepreviewfile'] = 'Vorschau Teilnahmebestätigung';
+$string['certificates'] = 'Teilnahmebestätigungen';
+$string['certificates_desc'] = 'PDF-Vorlagen für die Teilnahmebestätigungen, eine Datei je Person mit ihrem eigenen ' .
+    'Abschlussdatum, alle zusammen als ZIP. So entsteht eine Vorlage: In Word an die Stelle des Namens {name} und an ' .
+    'die Stelle des Datums {date} schreiben, in der Schrift, Größe und Ausrichtung, die der Text haben soll, und in ' .
+    'weißer Schriftfarbe, damit die Platzhalter in Word nicht stören; in den fertigen Bestätigungen sind sie ganz ' .
+    'entfernt. Dann als PDF speichern und hier hochladen. ' .
+    'Weitere Platzhalter: {firstname}, {lastname}, {company}, {course}, {module}, {title}. Der Text beginnt dort, wo ' .
+    'der Platzhalter beginnt; {name:center} setzt ihn auf dessen Mitte, {name:right} an dessen Ende. Moodle kennt ' .
+    'keine Anrede, der Text sollte also ohne „Herr“ und „Frau“ auskommen. Nach dem Speichern zeigt die Vorschau mit ' .
+    'Raster, wo alles landet.';
+$string['certificatesample'] = 'Beispieltext';
+$string['certificatesamplefirstname'] = 'Erika';
+$string['certificatesamplelastname'] = 'Mustermann';
+$string['certificatesamplename'] = 'Erika Mustermann';
+$string['certificatetemplate'] = 'Vorlage (PDF)';
+$string['certificatezip'] = 'Teilnahmebestätigungen {$a}';
 $string['colemail'] = 'E-Mail-Adresse';
 $string['colfirstname'] = 'Vorname';
 $string['colfullname'] = 'Vorname und Nachname';
@@ -75,8 +111,8 @@ $string['correctstatereused'] = 'Vorhandenes Konto';
 $string['correctstatesent'] = 'Verschickt am {$a}';
 $string['correctstatewaiting'] = 'Warten auf den {$a->date}, {$a->time} Uhr';
 $string['correcttaken'] = 'Der Benutzername {$a} gehört bereits zu einem anderen Konto.';
-$string['coursehidden'] = 'Kurs „{$a}“ wurde verborgen.';
-$string['courseshown'] = 'Kurs „{$a}“ ist wieder sichtbar.';
+$string['coursedone'] = 'Kurs „{$a}“ ist erledigt und für die Teilnehmer verborgen.';
+$string['coursereleased'] = 'Kurs „{$a}“ ist wieder freigegeben.';
 $string['coursesoverview:createorder'] = 'Auftrag samt zugehörigem Kurs anlegen';
 $string['coursesoverview:view'] = 'Kursübersicht sehen';
 $string['deletechecked'] = 'Ich habe die Liste geprüft';
@@ -85,7 +121,7 @@ $string['deletedone'] = 'Kurs „{$a->course}“ gelöscht, {$a->users} Nutzerko
 $string['deletedone_one'] = 'Kurs „{$a->course}“ gelöscht, 1 Nutzerkonto entfernt.';
 $string['deleteheading'] = 'Kurs löschen: {$a}';
 $string['deleteirreversible'] = 'Das Löschen lässt sich nicht rückgängig machen. Prüfen Sie beide Listen.';
-$string['deletenothidden'] = 'Nur verborgene Kurse können hier gelöscht werden. Verbergen Sie den Kurs zuerst.';
+$string['deletenotdone'] = 'Nur erledigte Kurse können hier gelöscht werden. Markieren Sie den Kurs zuerst als erledigt.';
 $string['deletenousers'] = 'Es wird kein Nutzerkonto gelöscht, nur der Kurs.';
 $string['deleteunchecked'] = 'Bitte bestätigen Sie zuerst, dass Sie die Liste geprüft haben.';
 $string['deleteusers'] = 'Diese {$a} Nutzerkonten werden endgültig gelöscht';
@@ -95,6 +131,7 @@ $string['delimitercomma'] = 'Komma';
 $string['delimitersemicolon'] = 'Semikolon';
 $string['delimiterspace'] = 'Leerzeichen';
 $string['delimitertab'] = 'Tabulator';
+$string['donedate'] = 'Erledigt am';
 $string['exportexcel'] = 'Nach Excel exportieren';
 $string['keepadmin'] = 'Administrator';
 $string['keepcourses'] = 'noch in {$a} weiteren Kursen eingeschrieben';
@@ -172,6 +209,8 @@ $string['orderemailpattern_help'] = 'Optional. Wie der Kunde seine Adressen bild
     . 'die Domain. Umlaute dürfen als ae oder a geschrieben sein. Abweichende Adressen werden in der Prüfung markiert, halten den '
     . 'Auftrag aber nicht auf.';
 $string['orderenddate'] = 'Kursende';
+$string['orderendfromstart'] = 'Beginn + {$a} Monate';
+$string['orderendfromstart_one'] = 'Beginn + 1 Monat';
 $string['ordererrorabnr'] = 'Die AB-Nummer fehlt.';
 $string['ordererrorcategory'] = 'Für das Modul „{$a}“ ist kein Kursbereich hinterlegt, und der Vorlagenkurs liefert auch keinen.';
 $string['ordererrorcompany'] = 'Der Firmenname fehlt oder enthält nichts, was in einen Kurzname passt.';
@@ -271,15 +310,11 @@ $string['orderreused'] = 'Das vorhandene Konto wird weiterverwendet und bekommt 
 $string['orderreusehint'] = 'Ein vorhandenes Konto behalten darf nur ein Organisator.';
 $string['orderrow'] = 'Zeile';
 $string['orderruntime'] = 'Laufzeit';
-$string['orders'] = 'Aufträge';
-$string['orders_help'] = 'Alle Aufträge, die über „Auftrag anlegen“ entstanden sind, auch nach dem Löschen ihres Kurses. Bei '
-    . 'gelöschten Kursen stehen die Abschlüsse, die der Kurs kurz vor dem Löschen hatte.';
 $string['orderscheme'] = 'Benutzernamen';
 $string['orderscheme_help'] = 'Die Adresse ist der einfachere Weg, geht aber nur einmal je Person. Ein geteiltes Postfach braucht '
     . 'deshalb vorname.nachname.';
 $string['orderschemeemail'] = 'E-Mail-Adresse';
 $string['orderschemename'] = 'vorname.nachname';
-$string['orderscompleted'] = 'Abgeschlossen';
 $string['orderscreated'] = 'Angelegt';
 $string['orderscreator'] = 'Angelegt von';
 $string['ordersdeleted'] = '{$a->shortname} (gelöscht am {$a->date})';
@@ -291,23 +326,18 @@ $string['ordersdeliverymail'] = 'Mail';
 $string['ordersendtime'] = 'Versanduhrzeit';
 $string['ordersendtime_desc'] = 'Bei einem Kursbeginn in der Zukunft gehen die Zugangsdaten am Starttag zu dieser Uhrzeit raus, '
     . 'genauer beim ersten stündlichen Lauf danach. Der Kurs selbst öffnet schon um 0 Uhr.';
-$string['ordersfile'] = 'Auftraege';
 $string['ordershortname'] = 'Kurzname des Kurses';
 $string['orderskip'] = 'Auslassen';
 $string['orderskipped'] = 'Ausgelassen, für diese Zeile wird nichts angelegt.';
 $string['orderskippedcount'] = '{$a} Zeilen werden ausgelassen.';
 $string['orderskippedcount_one'] = '1 Zeile wird ausgelassen.';
-$string['ordersnomatch'] = 'Kein Auftrag passt zur Suche.';
-$string['ordersnone'] = 'Noch keine Aufträge.';
 $string['ordersorganisers'] = 'Organisatoren';
-$string['ordersparticipants'] = 'Teilnehmer';
 $string['ordersremove'] = 'Eintrag entfernen';
 $string['ordersremoveconfirm'] = 'Den Auftrag {$a->shortname} von {$a->company} (AB-Nummer {$a->abnr}) endgültig aus der Liste '
     . 'entfernen? Konten und Kurse sind davon nicht betroffen.';
 $string['ordersremovecourse'] = 'Der Kurs dieses Auftrags existiert noch. Nur Aufträge, deren Kurs gelöscht ist, lassen sich aus '
     . 'der Liste entfernen.';
 $string['ordersremoved'] = 'Auftrag {$a} aus der Liste entfernt.';
-$string['orderssearch'] = 'Firma, AB-Nummer oder Kurzname';
 $string['ordersstarts'] = 'beginnt am {$a}';
 $string['orderstartdate'] = 'Kursbeginn';
 $string['orderstartdate_help'] = 'Ein Beginn in der Zukunft hält die Einschreibung zurück und die Zugangsdaten mit ihr.';
@@ -317,8 +347,11 @@ $string['orderusername'] = 'Benutzername';
 $string['orderwithoutcourse'] = 'Der Kurs dieses Auftrags existiert nicht mehr.';
 $string['organiser'] = 'Organisator';
 $string['organisers'] = 'Organisatoren';
+$string['origin'] = 'Herkunft';
+$string['originnone'] = 'Ohne Auftrag';
+$string['originorder'] = 'Mit Auftrag';
 $string['overview'] = 'Kursübersicht';
-$string['pluginname'] = 'Online-Unterweisungen';
+$string['pluginname'] = 'Schulungsverwaltung';
 $string['progressheader'] = 'Abschnitte abgeschlossen / Gesamt';
 $string['remind_help'] = 'Erinnert werden nur Teilnehmer, die den Kurs noch nicht abgeschlossen haben. Automatische Erinnerungen '
     . 'gehen zur Versanduhrzeit der Zugangsdaten raus. Wer in den letzten zwei Tagen eine Erinnerung bekommen hat, auch eine von '
@@ -390,14 +423,17 @@ $string['settings'] = 'Einstellungen';
 $string['settingsorders'] = 'Aufträge und Module';
 $string['statusactive'] = 'Laufend';
 $string['statuscompleted'] = 'Abgeschlossen';
+$string['statusdeleted'] = 'Gelöscht';
+$string['statusdone'] = 'Erledigt';
+$string['statusdoneon'] = 'Erledigt am {$a}';
 $string['statusendingsoon'] = 'Endet demnächst, nicht abgeschlossen';
-$string['statushidden'] = 'Verborgen (abgerechnet)';
+$string['statushidden'] = 'Verborgen';
 $string['statusinprogress'] = 'Begonnen, nicht abgeschlossen';
 $string['statusnotstarted'] = 'Nicht begonnen';
 $string['statusoverdue'] = 'Beendet, nicht abgeschlossen';
 $string['statuspast'] = 'Beendet';
 $string['statustodo'] = 'Handlungsbedarf';
-$string['statustosettle'] = 'Abgeschlossen, noch nicht abgerechnet';
+$string['statustosettle'] = 'Abgeschlossen, noch nicht erledigt';
 $string['statusupcoming'] = 'Beginnt später';
 $string['tasknotifycompleted'] = 'Meldung über vollständig abgeschlossene Kurse';
 $string['tasksendcredentials'] = 'Fällige Zugangsdaten aus Aufträgen verschicken';

@@ -59,8 +59,8 @@
     background-color: #d4edda !important;
 }
 
-#coursesoverview-tables tbody tr.coursesoverview-hidden td,
-#coursesoverview-tables tbody tr.coursesoverview-hidden:hover td {
+#coursesoverview-tables tbody tr.coursesoverview-done td,
+#coursesoverview-tables tbody tr.coursesoverview-done:hover td {
     background-color: #e0e0e0 !important;
     color: #888;
 }
@@ -119,7 +119,7 @@
     background-color: #d4edda;
 }
 
-.coursesoverview-swatch-hidden {
+.coursesoverview-swatch-done {
     background-color: #e0e0e0;
 }
 
@@ -133,4 +133,19 @@
 
 .coursesoverview-swatch-completed {
     background-color: #d4edda;
+}
+
+/*
+ * The subject lines in the settings run as wide as the mail text below them.
+ * Core keeps a text setting and its default side by side; here the default
+ * moves below, as it does for the editor.
+ */
+#adminsettings .form-setting .defaultsnext:has(> #id_s_local_coursesoverview_ordermailsubject),
+#adminsettings .form-setting .defaultsnext:has(> #id_s_local_coursesoverview_remindersubject) {
+    display: block;
+}
+
+#adminsettings #id_s_local_coursesoverview_ordermailsubject,
+#adminsettings #id_s_local_coursesoverview_remindersubject {
+    width: 100%;
 }

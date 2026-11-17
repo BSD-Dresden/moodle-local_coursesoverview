@@ -192,5 +192,41 @@ function xmldb_local_coursesoverview_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026103100, 'local', 'coursesoverview');
     }
 
+    if ($oldversion < 2026111703) {
+        // Done gets a mark of its own instead of being read from hiding.
+        $table = new xmldb_table('local_coursesoverview_done');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timedone', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('userdone', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('courseid', XMLDB_KEY_FOREIGN_UNIQUE, ['courseid'], 'course', ['id']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+
+            // Until now a hidden course was a done one. Templates are hidden
+            // too but have no end date or one in the future, so only hidden
+            // courses that have ended are taken over.
+            $now = time();
+            $courses = $DB->get_records_select(
+                'course',
+                'visible = 0 AND id <> :siteid AND enddate > 0 AND enddate < :now',
+                ['siteid' => SITEID, 'now' => $now],
+                '',
+                'id'
+            );
+            foreach ($courses as $course) {
+                $DB->insert_record('local_coursesoverview_done', (object) [
+                    'courseid' => $course->id,
+                    'timedone' => $now,
+                    'userdone' => 0,
+                ]);
+            }
+        }
+
+        upgrade_plugin_savepoint(true, 2026111703, 'local', 'coursesoverview');
+    }
+
     return true;
 }

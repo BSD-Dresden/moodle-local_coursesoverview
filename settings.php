@@ -28,7 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 // fewer than eight entries and none of them a category, so the settings below are a category of their own.
 $ADMIN->add('root', new admin_category(
     'localcoursesoverviewcategory',
-    get_string('admincategory', 'local_coursesoverview')
+    get_string('pluginname', 'local_coursesoverview')
 ), 'users');
 
 if ($hassiteconfig || has_capability('local/coursesoverview:view', context_system::instance())) {
@@ -45,12 +45,6 @@ if ($hassiteconfig || has_capability('local/coursesoverview:createorder', contex
         'localcoursesovervieworder',
         get_string('neworder', 'local_coursesoverview'),
         new moodle_url('/local/coursesoverview/order.php'),
-        'local/coursesoverview:createorder'
-    ));
-    $ADMIN->add('localcoursesoverviewcategory', new admin_externalpage(
-        'localcoursesoverviewhistory',
-        get_string('orders', 'local_coursesoverview'),
-        new moodle_url('/local/coursesoverview/orders.php'),
         'local/coursesoverview:createorder'
     ));
 }
@@ -110,13 +104,14 @@ if ($hassiteconfig) {
         'moodle/site:config'
     );
 
-    // The minutes live under their own name in the same plugin.
+    // The minutes live under their own name in the same plugin. Core shows the default as hour.':'.minute,
+    // so the minute is a string to read 7:00 instead of 7:0; saving casts it to a number anyway.
     $settings->add(new admin_setting_configtime(
         'local_coursesoverview/ordersendhour',
         'ordersendminute',
         get_string('ordersendtime', 'local_coursesoverview'),
         get_string('ordersendtime_desc', 'local_coursesoverview'),
-        ['h' => 7, 'm' => 0]
+        ['h' => 7, 'm' => '00']
     ));
 
     $settings->add(new admin_setting_configtext(
@@ -181,5 +176,80 @@ if ($hassiteconfig) {
         get_string('reminderbody_default', 'local_coursesoverview')
     ));
 
+    $ADMIN->add('localcoursesoverviewsettingscategory', $settings);
+
+    // PDF templates for the certificates of attendance. They carry the
+    // company's logo and signature, which is why they live here and not in
+    // the plugin. One in general, and one per module that needs its own,
+    // each with the places where name and date go.
+    $settings = new admin_settingpage(
+        'localcoursesoverviewcertificates',
+        get_string('certificates', 'local_coursesoverview'),
+        'moodle/site:config'
+    );
+    $settings->add(new admin_setting_heading(
+        'local_coursesoverview/certificateheading',
+        '',
+        get_string('certificates_desc', 'local_coursesoverview')
+    ));
+    $settings->add(new admin_setting_configtext(
+        'local_coursesoverview/certificatefontsize',
+        get_string('certificatefontsize', 'local_coursesoverview'),
+        '',
+        12,
+        PARAM_INT,
+        4
+    ));
+    $settings->add(new admin_setting_configcheckbox(
+        'local_coursesoverview/certificatebold',
+        get_string('certificatebold', 'local_coursesoverview'),
+        '',
+        1
+    ));
+
+    $templates = [0 => [
+        get_string('certificatedefault', 'local_coursesoverview'),
+        get_string('certificatedefault_desc', 'local_coursesoverview'),
+    ]];
+    foreach (\local_coursesoverview\order\module::all() as $prefix => $module) {
+        $templates[\local_coursesoverview\certificate::itemid($prefix)] = [
+            get_string('certificatemodule', 'local_coursesoverview', $module->name),
+            get_string('certificatemodule_desc', 'local_coursesoverview'),
+        ];
+    }
+    foreach ($templates as $itemid => [$label, $description]) {
+        $settings->add(new admin_setting_heading(
+            'local_coursesoverview/certificateheading_' . $itemid,
+            $label,
+            $description
+        ));
+        $settings->add(new admin_setting_configstoredfile(
+            'local_coursesoverview/certificate_' . $itemid,
+            get_string('certificatetemplate', 'local_coursesoverview'),
+            '',
+            \local_coursesoverview\certificate::FILEAREA,
+            $itemid,
+            ['accepted_types' => ['.pdf'], 'maxfiles' => 1]
+        ));
+
+        // A sample with a millimetre grid shows where the numbers put the text.
+        $positionsdesc = get_string($itemid ? 'certificatepos_module_desc' : 'certificatepos_desc', 'local_coursesoverview');
+        if (\local_coursesoverview\certificate::exists($itemid)) {
+            $previewurl = new moodle_url('/local/coursesoverview/certificate.php', ['preview' => $itemid]);
+            $positionsdesc .= ' ' . html_writer::link(
+                $previewurl,
+                get_string('certificatepreview', 'local_coursesoverview'),
+                ['target' => '_blank']
+            );
+        }
+        $settings->add(new admin_setting_configtext(
+            'local_coursesoverview/certificatepos_' . $itemid,
+            get_string('certificatepos', 'local_coursesoverview'),
+            $positionsdesc,
+            $itemid ? '' : \local_coursesoverview\certificate::DEFAULT_POSITIONS,
+            '/^\s*$|^\s*\d+([.,]\d+)?([\s\/;]+\d+([.,]\d+)?){3}\s*$/',
+            20
+        ));
+    }
     $ADMIN->add('localcoursesoverviewsettingscategory', $settings);
 }

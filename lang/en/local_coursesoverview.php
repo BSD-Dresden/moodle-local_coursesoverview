@@ -25,9 +25,43 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['accesssince'] = 'Access since';
-$string['admincategory'] = 'Training management';
+$string['actiondone'] = 'Done';
+$string['actionrelease'] = 'Release again';
 $string['applyfilters'] = 'Filter';
 $string['backtooverview'] = 'Back to courses overview';
+$string['certificatebold'] = 'Without placeholders: name and date in bold';
+$string['certificatebutton'] = 'Certificates of attendance ({$a})';
+$string['certificatedefault'] = 'General template';
+$string['certificatedefault_desc'] = 'For modules without a template of their own and for courses without an order. ' .
+    'Leave empty for no certificates there.';
+$string['certificatefailed'] = 'The certificates could not be made. Is the template a PDF?';
+$string['certificatefile'] = 'Certificate {$a}';
+$string['certificatefontsize'] = 'Without placeholders: font size in points';
+$string['certificatemodule'] = 'Template for {$a}';
+$string['certificatemodule_desc'] = 'Instead of the general template. Leave empty for the general one.';
+$string['certificatenone'] = 'Nobody has completed this course yet.';
+$string['certificatenotemplate'] = 'There is no template for certificates of attendance for this course.';
+$string['certificatepos'] = 'Without placeholders: position of name and date';
+$string['certificatepos_desc'] = 'Only for templates without placeholders. Four numbers in millimetres from the top ' .
+    'left corner: name across and down, then date across and down. Measured to the baseline, the bottom of the letters ' .
+    'without descenders. Example: 18.5 84.8 30.8 142.4';
+$string['certificatepos_module_desc'] = 'As for the general template. Leave empty to use its position.';
+$string['certificatepreview'] = 'Open preview with grid';
+$string['certificatepreviewfile'] = 'Certificate preview';
+$string['certificates'] = 'Certificates of attendance';
+$string['certificates_desc'] = 'PDF templates for the certificates of attendance, one file per person with their own ' .
+    'completion date, all together as a ZIP. To make a template, write {name} where the name goes and {date} where the ' .
+    'date goes in Word, in the font, size and alignment the text should have and in white, so that the placeholders do ' .
+    'not get in the way in Word; the finished certificates do not contain them at all. Then save as PDF and upload it here. More placeholders: {firstname}, {lastname}, {company}, {course}, ' .
+    '{module}, {title}. The text starts where the placeholder starts; {name:center} puts it on its middle, ' .
+    '{name:right} at its end. Moodle knows no form of address, so the text should do without "Mr" and "Ms". Once ' .
+    'saved, the preview with a grid shows where everything lands.';
+$string['certificatesample'] = 'Sample text';
+$string['certificatesamplefirstname'] = 'Jane';
+$string['certificatesamplelastname'] = 'Doe';
+$string['certificatesamplename'] = 'Jane Doe';
+$string['certificatetemplate'] = 'Template (PDF)';
+$string['certificatezip'] = 'Certificates {$a}';
 $string['colemail'] = 'Email address';
 $string['colfirstname'] = 'First name';
 $string['colfullname'] = 'First name and surname';
@@ -74,8 +108,8 @@ $string['correctstatereused'] = 'Existing account';
 $string['correctstatesent'] = 'Sent on {$a}';
 $string['correctstatewaiting'] = 'Waiting for {$a->date}, {$a->time}';
 $string['correcttaken'] = 'The user name {$a} already belongs to another account.';
-$string['coursehidden'] = 'Course "{$a}" has been hidden.';
-$string['courseshown'] = 'Course "{$a}" is visible again.';
+$string['coursedone'] = 'Course "{$a}" is done and hidden from its participants.';
+$string['coursereleased'] = 'Course "{$a}" is released again.';
 $string['coursesoverview:createorder'] = 'Create an order together with its course';
 $string['coursesoverview:view'] = 'View the courses overview';
 $string['deletechecked'] = 'I have checked the list';
@@ -84,7 +118,7 @@ $string['deletedone'] = 'Course "{$a->course}" deleted, {$a->users} accounts rem
 $string['deletedone_one'] = 'Course "{$a->course}" deleted, 1 account removed.';
 $string['deleteheading'] = 'Delete course: {$a}';
 $string['deleteirreversible'] = 'Deleting cannot be undone. Check both lists.';
-$string['deletenothidden'] = 'Only hidden courses can be deleted here. Hide the course first.';
+$string['deletenotdone'] = 'Only courses marked as done can be deleted here. Mark the course as done first.';
 $string['deletenousers'] = 'No account will be deleted, only the course.';
 $string['deleteunchecked'] = 'Please confirm that you have checked the list.';
 $string['deleteusers'] = 'These {$a} accounts will be permanently deleted';
@@ -94,6 +128,7 @@ $string['delimitercomma'] = 'Comma';
 $string['delimitersemicolon'] = 'Semicolon';
 $string['delimiterspace'] = 'Blanks';
 $string['delimitertab'] = 'Tab';
+$string['donedate'] = 'Done on';
 $string['exportexcel'] = 'Export to Excel';
 $string['keepadmin'] = 'Administrator';
 $string['keepcourses'] = 'still enrolled in {$a} other courses';
@@ -170,6 +205,8 @@ $string['orderemailpattern_help'] = 'Optional. How the customer\'s addresses are
     . 'and * for anything; just the domain checks only the domain. Umlauts may be written either way. Addresses that do not fit '
     . 'are marked in the check but do not stop the order.';
 $string['orderenddate'] = 'Course end';
+$string['orderendfromstart'] = 'Start + {$a} months';
+$string['orderendfromstart_one'] = 'Start + 1 month';
 $string['ordererrorabnr'] = 'The order number is missing.';
 $string['ordererrorcategory'] = 'Module "{$a}" has no category, and its template course does not supply one either.';
 $string['ordererrorcompany'] = 'The company name is missing, or holds nothing a course short name can carry.';
@@ -268,15 +305,11 @@ $string['orderreused'] = 'The existing account is used again and gets no new cre
 $string['orderreusehint'] = 'Only an organiser may keep an existing account.';
 $string['orderrow'] = 'Line';
 $string['orderruntime'] = 'Runtime';
-$string['orders'] = 'Orders';
-$string['orders_help'] = 'Every order made with "New order", also after its course has been deleted. Completions of a deleted '
-    . 'course are the ones it had just before it was deleted.';
 $string['orderscheme'] = 'User names';
 $string['orderscheme_help'] = 'The address is the simpler choice, but it only works once per person. A shared mailbox therefore '
     . 'needs firstname.lastname.';
 $string['orderschemeemail'] = 'Email address';
 $string['orderschemename'] = 'firstname.lastname';
-$string['orderscompleted'] = 'Completed';
 $string['orderscreated'] = 'Created';
 $string['orderscreator'] = 'Created by';
 $string['ordersdeleted'] = '{$a->shortname} (deleted on {$a->date})';
@@ -288,23 +321,18 @@ $string['ordersdeliverymail'] = 'Mail';
 $string['ordersendtime'] = 'Send time';
 $string['ordersendtime_desc'] = 'When a course starts later, its credentials go out at this time on the start day, more precisely '
     . 'with the first hourly run after it. The course itself opens at midnight.';
-$string['ordersfile'] = 'Orders';
 $string['ordershortname'] = 'Course short name';
 $string['orderskip'] = 'Leave out';
 $string['orderskipped'] = 'Left out, nothing is created for this line.';
 $string['orderskippedcount'] = '{$a} lines are left out.';
 $string['orderskippedcount_one'] = '1 line is left out.';
-$string['ordersnomatch'] = 'No order matches the search.';
-$string['ordersnone'] = 'No orders yet.';
 $string['ordersorganisers'] = 'Organisers';
-$string['ordersparticipants'] = 'Participants';
 $string['ordersremove'] = 'Remove entry';
 $string['ordersremoveconfirm'] = 'Remove the order {$a->shortname} of {$a->company} (order number {$a->abnr}) from the list for '
     . 'good? Accounts and courses are not affected.';
 $string['ordersremovecourse'] = 'The course of this order still exists. Only orders whose course has been deleted can be removed '
     . 'from the list.';
 $string['ordersremoved'] = 'Order {$a} removed from the list.';
-$string['orderssearch'] = 'Company, order number or short name';
 $string['ordersstarts'] = 'starts on {$a}';
 $string['orderstartdate'] = 'Course start';
 $string['orderstartdate_help'] = 'A start in the future holds back the enrolment, and the credentials with it.';
@@ -314,8 +342,11 @@ $string['orderusername'] = 'User name';
 $string['orderwithoutcourse'] = 'The course of this order no longer exists.';
 $string['organiser'] = 'Organiser';
 $string['organisers'] = 'Organisers';
+$string['origin'] = 'Origin';
+$string['originnone'] = 'Without order';
+$string['originorder'] = 'With order';
 $string['overview'] = 'Courses overview';
-$string['pluginname'] = 'Online instructions';
+$string['pluginname'] = 'Training management';
 $string['progressheader'] = 'Sections completed / total';
 $string['remind_help'] = 'Only participants who have not completed the course are reminded. Automatic reminders go out at the send '
     . 'time of the credentials. Somebody who had a reminder in the last two days, also one sent by hand, gets no automatic one, so '
@@ -387,14 +418,17 @@ $string['settings'] = 'Settings';
 $string['settingsorders'] = 'Orders and modules';
 $string['statusactive'] = 'Ongoing';
 $string['statuscompleted'] = 'Completed';
+$string['statusdeleted'] = 'Deleted';
+$string['statusdone'] = 'Done';
+$string['statusdoneon'] = 'Done on {$a}';
 $string['statusendingsoon'] = 'Ending soon, not completed';
-$string['statushidden'] = 'Hidden (settled)';
+$string['statushidden'] = 'Hidden';
 $string['statusinprogress'] = 'Started, not completed';
 $string['statusnotstarted'] = 'Not started';
 $string['statusoverdue'] = 'Ended, not completed';
 $string['statuspast'] = 'Finished';
 $string['statustodo'] = 'Needs attention';
-$string['statustosettle'] = 'Completed, not yet settled';
+$string['statustosettle'] = 'Completed, not yet done';
 $string['statusupcoming'] = 'Starts later';
 $string['tasknotifycompleted'] = 'Notify about fully completed courses';
 $string['tasksendcredentials'] = 'Send the credentials of orders that are due';

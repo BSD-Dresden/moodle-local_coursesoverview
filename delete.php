@@ -48,10 +48,10 @@ if ($course->id == SITEID || !can_delete_course($courseid)) {
 require_capability('moodle/user:delete', context_system::instance());
 require_capability('local/coursesoverview:view', context_system::instance());
 
-// A course is hidden once it has been settled. Requiring that first means
-// nothing can be deleted that was not deliberately marked as finished.
-if ($course->visible) {
-    throw new moodle_exception('deletenothidden', 'local_coursesoverview', $overviewurl->out());
+// Requiring the mark first means nothing can be deleted that was not
+// deliberately marked as finished.
+if (!\local_coursesoverview\done::is_done($course->id)) {
+    throw new moodle_exception('deletenotdone', 'local_coursesoverview', $overviewurl->out());
 }
 
 // The page survives the deletion by living in the category context.

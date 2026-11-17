@@ -47,3 +47,36 @@ function local_coursesoverview_extend_navigation_course($navigation, $course, $c
         new pix_icon('i/report', '')
     );
 }
+
+/**
+ * Offer deleting the account on its profile page.
+ *
+ * The link leads to the confirmation of the core user list, which deletes
+ * with delete_user() and returns to that list. Shown only to whoever may
+ * delete accounts, and never for oneself, the guest or an administrator,
+ * the same accounts the core list refuses.
+ *
+ * @param core_user\output\myprofile\tree $tree
+ * @param stdClass $user whose profile is shown
+ * @param bool $iscurrentuser
+ * @param stdClass|null $course
+ */
+function local_coursesoverview_myprofile_navigation(core_user\output\myprofile\tree $tree, $user, $iscurrentuser, $course) {
+    global $CFG;
+
+    if ($iscurrentuser || !empty($user->deleted) || isguestuser($user) || is_siteadmin($user)) {
+        return;
+    }
+    if ($user->mnethostid != $CFG->mnet_localhost_id || !has_capability('moodle/user:delete', context_system::instance())) {
+        return;
+    }
+
+    $url = new moodle_url('/admin/user.php', ['delete' => $user->id, 'sesskey' => sesskey()]);
+    $tree->add_node(new core_user\output\myprofile\node(
+        'administration',
+        'local_coursesoverview_deleteuser',
+        get_string('deleteuser', 'admin'),
+        null,
+        $url
+    ));
+}

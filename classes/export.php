@@ -89,7 +89,7 @@ class export {
 
         require_once($CFG->libdir . '/excellib.class.php');
 
-        $workbook = new \MoodleExcelWorkbook('-');
+        $workbook = new excel_workbook('-');
         $workbook->send($filename);
 
         $worksheet = $workbook->add_worksheet(self::sheet_title($sheetname));
@@ -109,6 +109,7 @@ class export {
             $rownum++;
         }
 
+        $headerrow = $rownum;
         foreach (array_values($columns) as $col => $label) {
             $worksheet->write_string($rownum, $col, (string) $label, $boldformat);
             $width = min(40, max(12, core_text::strlen((string) $label) + 4));
@@ -131,6 +132,12 @@ class export {
 
             self::write_row($worksheet, $rownum, $row['values'], $format);
             $rownum++;
+        }
+
+        // Excel wants table headers unique and not empty, otherwise it "repairs" the file on open.
+        $labels = array_map('strval', array_values($columns));
+        if (!in_array('', $labels, true) && count(array_unique($labels)) === count($labels)) {
+            $workbook->add_table($headerrow, $rownum - 1, count($labels));
         }
 
         $workbook->close();

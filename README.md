@@ -61,8 +61,10 @@ Der erste zutreffende Fall gewinnt:
 
 | Zustand | Bedingung | Farbe |
 |---|---|---|
-| Verborgen (abgerechnet) | Kurs ist verborgen | grau |
-| Abgeschlossen, noch nicht abgerechnet | alle Teilnehmer fertig | grün |
+| Erledigt | von Hand als erledigt markiert | grau |
+| Verborgen | Kurs ist verborgen, aber nicht erledigt (etwa eine Vorlage) | keine |
+| Beginnt später | Kurs beginnt später, noch niemand eingeschrieben | keine |
+| Abgeschlossen, noch nicht erledigt | alle Teilnehmer fertig | grün |
 | Beendet, nicht abgeschlossen | Enddatum vorbei, noch offen | rot |
 | Endet demnächst, nicht abgeschlossen | Enddatum in ≤ 14 Tagen, noch offen | gelb |
 | Beendet | Enddatum vorbei, Quote unbekannt | keine |
@@ -70,19 +72,61 @@ Der erste zutreffende Fall gewinnt:
 
 Zwei Dinge sind absichtlich so gebaut:
 
-* **Verborgen schlägt alles.** Ein Kurs wird von Hand verborgen, sobald er
-  abgerechnet ist, und darf danach nicht mehr in der Nachfassliste auftauchen.
+* **Erledigt schlägt alles.** Erledigt heißt: Die Abschlüsse sind
+  weitergegeben, es ist nichts mehr zu tun. „Erledigt“ in der Aktionsspalte
+  merkt das in einer eigenen Tabelle und verbirgt den Kurs, damit die
+  Teilnehmer nicht mehr hineinkommen. „Wieder freigeben“ nimmt beides zurück,
+  etwa bei einer Verlängerung. Bis November 2026 stand Verbergen allein für
+  erledigt; beim Upgrade wurden verborgene Kurse mit vergangenem Kursende
+  übernommen, Vorlagen ohne Kursende nicht.
 * **Ohne Abschlussverfolgung wird nie eingefärbt.** Die Quote ist dann nicht
   null, sondern unbekannt.
 
 Die Schwelle für „endet demnächst" steht als Konstante `ENDING_SOON` in
 `classes/helper.php`.
 
+## Aufträge in der Übersicht
+
+Wer `local/coursesoverview:createorder` besitzt, sieht zu jedem Kurs aus einem
+Auftrag dessen Firma, AB-Nummer, Modul und wie die Zugangsdaten verschickt
+wurden; die Suche findet auch Firma und AB-Nummer. Kurse ohne Auftrag lassen
+diese Felder leer, der Filter „Herkunft“ trennt beides. Aufträge, deren Kurs
+gelöscht ist, stehen unter dem Status „Gelöscht“ mit den Zahlen von kurz vor
+dem Löschen. Wer nur `local/coursesoverview:view` hat, sieht die Übersicht ohne
+Auftragsdaten. Die frühere Seite `orders.php` leitet auf die Übersicht um.
+
+## Teilnahmebestätigungen
+
+Unter **Einstellungen → Teilnahmebestätigungen** liegt eine allgemeine
+PDF-Vorlage und auf Wunsch eine eigene je Modul. Logo, Unterschrift und
+Wortlaut stehen nur in diesen Dateien, nicht im Plugin.
+
+In Word stehen an den passenden Stellen Platzhalter wie `{name}` und `{date}`
+in weißer Schrift, dann wird als PDF gespeichert. `classes/pdf_placeholders.php`
+liest mit dem Parser von FPDI den Text der ersten Seite samt Position, Größe
+und Schriftschnitt und findet die Platzhalter dort, auch wenn Word sie auf
+mehrere Textstücke verteilt hat. Beim Übernehmen der Seite werden die
+Platzhalter aus dem Seiteninhalt entfernt und durch einen Sprung gleicher
+Breite ersetzt, im fertigen PDF lassen sie sich also weder markieren noch
+kopieren oder finden. Moodle schreibt dann mit TCPDF und FPDI
+(beide im Kern) die Werte an diese Stellen; kommt ein Platzhalter mehrfach
+vor, wird jede Stelle gefüllt. `{name:center}` und
+`{name:right}` richten an Mitte oder Ende des Platzhalters aus. Eine Vorlage
+ohne Platzhalter bekommt Name und Datum an Positionen in Millimetern bis zur
+Grundlinie, die in den Einstellungen stehen. Die Vorschau zeigt beides auf
+einem Raster. Word auf dem Server nach PDF umzuwandeln bräuchte LibreOffice.
+
+Auf der Seite **Abschlussstatus** und in der Meldung nach „Erledigt“ steht
+dann ein Link, der für jede Person mit Abschluss ein eigenes PDF mit ihrem
+Abschlussdatum erzeugt und alle zusammen als ZIP liefert. Nur mit
+`local/coursesoverview:createorder`, Organisatoren der Kunden sehen ihn nicht.
+Kurse ohne Auftrag und Module ohne eigene Vorlage nehmen die allgemeine.
+
 ## Kurs mit Teilnehmern löschen
 
-In der Aktionsspalte der Übersicht steht bei **verborgenen** Kursen ein
-`Löschen`. Verborgen heißt hier abgerechnet — dadurch kann nichts entfernt
-werden, das nicht vorher bewusst als erledigt markiert wurde. Der Link führt
+In der Aktionsspalte der Übersicht steht bei **erledigten** Kursen ein
+`Löschen`. Dadurch kann nichts entfernt werden, das nicht vorher bewusst als
+erledigt markiert wurde. Der Link führt
 auf eine Bestätigungsseite und löscht nichts.
 
 Dort stehen zwei Listen: die Konten, die mitgelöscht werden, und die, die
@@ -131,16 +175,23 @@ Die Aufgabe läuft stündlich, einstellbar unter **Server → Geplante Aufgaben*
 ## Aufbau
 
 ```
+classes/certificate.php  Teilnahmebestätigungen auf der PDF-Vorlage
+classes/certificate_pdf.php  FPDI mit ausgetauschtem Seiteninhalt
+classes/done.php      Als erledigt markierte Kurse
+classes/pdf_placeholders.php  Platzhalter in der PDF-Vorlage finden und entfernen
 classes/helper.php    Datumsformat, Kurszustände, Sortierung
 classes/output.php    Filterleiste, Legende, Tabellen, Sortier-Links
-classes/export.php    Excel-Export
+classes/export.php    Excel-Export, als Excel-Tabelle mit Filter
+classes/order/        Aufträge: Anlegen, Versand, Erinnerungen, Liste
 classes/purge.php     Wer beim Löschen eines Kurses mitgeht
 classes/task/         Geplante Aufgabe für die Abschlussmeldung
 db/tasks.php          Zeitplan der Aufgabe
 index.php             Kursübersicht
 participants.php      Abschlussstatus eines Kurses
 delete.php            Bestätigung und Löschung von Kurs samt Konten
-lib.php               Eintrag im Kursmenü
+lib.php               Eintrag im Kursmenü, Löschen auf der Profilseite
+orders.php            Eintrag eines gelöschten Auftrags entfernen
+certificate.php       Teilnahmebestätigungen eines Kurses als ZIP
 settings.php          Admin-Baum und Einstellungen
 styles.css            Zeilenfarben
 ```

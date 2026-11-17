@@ -358,6 +358,10 @@ if (empty($participants)) {
 }
 
 echo output::export_button($sorturl);
+$certificates = \local_coursesoverview\certificate::link($course, 'btn btn-secondary');
+if ($certificates !== '') {
+    echo html_writer::div($certificates, 'mb-3');
+}
 echo output::legend(['notstarted', 'inprogress', 'completed']);
 echo output::start_tables();
 

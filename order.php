@@ -471,17 +471,39 @@ if ($step < 2) {
             get_string('orderstartdate_help', 'local_coursesoverview')
         );
 
+        // The end can follow a changed start: start plus the runtime from the settings, counted like the
+        // prefilled end above, so 31 December plus two months lands where PHP lands too.
+        $runtime = max(1, (int) get_config('local_coursesoverview', 'ordermonths'));
         $form .= $field(
             get_string('orderenddate', 'local_coursesoverview'),
-            html_writer::empty_tag('input', [
-                'type' => 'date',
-                'name' => 'enddate',
-                'id' => 'coursesoverview-enddate',
-                'value' => $enddate,
-                'class' => 'form-control',
-            ]),
+            html_writer::div(
+                html_writer::empty_tag('input', [
+                    'type' => 'date',
+                    'name' => 'enddate',
+                    'id' => 'coursesoverview-enddate',
+                    'value' => $enddate,
+                    'class' => 'form-control',
+                ]) .
+                html_writer::tag('button', helper::counted('orderendfromstart', $runtime), [
+                    'type' => 'button',
+                    'id' => 'coursesoverview-endfromstart',
+                    'class' => 'btn btn-secondary text-nowrap',
+                    'data-months' => $runtime,
+                ]),
+                'd-flex gap-2'
+            ),
             'coursesoverview-enddate'
         );
+        $PAGE->requires->js_init_code("
+            document.getElementById('coursesoverview-endfromstart').addEventListener('click', function() {
+                var start = document.getElementById('coursesoverview-startdate').value.split('-');
+                if (start.length !== 3) {
+                    return;
+                }
+                var end = new Date(Date.UTC(+start[0], +start[1] - 1 + (+this.dataset.months), +start[2]));
+                document.getElementById('coursesoverview-enddate').value = end.toISOString().slice(0, 10);
+            });
+        ", true);
 
         $form .= $field(
             get_string('orderscheme', 'local_coursesoverview'),

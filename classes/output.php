@@ -174,9 +174,10 @@ class output {
      * @param moodle_url $action page url
      * @param array $current current values, keyed by parameter name
      * @param array $categories category id => name
+     * @param array $origins origin key => label, empty to leave the filter out
      * @return string
      */
-    public static function filters(moodle_url $action, array $current, array $categories): string {
+    public static function filters(moodle_url $action, array $current, array $categories, array $origins = []): string {
         $target = $action->out_omit_querystring();
 
         $formattributes = [
@@ -231,6 +232,19 @@ class output {
             ['' => get_string('all')],
             ['id' => 'coursesoverview-state', 'class' => 'custom-select mr-3 mb-2']
         );
+
+        if ($origins) {
+            $out .= html_writer::label(get_string('origin', 'local_coursesoverview'), 'coursesoverview-origin', true, [
+                'class' => 'mr-2 mb-2',
+            ]);
+            $out .= html_writer::select(
+                $origins,
+                'origin',
+                $current['origin'] ?? '',
+                ['' => get_string('all')],
+                ['id' => 'coursesoverview-origin', 'class' => 'custom-select mr-3 mb-2']
+            );
+        }
 
         $checkbox = html_writer::checkbox(
             'withoutparticipants',

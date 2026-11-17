@@ -140,7 +140,7 @@ class provision {
 
         require_once($CFG->libdir . '/csvlib.class.php');
         require_once($CFG->libdir . '/enrollib.php');
-        require_once($CFG->dirroot . '/' . $CFG->admin . '/tool/uploaduser/locallib.php');
+        require_once($CFG->dirroot . '/admin/tool/uploaduser/locallib.php');
     }
 
     /**
