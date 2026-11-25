@@ -27,6 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 $string['accesssince'] = 'Access since';
 $string['actiondone'] = 'Done';
 $string['actionrelease'] = 'Release again';
+$string['allstartlater'] = 'Everybody in this group starts later, see below.';
 $string['applyfilters'] = 'Filter';
 $string['backtooverview'] = 'Back to courses overview';
 $string['certificatebold'] = 'Without placeholders: name and date in bold';
@@ -451,6 +452,9 @@ $string['roleorganiser'] = 'Organiser';
 $string['roleparticipant'] = 'Participant';
 $string['settings'] = 'Settings';
 $string['settingsorders'] = 'Orders and modules';
+$string['startlaterheading'] = 'Starting later ({$a})';
+$string['startlaterinfo'] = 'These people are already registered, but their access only opens on their start date. Until '
+    . 'then they cannot work on anything. They already count towards the completion of the course.';
 $string['startslater'] = 'Starts on {$a}';
 $string['statusactive'] = 'Ongoing';
 $string['statuscompleted'] = 'Completed';

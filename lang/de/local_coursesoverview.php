@@ -27,6 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 $string['accesssince'] = 'Zugang seit';
 $string['actiondone'] = 'Erledigt';
 $string['actionrelease'] = 'Wieder freigeben';
+$string['allstartlater'] = 'Alle in dieser Gruppe beginnen später, siehe unten.';
 $string['applyfilters'] = 'Filtern';
 $string['backtooverview'] = 'Zurück zur Kursübersicht';
 $string['certificatebold'] = 'Ohne Platzhalter: Name und Datum fett';
@@ -457,6 +458,9 @@ $string['roleorganiser'] = 'Organisator';
 $string['roleparticipant'] = 'Teilnehmer';
 $string['settings'] = 'Einstellungen';
 $string['settingsorders'] = 'Aufträge und Module';
+$string['startlaterheading'] = 'Beginnen später ({$a})';
+$string['startlaterinfo'] = 'Diese Personen sind schon angemeldet, ihr Zugang öffnet aber erst an ihrem Startdatum. Bis '
+    . 'dahin können sie nichts bearbeiten. Für den Abschluss des Kurses zählen sie bereits mit.';
 $string['startslater'] = 'Beginnt am {$a}';
 $string['statusactive'] = 'Laufend';
 $string['statuscompleted'] = 'Abgeschlossen';

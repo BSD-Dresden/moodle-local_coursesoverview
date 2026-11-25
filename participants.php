@@ -207,6 +207,7 @@ foreach ($participants as $user) {
             'date' => $date,
         ],
         'state' => $state,
+        'later' => (bool) $laterstart,
         'cells' => [
             $maylinkprofiles ? html_writer::link($profileurl, s($user->firstname)) : s($user->firstname),
             $maylinkprofiles ? html_writer::link($profileurl, s($user->lastname)) : s($user->lastname),
@@ -403,15 +404,40 @@ if ($certificates !== '') {
 echo output::legend(['notstarted', 'inprogress', 'completed']);
 echo output::start_tables();
 
+// Those who start later get a table of their own below, so that the tables
+// above show who can work on the course today. The export keeps everybody.
+$laterrows = [];
 foreach ($sections as $section) {
+    $current = [];
+    foreach ($section['rows'] as $row) {
+        if ($row['later']) {
+            $laterrows[] = $row + ['group' => $section['name']];
+        } else {
+            $current[] = $row;
+        }
+    }
+
     if ($section['name'] !== '') {
         echo html_writer::tag('h3', $section['name']);
     }
     if (!empty($section['organisers'])) {
         echo output::organisers($section['organisers'], $maylinkprofiles ? $courseid : 0);
     }
+    if (!$current && count($section['rows'])) {
+        echo html_writer::tag('p', get_string('allstartlater', 'local_coursesoverview'));
+        continue;
+    }
     $caption = ($section['name'] !== '') ? $section['name'] : $pagetitle;
-    echo output::participants_table($section['rows'], $sort, $descending, $baseurl, $caption);
+    echo output::participants_table($current, $sort, $descending, $baseurl, $caption);
+}
+
+if ($laterrows) {
+    $heading = get_string('startlaterheading', 'local_coursesoverview', count($laterrows));
+    echo html_writer::tag('h3', $heading, ['class' => 'mt-4']);
+    echo html_writer::tag('p', get_string('startlaterinfo', 'local_coursesoverview'));
+    // Earliest start first, the order in which they come in.
+    $laterrows = helper::sort_rows($laterrows, 'date', false);
+    echo output::participants_table($laterrows, $sort, $descending, $baseurl, $heading, !empty($groups));
 }
 
 echo output::end_tables();

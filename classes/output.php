@@ -292,6 +292,7 @@ class output {
      * @param bool $descending active sort direction
      * @param moodle_url $baseurl page url without sort parameters
      * @param string $caption table caption, read by screen readers
+     * @param bool $withgroup add a column with the group of each row
      * @return string
      */
     public static function participants_table(
@@ -299,7 +300,8 @@ class output {
         string $sort,
         bool $descending,
         moodle_url $baseurl,
-        string $caption
+        string $caption,
+        bool $withgroup = false
     ): string {
         if (empty($rows)) {
             return html_writer::tag('p', get_string('noparticipants', 'local_coursesoverview'));
@@ -319,9 +321,16 @@ class output {
             self::sort_header($progresslabel, 'progress', $sort, $descending, $baseurl),
             self::sort_header($datelabel, 'date', $sort, $descending, $baseurl),
         ];
+        if ($withgroup) {
+            $table->head[] = get_string('group');
+        }
 
         foreach ($rows as $row) {
-            $tablerow = new html_table_row($row['cells']);
+            $cells = $row['cells'];
+            if ($withgroup) {
+                $cells[] = s($row['group'] ?? '');
+            }
+            $tablerow = new html_table_row($cells);
 
             // The table renderer rebuilds the tr attributes, so an inline
             // style set here would be dropped. Colour via a class instead.
