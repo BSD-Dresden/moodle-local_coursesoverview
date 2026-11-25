@@ -56,6 +56,12 @@ class participant {
     /** @var string the course group this person goes into, empty for none */
     public $group = '';
 
+    /** @var string the start date as the list wrote it, empty for none */
+    public $startraw = '';
+
+    /** @var int midnight of the day this person starts, zero when the list gives none or it is unreadable */
+    public $start = 0;
+
     /**
      * Start an empty person for one line of the list.
      *
@@ -147,6 +153,10 @@ class participant {
             $problems[] = get_string('ordermissingemail', 'local_coursesoverview');
         } else if (!validate_email($this->email)) {
             $problems[] = get_string('orderinvalidemail', 'local_coursesoverview', s($this->email));
+        }
+
+        if ($this->startraw !== '' && !$this->start) {
+            $problems[] = get_string('orderinvalidstart', 'local_coursesoverview', s($this->startraw));
         }
 
         return $problems;

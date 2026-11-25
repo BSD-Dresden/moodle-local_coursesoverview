@@ -72,6 +72,7 @@ $string['collastfirst'] = 'Surname, first name';
 $string['collastname'] = 'Surname';
 $string['colnamemail'] = 'Name and address in one cell';
 $string['colrole'] = 'Role';
+$string['colstartdate'] = 'Start date';
 $string['completed_lastseen'] = 'Course completed / Last seen';
 $string['completedparticipants'] = 'Completed Participants';
 $string['completiondisabled'] = 'Completion tracking is disabled in this course.';
@@ -146,6 +147,21 @@ $string['nocoursesmatch'] = 'No courses match the filter.';
 $string['nocriteria'] = 'No completion criteria are defined for this course.';
 $string['nogroup'] = 'No group';
 $string['noparticipants'] = 'No participants.';
+$string['noticebody'] = 'Text';
+$string['noticebody_default'] = '<p>Dear {firstname} {lastname},</p><p>the following people have just received their '
+    . 'credentials for <strong>{module}</strong> by mail:</p>{participants}<p>You can follow their progress in the course '
+    . 'at {link}.</p><p>Kind regards<br>{sitename}</p>';
+$string['noticebody_desc'] = 'The placeholders of the credentials mail, plus {participants} for the list of people with '
+    . 'name and address and {count} for how many they are. {firstname} and {lastname} are the name of the organiser here. '
+    . '{startdate} is the start of the course.';
+$string['noticeheading'] = 'Notice to organisers';
+$string['noticeheading_desc'] = 'Text of the mail to the organisers. Whether it goes out is ticked when an order is '
+    . 'created and with every late report, in the box "Notify organisers". It goes out once the credentials are sent, one '
+    . 'mail per organiser and sending. Organisers in groups only hear of their groups, organisers in no group of '
+    . 'everybody.';
+$string['noticesubject'] = 'Subject';
+$string['noticesubject_default'] = 'Credentials sent: {module}';
+$string['noticesubject_desc'] = 'The same placeholders as in the text.';
 $string['notifybody'] = 'All {$a->total} participants have completed the course "{$a->fullname}" ({$a->shortname}).
 
 Course end: {$a->enddate}
@@ -236,6 +252,7 @@ $string['orderheld'] = 'The credentials for {$a->count} people go out on {$a->da
 $string['orderheld_one'] = 'The credentials for 1 person go out on {$a->date} at {$a->time}. Until then no mail is sent, and the '
     . 'course only opens for them on its start day.';
 $string['orderinvalidemail'] = '"{$a}" is not an address.';
+$string['orderinvalidstart'] = 'Start date "{$a}" not readable, expected something like 02.12.2026.';
 $string['orderlist'] = 'Participant list';
 $string['orderlist_help'] = 'Paste the list as the customer sent it, one person per line.';
 $string['orderlistready'] = 'The passwords below are shown only now and are not stored. Download the list before leaving this '
@@ -280,6 +297,10 @@ $string['ordernomodules'] = 'No module has been configured yet. An order needs a
 $string['ordernopeople'] = 'The list yielded nobody. Check the separator and the assignment.';
 $string['ordernotcreated'] = 'Account "{$a}" was not created.';
 $string['ordernotes'] = 'Notes';
+$string['ordernotify'] = 'Notify organisers';
+$string['ordernotify_help'] = 'The organisers of the course get a mail with the names once the credentials of this order '
+    . 'or report have been mailed, without passwords. Only when credentials go to the participants. The text is under '
+    . 'Settings, Notice to organisers.';
 $string['ordernousername'] = 'No user name can be made from this line.';
 $string['orderpattern'] = 'Pattern for the full course name';
 $string['orderpattern_desc'] = 'Placeholders: {module}, {company}, {abnr}, {shortname}. Leave empty to use the short name for '
@@ -336,8 +357,11 @@ $string['ordersremovecourse'] = 'The course of this order still exists. Only ord
     . 'from the list.';
 $string['ordersremoved'] = 'Order {$a} removed from the list.';
 $string['ordersstarts'] = 'starts on {$a}';
+$string['orderstart'] = 'Start';
+$string['orderstartafterend'] = 'Start date {$a} is after the end of the course.';
 $string['orderstartdate'] = 'Course start';
 $string['orderstartdate_help'] = 'A start in the future holds back the enrolment, and the credentials with it.';
+$string['orderstartmoved'] = 'Start date {$a->given} is earlier, starts on {$a->start}.';
 $string['orderstartpassword'] = 'Start password';
 $string['orderupdate'] = 'Update';
 $string['orderusername'] = 'User name';

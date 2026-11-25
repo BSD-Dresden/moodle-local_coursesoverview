@@ -131,6 +131,36 @@ if ($hassiteconfig) {
     $ADMIN->add('localcoursesoverviewsettingscategory', $settings);
 
     $settings = new admin_settingpage(
+        'localcoursesoverviewnotice',
+        get_string('noticeheading', 'local_coursesoverview'),
+        'moodle/site:config'
+    );
+
+    // Whether it goes out is ticked per order or late report, here is only what it says.
+    $settings->add(new admin_setting_heading(
+        'local_coursesoverview/noticeheading',
+        '',
+        get_string('noticeheading_desc', 'local_coursesoverview')
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'local_coursesoverview/noticesubject',
+        get_string('noticesubject', 'local_coursesoverview'),
+        get_string('noticesubject_desc', 'local_coursesoverview'),
+        get_string('noticesubject_default', 'local_coursesoverview'),
+        PARAM_TEXT
+    ));
+
+    $settings->add(new admin_setting_confightmleditor(
+        'local_coursesoverview/noticebody',
+        get_string('noticebody', 'local_coursesoverview'),
+        get_string('noticebody_desc', 'local_coursesoverview'),
+        get_string('noticebody_default', 'local_coursesoverview')
+    ));
+
+    $ADMIN->add('localcoursesoverviewsettingscategory', $settings);
+
+    $settings = new admin_settingpage(
         'localcoursesoverviewreminders',
         get_string('reminderheading', 'local_coursesoverview'),
         'moodle/site:config'

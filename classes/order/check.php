@@ -51,6 +51,9 @@ class check {
     /** @var int the account this line ended up with, once the order went through */
     public $userid = 0;
 
+    /** @var int midnight of the day this person starts, see validator::flag_start() */
+    public $start = 0;
+
     /** @var string[] what stops the order */
     public $errors = [];
 

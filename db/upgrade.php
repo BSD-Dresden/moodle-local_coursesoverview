@@ -228,5 +228,16 @@ function xmldb_local_coursesoverview_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2026111703, 'local', 'coursesoverview');
     }
 
+    if ($oldversion < 2026112501) {
+        // Whether the organisers hear of the credentials, ticked per order or late report.
+        $table = new xmldb_table('local_coursesoverview_orderuser');
+        $field = new xmldb_field('notify', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'timesent');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_plugin_savepoint(true, 2026112501, 'local', 'coursesoverview');
+    }
+
     return true;
 }

@@ -141,11 +141,13 @@
  * moves below, as it does for the editor.
  */
 #adminsettings .form-setting .defaultsnext:has(> #id_s_local_coursesoverview_ordermailsubject),
-#adminsettings .form-setting .defaultsnext:has(> #id_s_local_coursesoverview_remindersubject) {
+#adminsettings .form-setting .defaultsnext:has(> #id_s_local_coursesoverview_remindersubject),
+#adminsettings .form-setting .defaultsnext:has(> #id_s_local_coursesoverview_noticesubject) {
     display: block;
 }
 
 #adminsettings #id_s_local_coursesoverview_ordermailsubject,
-#adminsettings #id_s_local_coursesoverview_remindersubject {
+#adminsettings #id_s_local_coursesoverview_remindersubject,
+#adminsettings #id_s_local_coursesoverview_noticesubject {
     width: 100%;
 }

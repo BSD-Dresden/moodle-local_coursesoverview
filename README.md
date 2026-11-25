@@ -96,6 +96,27 @@ gelöscht ist, stehen unter dem Status „Gelöscht“ mit den Zahlen von kurz v
 dem Löschen. Wer nur `local/coursesoverview:view` hat, sieht die Übersicht ohne
 Auftragsdaten. Die frühere Seite `orders.php` leitet auf die Übersicht um.
 
+## Startdatum je Person und Info an Organisatoren
+
+Beim Anlegen und beim Nachmelden darf die Kundenliste eine Spalte
+**Startdatum** haben (02.12.2026, 02.12.26 oder 2026-12-02). Sie wird an der
+Überschrift oder an ihren Werten erkannt. Wer ein eigenes Datum hat, wird ab
+diesem Tag eingeschrieben und bekommt die Zugangsdaten an diesem Morgen zur
+Versanduhrzeit; `{startdate}` in der Mail ist dann dieses Datum. Zeilen ohne
+Datum beginnen wie bisher mit dem Auftrag, Nachmeldungen frühestens heute. Ein
+Datum davor wird auf diesen Beginn gezogen, eines nach dem Kursende ist ein
+Fehler. „Jetzt freischalten und senden“ öffnet weiterhin alle Einschreibungen
+des Auftrags sofort, auch die mit späterem eigenem Datum.
+
+Beim Anlegen und bei jeder Nachmeldung gibt es den Haken **Organisatoren
+informieren** (Vorgabe aus). Ist er gesetzt, bekommen die Organisatoren des
+Kurses eine Mail, sobald die Zugangsdaten dieses Vorgangs per Mail
+verschickt wurden, eine Mail je Organisator und Versand mit allen Namen, nie
+mit Passwörtern. Der Text steht unter **Einstellungen → Info an
+Organisatoren**. Organisatoren in
+Gruppen erfahren nur von ihren Gruppen. Beim Versand als Liste gibt es keine
+Info.
+
 ## Teilnahmebestätigungen
 
 Unter **Einstellungen → Teilnahmebestätigungen** liegt eine allgemeine
@@ -186,7 +207,7 @@ classes/pdf_placeholders.php  Platzhalter in der PDF-Vorlage finden und entferne
 classes/helper.php    Datumsformat, Kurszustände, Sortierung
 classes/output.php    Filterleiste, Legende, Tabellen, Sortier-Links
 classes/export.php    Excel-Export, als Excel-Tabelle mit Filter
-classes/order/        Aufträge: Anlegen, Versand, Erinnerungen, Liste
+classes/order/        Aufträge: Anlegen, Versand, Erinnerungen, Info an Organisatoren, Liste
 classes/purge.php     Wer beim Löschen eines Kurses mitgeht
 classes/task/         Geplante Aufgabe für die Abschlussmeldung
 db/tasks.php          Zeitplan der Aufgabe

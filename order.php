@@ -56,6 +56,7 @@ $startdate = optional_param('startdate', '', PARAM_TEXT);
 $enddate = optional_param('enddate', '', PARAM_TEXT);
 $scheme = optional_param('scheme', validator::SCHEME_EMAIL, PARAM_ALPHA);
 $delivery = optional_param('delivery', '', PARAM_ALPHA);
+$notify = optional_param('notify', 0, PARAM_BOOL);
 
 // How the customer's addresses are built. Missing rather than empty means
 // a late report that takes it over from its order.
@@ -309,6 +310,13 @@ $active = [];
 
 if ($step >= 3) {
     $checks = validator::run($people, $scheme, $roles, $reuse, $existing ? (int) $course->id : 0, $pattern, $skip);
+    // People reported late start today at the earliest, a new order on its own start day.
+    if ($existing) {
+        $defaultstart = max(usergetmidnight((int) $existing->startdate), usergetmidnight(time()));
+        validator::flag_start($checks, $defaultstart, (int) $course->enddate);
+    } else {
+        validator::flag_start($checks, $starttime, $endtime);
+    }
     $active = array_filter($checks, function ($check) {
         return !$check->skip;
     });
@@ -340,7 +348,7 @@ if ($step >= 4) {
             return $check->blocked();
         });
     } else if ($existing) {
-        $result = provision::add($existing, $course, $active, $delivery);
+        $result = provision::add($existing, $course, $active, $delivery, (bool) $notify);
 
         // The next late report of the same customer starts from this pattern.
         $patterntext = $pattern ? $pattern->text() : '';
@@ -361,7 +369,7 @@ if ($step >= 4) {
             'emailpattern' => $pattern ? $pattern->text() : '',
         ];
 
-        $result = provision::run($order, $module, $active);
+        $result = provision::run($order, $module, $active, (bool) $notify);
 
         // Without a course nothing happened, and the checked list is still
         // the best place to be.
@@ -404,6 +412,7 @@ $carried = [
     'enddate' => $enddate,
     'scheme' => $scheme,
     'delivery' => $delivery,
+    'notify' => $notify,
     'emailpattern' => $emailpattern,
     'list' => $list,
 ];
@@ -526,6 +535,14 @@ if ($step < 2) {
         get_string('orderdelivery_help', 'local_coursesoverview')
     );
 
+    // Off unless ticked: not every customer wants their supervisors mailed.
+    $box = html_writer::checkbox('notify', 1, (bool) $notify, get_string('ordernotify', 'local_coursesoverview'), [
+        'id' => 'coursesoverview-notify',
+        'class' => 'mr-2 me-2',
+    ]);
+    $hint = html_writer::tag('small', get_string('ordernotify_help', 'local_coursesoverview'), ['class' => 'form-text text-muted']);
+    $form .= html_writer::div($box . $hint, 'mb-3');
+
     $form .= $field(
         get_string('orderemailpattern', 'local_coursesoverview'),
         html_writer::empty_tag('input', [
@@ -570,6 +587,9 @@ $summary = [
     get_string('orderscheme', 'local_coursesoverview') => $schemes[$scheme],
     get_string('orderdelivery', 'local_coursesoverview') => $deliveries[$delivery],
 ];
+if ($notify && $delivery === provision::DELIVERY_DIRECT) {
+    $summary[get_string('ordernotify', 'local_coursesoverview')] = get_string('yes');
+}
 if ($pattern) {
     $summary[get_string('orderemailpattern', 'local_coursesoverview')] = $pattern->text();
 }

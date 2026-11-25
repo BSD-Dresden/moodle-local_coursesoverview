@@ -57,6 +57,12 @@ class columnmap {
     /** @var string the course group a person goes into */
     const GROUP = 'group';
 
+    /** @var string the day a person starts, when it is not the day of the order */
+    const STARTDATE = 'startdate';
+
+    /** @var string a date as customers write it: 2.12.2026, 02.12.26 or 2026-12-02 */
+    const DATE_PATTERN = '/^\s*(\d{1,2}\.\d{1,2}\.(\d{2}|\d{4})|\d{4}-\d{1,2}-\d{1,2})\s*$/u';
+
     /**
      * The column meanings as a select menu.
      *
@@ -73,6 +79,7 @@ class columnmap {
             self::NAMEMAIL => get_string('colnamemail', 'local_coursesoverview'),
             self::ROLE => get_string('colrole', 'local_coursesoverview'),
             self::GROUP => get_string('group'),
+            self::STARTDATE => get_string('colstartdate', 'local_coursesoverview'),
         ];
     }
 
@@ -99,6 +106,7 @@ class columnmap {
             // Whole words only, so that a group heading such as "Gruppe 1"
             // at the top of a list is not mistaken for a row of titles.
             self::GROUP => '/^(gruppe|group|team|abteilung|department|bereich|standort)$/u',
+            self::STARTDATE => '/start|beginn|begin|ab wann|eintritt|freischalt/u',
             self::FIRSTNAME => '/vorname|firstname|first name|given/u',
             self::LASTNAME => '/nachname|familienname|lastname|last name|surname|^name$/u',
             self::FULLNAME => '/^(voller|full|ganzer) name$|teilnehmer|participant|person/u',
@@ -161,6 +169,8 @@ class columnmap {
                 $map[$index] = self::EMAIL;
             } else if (!in_array(self::ROLE, $taken, true) && self::most($cells, self::role_pattern())) {
                 $map[$index] = self::ROLE;
+            } else if (!in_array(self::STARTDATE, $taken, true) && self::most($cells, self::DATE_PATTERN)) {
+                $map[$index] = self::STARTDATE;
             } else if (!self::has_name($taken) && self::most($cells, '/^[^,]+,\s*\S/u')) {
                 $map[$index] = self::LASTFIRST;
             } else if (!in_array(self::FIRSTNAME, $taken, true) && self::most($cells, '/\S/u')) {
@@ -274,6 +284,10 @@ class columnmap {
                             $person->group = core_text::substr($cell, 0, 254);
                         }
                         break;
+                    case self::STARTDATE:
+                        $person->startraw = trim($cell);
+                        $person->start = self::read_date($cell);
+                        break;
                 }
             }
 
@@ -286,6 +300,28 @@ class columnmap {
         }
 
         return $people;
+    }
+
+    /**
+     * Read a date the way customers write it.
+     *
+     * @param string $cell 2.12.2026, 02.12.26 or 2026-12-02
+     * @return int midnight of that day, zero when the cell holds no date
+     */
+    public static function read_date(string $cell): int {
+        $cell = trim($cell);
+        if (preg_match('/^(\d{1,2})\.(\d{1,2})\.(\d{2}|\d{4})$/', $cell, $m)) {
+            [$day, $month, $year] = [(int) $m[1], (int) $m[2], (int) $m[3]];
+            if ($year < 100) {
+                $year += 2000;
+            }
+        } else if (preg_match('/^(\d{4})-(\d{1,2})-(\d{1,2})$/', $cell, $m)) {
+            [$year, $month, $day] = [(int) $m[1], (int) $m[2], (int) $m[3]];
+        } else {
+            return 0;
+        }
+
+        return checkdate($month, $day, $year) ? make_timestamp($year, $month, $day) : 0;
     }
 
     /**

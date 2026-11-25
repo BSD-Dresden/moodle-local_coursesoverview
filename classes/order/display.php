@@ -157,6 +157,7 @@ class display {
     public static function people_table(array $people): string {
         $roles = participant::roles();
         $grouped = self::has_groups($people);
+        $dated = self::has_starts($people);
 
         $table = new html_table();
         $table->attributes['class'] = 'generaltable';
@@ -169,6 +170,9 @@ class display {
         ];
         if ($grouped) {
             $table->head[] = get_string('group');
+        }
+        if ($dated) {
+            $table->head[] = get_string('colstartdate', 'local_coursesoverview');
         }
         $table->head[] = get_string('ordernotes', 'local_coursesoverview');
 
@@ -184,6 +188,9 @@ class display {
             ];
             if ($grouped) {
                 $cells[] = s($person->group);
+            }
+            if ($dated) {
+                $cells[] = $person->start ? helper::format_date($person->start) : s($person->startraw);
             }
             $cells[] = implode(' ', $problems);
 
@@ -206,6 +213,8 @@ class display {
      */
     public static function checks_table(array $checks): string {
         $grouped = self::has_groups(array_column($checks, 'person'));
+        // The start only gets a column when somebody has a day of their own.
+        $dated = self::has_starts(array_column($checks, 'person'));
 
         $table = new html_table();
         $table->attributes['class'] = 'generaltable';
@@ -220,6 +229,9 @@ class display {
         ];
         if ($grouped) {
             $table->head[] = get_string('group');
+        }
+        if ($dated) {
+            $table->head[] = get_string('orderstart', 'local_coursesoverview');
         }
         $table->head[] = get_string('ordernotes', 'local_coursesoverview');
 
@@ -283,6 +295,9 @@ class display {
             if ($grouped) {
                 $cells[] = s($person->group);
             }
+            if ($dated) {
+                $cells[] = $check->start ? helper::format_date($check->start) : '';
+            }
             $cells[] = implode('', $notes);
 
             $row = new html_table_row($cells);
@@ -338,6 +353,22 @@ class display {
         }
 
         return html_writer::table($table);
+    }
+
+    /**
+     * Whether anybody in the list has a start day of their own.
+     *
+     * @param participant[] $people
+     * @return bool
+     */
+    protected static function has_starts(array $people): bool {
+        foreach ($people as $person) {
+            if ($person->startraw !== '') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

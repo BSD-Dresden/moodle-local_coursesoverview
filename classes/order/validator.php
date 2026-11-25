@@ -107,6 +107,37 @@ class validator {
     }
 
     /**
+     * Work out the day each line starts, and what speaks against it.
+     *
+     * Somebody starts on the day the list gives, but never before the order
+     * itself, nor before today when people are reported late; a day that has
+     * passed is moved to that start and said so. A start after the end of the
+     * course would give credentials for a course that is over.
+     *
+     * @param check[] $checks modified in place
+     * @param int $default midnight of the day people start without a date of their own
+     * @param int $end end of the course, zero for none
+     */
+    public static function flag_start(array $checks, int $default, int $end): void {
+        foreach ($checks as $check) {
+            $own = $check->person->start;
+            $check->start = max($own, $default);
+            if ($check->skip || !$own) {
+                continue;
+            }
+
+            if ($end && $own > $end) {
+                $check->errors[] = get_string('orderstartafterend', 'local_coursesoverview', helper::format_date($own));
+            } else if ($own < $default) {
+                $check->notes[] = get_string('orderstartmoved', 'local_coursesoverview', (object) [
+                    'given' => helper::format_date($own),
+                    'start' => helper::format_date($default),
+                ]);
+            }
+        }
+    }
+
+    /**
      * Mark the addresses that do not look the way the customer's addresses do.
      *
      * @param check[] $checks keyed by index, modified in place

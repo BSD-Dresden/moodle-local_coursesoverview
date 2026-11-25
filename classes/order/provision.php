@@ -58,9 +58,10 @@ class provision {
      *      emailpattern
      * @param module $module
      * @param check[] $checks the lines, already checked and free of errors
+     * @param bool $notify tell the organisers once the credentials of the participants are mailed
      * @return stdClass see result()
      */
-    public static function run(stdClass $order, module $module, array $checks): stdClass {
+    public static function run(stdClass $order, module $module, array $checks, bool $notify = false): stdClass {
         global $DB;
 
         self::requires();
@@ -77,14 +78,17 @@ class provision {
         }
         $result->courseid = (int) $course->id;
 
-        $batch = self::batch($order->abnr, $order->delivery, $order->startdate);
-        if (!self::fill($course, $batch, $checks, $result)) {
+        $batches = self::fill_by_start($course, $order->abnr, $order->delivery, (int) $order->startdate, $checks, $result);
+        if ($batches === null) {
             return $result;
         }
 
-        $result->orderid = self::record_order($order, $course, $batch);
-        self::record_people($result->orderid, $checks, $batch);
-        self::mail_now($batch, $result);
+        $result->orderid = self::record_order($order, $course, self::batch($order->abnr, $order->delivery, $order->startdate));
+        foreach ($batches as [$batch, $group]) {
+            $batch->notify = $notify;
+            self::record_people($result->orderid, $group, $batch);
+        }
+        self::mail_now($batches, $result);
 
         return $result;
     }
@@ -92,30 +96,80 @@ class provision {
     /**
      * Add people reported late to an order that already has its course.
      *
-     * They start on the order's start day, or today when that has passed, and
-     * their credentials go out however this report asks, which need not be
-     * the way the order went.
+     * They start on the order's start day, or today when that has passed,
+     * unless the list gives a later day of their own, and their credentials go
+     * out however this report asks, which need not be the way the order went.
      *
      * @param stdClass $order the order as it is stored
      * @param stdClass $course its course
      * @param check[] $checks the lines, already checked and free of errors
      * @param string $delivery one of the DELIVERY_ constants
+     * @param bool $notify tell the organisers once the credentials of the participants are mailed
      * @return stdClass see result()
      */
-    public static function add(stdClass $order, stdClass $course, array $checks, string $delivery): stdClass {
+    public static function add(
+        stdClass $order,
+        stdClass $course,
+        array $checks,
+        string $delivery,
+        bool $notify = false
+    ): stdClass {
         self::requires();
         $result = self::result();
         $result->courseid = (int) $course->id;
         $result->orderid = (int) $order->id;
 
         $start = max(usergetmidnight((int) $order->startdate), usergetmidnight(time()));
-        $batch = self::batch($order->abnr, $delivery, $start);
-        if (self::fill($course, $batch, $checks, $result)) {
-            self::record_people($result->orderid, $checks, $batch);
-            self::mail_now($batch, $result);
+        $batches = self::fill_by_start($course, $order->abnr, $delivery, $start, $checks, $result);
+        if ($batches !== null) {
+            foreach ($batches as [$batch, $group]) {
+                $batch->notify = $notify;
+                self::record_people($result->orderid, $group, $batch);
+            }
+            self::mail_now($batches, $result);
         }
 
         return $result;
+    }
+
+    /**
+     * Enrol the lines one start day at a time.
+     *
+     * Everybody of a start day shares the start of their enrolment and the
+     * morning their credentials go out.
+     *
+     * @param stdClass $course
+     * @param string $abnr
+     * @param string $delivery one of the DELIVERY_ constants
+     * @param int $default the start of lines without a day of their own
+     * @param check[] $checks
+     * @param stdClass $result
+     * @return array|null list of [batch, its checks], null when the course cannot take anybody
+     */
+    protected static function fill_by_start(
+        stdClass $course,
+        string $abnr,
+        string $delivery,
+        int $default,
+        array $checks,
+        stdClass $result
+    ): ?array {
+        $bystart = [];
+        foreach ($checks as $check) {
+            $bystart[$check->start ?: $default][] = $check;
+        }
+        ksort($bystart);
+
+        $batches = [];
+        foreach ($bystart as $start => $group) {
+            $batch = self::batch($abnr, $delivery, $start);
+            if (!self::fill($course, $batch, $group, $result)) {
+                return null;
+            }
+            $batches[] = [$batch, $group];
+        }
+
+        return $batches;
     }
 
     /**
@@ -123,12 +177,15 @@ class provision {
      *
      * A mail that fails stays due, and the hourly task tries it again.
      *
-     * @param stdClass $batch
+     * @param array $batches list of [batch, its checks]
      * @param stdClass $result
      */
-    protected static function mail_now(stdClass $batch, stdClass $result): void {
-        if ($batch->delivery === self::DELIVERY_DIRECT && !$batch->held) {
-            $result->mailed = credentials::send_due(time(), $result->orderid);
+    protected static function mail_now(array $batches, stdClass $result): void {
+        foreach ($batches as [$batch]) {
+            if ($batch->delivery === self::DELIVERY_DIRECT && !$batch->held) {
+                $result->mailed = credentials::send_due(time(), $result->orderid);
+                return;
+            }
         }
     }
 
@@ -160,6 +217,7 @@ class provision {
             'held' => 0,
             'senddate' => 0,
             'groups' => 0,
+            'groupnames' => [],
             'grouped' => 0,
             'errors' => [],
             'credentials' => [],
@@ -185,6 +243,7 @@ class provision {
             'start' => $start,
             'held' => $held,
             'senddate' => $held ? credentials::send_time($start) : time(),
+            'notify' => false,
         ];
     }
 
@@ -204,6 +263,7 @@ class provision {
             return false;
         }
 
+        $created = $result->created;
         self::import_users($course, $batch, $checks, $result);
 
         foreach ($checks as $check) {
@@ -214,9 +274,10 @@ class provision {
 
         self::assign_groups($course, $checks, $result);
 
+        // With several start days the message names the first morning.
         if ($batch->held) {
-            $result->held = $result->created;
-            $result->senddate = $batch->senddate;
+            $result->held += $result->created - $created;
+            $result->senddate = $result->senddate ? min($result->senddate, $batch->senddate) : $batch->senddate;
         }
 
         return true;
@@ -502,7 +563,7 @@ class provision {
     ): void {
         // What counts as created is what is in the database afterwards.
         $accounts = validator::accounts($wanted);
-        $result->created = count($accounts);
+        $result->created += count($accounts);
 
         foreach ($checks as $check) {
             if ($check->reuse) {
@@ -552,7 +613,6 @@ class provision {
             $ids[core_text::strtolower($group->name)] = (int) $group->id;
         }
 
-        $used = [];
         foreach ($checks as $check) {
             $name = $check->person->group;
             if ($name === '' || !$check->userid) {
@@ -563,7 +623,7 @@ class provision {
             if (!isset($ids[$key])) {
                 $ids[$key] = (int) groups_create_group((object) ['courseid' => $course->id, 'name' => $name]);
             }
-            $used[$key] = true;
+            $result->groupnames[$key] = true;
 
             if (groups_add_member($ids[$key], $check->userid)) {
                 $result->grouped++;
@@ -572,7 +632,8 @@ class provision {
             }
         }
 
-        $result->groups = count($used);
+        // Several start days fill the same groups, which count once.
+        $result->groups = count($result->groupnames);
     }
 
     /**
@@ -706,6 +767,8 @@ class provision {
                 // Due now or on the start morning, and sent by credentials.
                 'senddate' => $mailed ? $batch->senddate : 0,
                 'timesent' => 0,
+                // Organisers only hear of participants who get a mail.
+                'notify' => ($mailed && $batch->notify && $check->person->is_participant()) ? 1 : 0,
             ]);
         }
     }

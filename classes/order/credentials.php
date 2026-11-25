@@ -77,6 +77,8 @@ class credentials {
 
         $sent = 0;
         $orders = [];
+        // Participants per order whose organisers asked to hear of it.
+        $told = [];
 
         foreach ($DB->get_records_select('local_coursesoverview_orderuser', $where, $params) as $row) {
             if (!array_key_exists($row->orderid, $orders)) {
@@ -85,12 +87,23 @@ class credentials {
             [$order, $course] = $orders[$row->orderid];
 
             $user = $DB->get_record('user', ['id' => $row->userid, 'deleted' => 0, 'suspended' => 0]);
-            if (!$user || !$course || !self::send($user, $order, $course)) {
+            if (!$user || !$course) {
+                continue;
+            }
+            if (!self::send($user, $order, $course, self::enrolment_start((int) $course->id, (int) $user->id))) {
                 continue;
             }
 
             $DB->set_field('local_coursesoverview_orderuser', 'timesent', time(), ['id' => $row->id]);
             $sent++;
+            if (!empty($row->notify)) {
+                $told[$row->orderid][] = (int) $user->id;
+            }
+        }
+
+        foreach ($told as $id => $userids) {
+            [$order, $course] = $orders[$id];
+            notice::send($order, $course, $userids);
         }
 
         // An order is sent once nobody in it is waiting any more.
@@ -114,9 +127,10 @@ class credentials {
      * @param stdClass $user the full user record
      * @param stdClass $order
      * @param stdClass $course
+     * @param int $start when this person's enrolment begins, zero for the course start
      * @return bool whether the mail was accepted for delivery
      */
-    public static function send(stdClass $user, stdClass $order, stdClass $course): bool {
+    public static function send(stdClass $user, stdClass $order, stdClass $course, int $start = 0): bool {
         $password = provision::password();
         update_internal_user_password($user, $password);
 
@@ -124,7 +138,7 @@ class credentials {
         unset_user_preference('create_password', $user);
         set_user_preference('auth_forcepasswordchange', 1, $user);
 
-        [$subject, $html] = self::compose($user, $order, $course, $password);
+        [$subject, $html] = self::compose($user, $order, $course, $password, $start);
 
         return (bool) email_to_user($user, \core_user::get_support_user(), $subject, html_to_text($html), $html);
     }
@@ -136,9 +150,10 @@ class credentials {
      * @param stdClass $order
      * @param stdClass $course
      * @param string $password
+     * @param int $start when this person's enrolment begins, zero for the course start
      * @return string[] subject and body as html
      */
-    public static function compose(stdClass $user, stdClass $order, stdClass $course, string $password): array {
+    public static function compose(stdClass $user, stdClass $order, stdClass $course, string $password, int $start = 0): array {
         $subject = (string) get_config('local_coursesoverview', 'ordermailsubject');
         if (trim($subject) === '') {
             $subject = get_string('ordermailsubject_default', 'local_coursesoverview');
@@ -148,7 +163,32 @@ class credentials {
             $body = get_string('ordermailbody_default', 'local_coursesoverview');
         }
 
-        return self::fill($subject, $body, $user, $order, $course, ['{password}' => $password]);
+        $extra = ['{password}' => $password];
+        // Somebody reported with a later day of their own starts then, not with the course.
+        if ($start > $course->startdate) {
+            $extra['{startdate}'] = helper::format_date($start, '');
+        }
+
+        return self::fill($subject, $body, $user, $order, $course, $extra);
+    }
+
+    /**
+     * When somebody's enrolment in a course begins.
+     *
+     * @param int $courseid
+     * @param int $userid
+     * @return int zero when it is open from the start
+     */
+    protected static function enrolment_start(int $courseid, int $userid): int {
+        global $DB;
+
+        return (int) $DB->get_field_sql(
+            "SELECT MAX(ue.timestart)
+               FROM {user_enrolments} ue
+               JOIN {enrol} e ON e.id = ue.enrolid
+              WHERE e.courseid = :courseid AND e.enrol = 'manual' AND ue.userid = :userid",
+            ['courseid' => $courseid, 'userid' => $userid]
+        );
     }
 
     /**

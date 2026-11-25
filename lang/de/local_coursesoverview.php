@@ -74,6 +74,7 @@ $string['collastfirst'] = 'Nachname, Vorname';
 $string['collastname'] = 'Nachname';
 $string['colnamemail'] = 'Name und Adresse in einer Zelle';
 $string['colrole'] = 'Rolle';
+$string['colstartdate'] = 'Startdatum';
 $string['completed_lastseen'] = 'Kurs abgeschlossen / Zuletzt im Kurs';
 $string['completedparticipants'] = 'Abgeschlossene Teilnehmer';
 $string['completiondisabled'] = 'Die Abschlussverfolgung ist in diesem Kurs deaktiviert.';
@@ -149,6 +150,22 @@ $string['nocoursesmatch'] = 'Keine Kurse entsprechen dem Filter.';
 $string['nocriteria'] = 'Für diesen Kurs sind keine Abschlusskriterien definiert.';
 $string['nogroup'] = 'Ohne Gruppe';
 $string['noparticipants'] = 'Keine Teilnehmer vorhanden.';
+$string['noticebody'] = 'Text';
+$string['noticebody_default'] = '<p>Guten Tag {firstname} {lastname},</p><p>für die Online-Unterweisung '
+    . '<strong>{module}</strong> haben soeben folgende Personen ihre Zugangsdaten per E-Mail '
+    . 'erhalten:</p>{participants}<p>Den Stand der Bearbeitung sehen Sie im Kurs unter {link}.</p><p>Mit freundlichen '
+    . 'Grüßen<br>{sitename}</p>';
+$string['noticebody_desc'] = 'Platzhalter wie in der Mail mit den Zugangsdaten, dazu {participants} für die Liste der '
+    . 'Personen mit Name und Adresse und {count} für ihre Anzahl. {firstname} und {lastname} sind hier der Name des '
+    . 'Organisators. {startdate} ist der Beginn des Kurses.';
+$string['noticeheading'] = 'Info an Organisatoren';
+$string['noticeheading_desc'] = 'Text der Mail an die Organisatoren. Ob sie rausgeht, wird beim Anlegen eines Auftrags und '
+    . 'bei jeder Nachmeldung mit dem Haken „Organisatoren informieren“ entschieden. Sie geht raus, sobald die Zugangsdaten '
+    . 'verschickt sind, eine Mail je Organisator und Versand. Organisatoren in Gruppen erfahren nur von ihren Gruppen, '
+    . 'Organisatoren ohne Gruppe von allen.';
+$string['noticesubject'] = 'Betreff';
+$string['noticesubject_default'] = 'Zugangsdaten verschickt: {module}';
+$string['noticesubject_desc'] = 'Dieselben Platzhalter wie im Text.';
 $string['notifybody'] = 'Im Kurs "{$a->fullname}" ({$a->shortname}) haben alle {$a->total} Teilnehmer/innen abgeschlossen.
 
 Kursende: {$a->enddate}
@@ -240,6 +257,7 @@ $string['orderheld'] = 'Die Zugangsdaten für {$a->count} Personen gehen am {$a-
 $string['orderheld_one'] = 'Die Zugangsdaten für 1 Person gehen am {$a->date} um {$a->time} Uhr raus. Bis dahin geht keine Mail '
     . 'raus, und der Kurs öffnet für sie erst am Kursbeginn.';
 $string['orderinvalidemail'] = '„{$a}“ ist keine Adresse.';
+$string['orderinvalidstart'] = 'Startdatum „{$a}“ nicht lesbar, erwartet wird etwa 02.12.2026.';
 $string['orderlist'] = 'Teilnehmerliste';
 $string['orderlist_help'] = 'Fügen Sie die Liste so ein, wie der Kunde sie geschickt hat, eine Person je Zeile.';
 $string['orderlistready'] = 'Die Passwörter unten werden nur jetzt angezeigt und nirgends gespeichert. Laden Sie die Liste '
@@ -285,6 +303,10 @@ $string['ordernomodules'] = 'Es ist noch kein Modul eingerichtet. Ein Auftrag br
 $string['ordernopeople'] = 'Die Liste ergibt niemanden. Prüfen Sie das Trennzeichen und die Zuordnung.';
 $string['ordernotcreated'] = 'Konto „{$a}“ wurde nicht angelegt.';
 $string['ordernotes'] = 'Hinweise';
+$string['ordernotify'] = 'Organisatoren informieren';
+$string['ordernotify_help'] = 'Die Organisatoren des Kurses bekommen eine Mail mit den Namen, sobald die Zugangsdaten '
+    . 'dieses Vorgangs per Mail verschickt sind, ohne Passwörter. Nur beim Versand an die Teilnehmer. Den Text gibt es '
+    . 'unter Einstellungen, Info an Organisatoren.';
 $string['ordernousername'] = 'Aus dieser Zeile lässt sich kein Benutzername bilden.';
 $string['orderpattern'] = 'Muster für den vollständigen Kursnamen';
 $string['orderpattern_desc'] = 'Platzhalter: {module}, {company}, {abnr}, {shortname}. Leer lassen, wenn der Kurzname für beides '
@@ -341,8 +363,11 @@ $string['ordersremovecourse'] = 'Der Kurs dieses Auftrags existiert noch. Nur Au
     . 'der Liste entfernen.';
 $string['ordersremoved'] = 'Auftrag {$a} aus der Liste entfernt.';
 $string['ordersstarts'] = 'beginnt am {$a}';
+$string['orderstart'] = 'Beginn';
+$string['orderstartafterend'] = 'Startdatum {$a} liegt nach dem Kursende.';
 $string['orderstartdate'] = 'Kursbeginn';
 $string['orderstartdate_help'] = 'Ein Beginn in der Zukunft hält die Einschreibung zurück und die Zugangsdaten mit ihr.';
+$string['orderstartmoved'] = 'Startdatum {$a->given} liegt davor, beginnt am {$a->start}.';
 $string['orderstartpassword'] = 'Start-Passwort';
 $string['orderupdate'] = 'Aktualisieren';
 $string['orderusername'] = 'Benutzername';
