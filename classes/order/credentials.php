@@ -268,6 +268,36 @@ class credentials {
     }
 
     /**
+     * Who of an order is still waiting for their credentials, by send time.
+     *
+     * @param int $orderid
+     * @return array send time => user records with names and email, earliest first
+     */
+    public static function waiting_people(int $orderid): array {
+        global $DB;
+
+        $names = \core_user\fields::for_name()->get_sql('u', false, '', '', false)->selects;
+        $records = $DB->get_records_sql(
+            "SELECT ou.id AS rowid, ou.senddate, u.id, u.email, " . ltrim($names, ' ,') . "
+               FROM {local_coursesoverview_orderuser} ou
+               JOIN {user} u ON u.id = ou.userid
+              WHERE ou.orderid = :orderid
+                    AND ou.senddate > 0
+                    AND ou.timesent = 0
+                    AND ou.reused = 0
+           ORDER BY ou.senddate, u.lastname, u.firstname",
+            ['orderid' => $orderid]
+        );
+
+        $people = [];
+        foreach ($records as $record) {
+            $people[(int) $record->senddate][] = $record;
+        }
+
+        return $people;
+    }
+
+    /**
      * Start an order now rather than on its day.
      *
      * Credentials for a course that is still closed would only cause calls,

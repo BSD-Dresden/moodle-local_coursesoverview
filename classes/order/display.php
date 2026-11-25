@@ -477,16 +477,23 @@ class display {
         if ($schedule) {
             $out .= html_writer::tag('p', self::schedule($schedule, 'orderboxwaiting', 'orderboxwaitingspread'));
 
-            // People reported with days of their own wait for many mornings, each worth checking.
-            if (count($schedule) > 1) {
-                $items = '';
-                foreach ($schedule as $time => $count) {
-                    $entry = (object) ['date' => helper::format_date($time), 'count' => $count];
-                    $items .= html_writer::tag('li', get_string('orderboxscheduleentry', 'local_coursesoverview', $entry));
+            // Every morning with the people it is for, each to be opened on its own.
+            $items = '';
+            foreach (credentials::waiting_people((int) $order->id) as $time => $people) {
+                $entry = (object) ['date' => helper::format_date($time), 'count' => count($people)];
+                $names = '';
+                foreach ($people as $person) {
+                    $profile = new moodle_url('/user/view.php', ['id' => $person->id, 'course' => $courseid]);
+                    $name = html_writer::link($profile, s(fullname($person)));
+                    $names .= html_writer::tag('li', $name . ' (' . s($person->email) . ')');
                 }
-                $summary = html_writer::tag('summary', get_string('orderboxschedule', 'local_coursesoverview'));
-                $out .= html_writer::tag('details', $summary . html_writer::tag('ul', $items), ['class' => 'mb-3']);
+                $line = html_writer::tag('summary', get_string('orderboxscheduleentry', 'local_coursesoverview', $entry));
+                $items .= html_writer::tag('li', html_writer::tag('details', $line . html_writer::tag('ul', $names)));
             }
+            $summary = html_writer::tag('summary', get_string('orderboxschedule', 'local_coursesoverview'));
+            $out .= html_writer::tag('details', $summary . html_writer::tag('ul', $items, ['class' => 'list-unstyled ms-3']), [
+                'class' => 'mb-3',
+            ]);
 
             $url = new moodle_url('/local/coursesoverview/order.php', [
                 'action' => 'release',

@@ -229,7 +229,7 @@ if (!empty($groups)) {
 
         // Organisers are listed above their own group's table rather than in it.
         if (isset($organisers[$membership->userid])) {
-            $organisersbygroup[$membership->groupid][] = fullname($organisers[$membership->userid]);
+            $organisersbygroup[$membership->groupid][] = $organisers[$membership->userid];
             $organiserhasgroup[$membership->userid] = true;
         }
     }
@@ -266,7 +266,7 @@ if (!empty($groups)) {
 $courseorganisers = [];
 foreach ($organisers as $userid => $user) {
     if (empty($organiserhasgroup[$userid])) {
-        $courseorganisers[] = fullname($user);
+        $courseorganisers[] = $user;
     }
 }
 
@@ -340,7 +340,7 @@ $enddate = helper::format_date($course->enddate);
 echo html_writer::tag('p', html_writer::tag('strong', get_string('enddate') . ': ') . $enddate);
 
 if (!empty($courseorganisers)) {
-    echo output::organisers($courseorganisers);
+    echo output::organisers($courseorganisers, $maylinkprofiles ? $courseid : 0);
 }
 
 // The order behind the course is our own business. Customers' organisers see
@@ -377,7 +377,7 @@ foreach ($sections as $section) {
         echo html_writer::tag('h3', $section['name']);
     }
     if (!empty($section['organisers'])) {
-        echo output::organisers($section['organisers']);
+        echo output::organisers($section['organisers'], $maylinkprofiles ? $courseid : 0);
     }
     $caption = ($section['name'] !== '') ? $section['name'] : $pagetitle;
     echo output::participants_table($section['rows'], $sort, $descending, $baseurl, $caption);

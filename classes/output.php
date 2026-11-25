@@ -20,6 +20,7 @@ use html_table;
 use html_table_row;
 use html_writer;
 use moodle_url;
+use stdClass;
 
 /**
  * Markup shared by the two pages.
@@ -122,15 +123,31 @@ class output {
      * Screen only. The Excel export is built from the participant rows, and
      * organisers are deliberately not among them.
      *
-     * @param array $names full names, unescaped
+     * @param stdClass[] $users the organisers, with id and name fields
+     * @param int $courseid link the names into this course profile, zero for plain names
      * @return string
      */
-    public static function organisers(array $names): string {
-        sort($names, SORT_NATURAL | SORT_FLAG_CASE);
+    public static function organisers(array $users, int $courseid = 0): string {
+        $names = [];
+        foreach ($users as $user) {
+            $names[] = ['name' => fullname($user), 'id' => (int) $user->id];
+        }
+        usort($names, function ($a, $b) {
+            return strnatcasecmp($a['name'], $b['name']);
+        });
+
+        // Linked into the course profile when a course is given, the way participant names are.
+        $entries = array_map(function ($entry) use ($courseid) {
+            if (!$courseid) {
+                return s($entry['name']);
+            }
+            $url = new moodle_url('/user/view.php', ['id' => $entry['id'], 'course' => $courseid]);
+            return html_writer::link($url, s($entry['name']));
+        }, $names);
 
         $key = (count($names) === 1) ? 'organiser' : 'organisers';
         $label = get_string($key, 'local_coursesoverview');
-        $list = implode(', ', array_map('s', $names));
+        $list = implode(', ', $entries);
 
         return html_writer::tag(
             'p',
