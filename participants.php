@@ -87,6 +87,24 @@ $participants = get_enrolled_users(
     true
 );
 
+// People whose enrolment begins later are participants as well. Moodle's own
+// reports leave them out until their day, but they still have to complete,
+// and whoever looks after them wants to see who is coming.
+$laterstarts = helper::later_starts($context, $viewgroups);
+if ($laterstarts) {
+    $tracked = get_enrolled_users(
+        $context,
+        'moodle/course:isincompletionreports',
+        $viewgroups,
+        'u.id, u.email, ' . ltrim($userfields, ' ,'),
+        null,
+        0,
+        0,
+        false
+    );
+    $participants += array_intersect_key($tracked, $laterstarts);
+}
+
 // Everyone else who is enrolled and active: organisers, trainers, managers.
 // They are deliberately not in the table above, because no completion is
 // tracked for them -- but who looks after a group is exactly what somebody
@@ -163,8 +181,19 @@ foreach ($participants as $user) {
     $completedtime = (int) ($coursecompletedbyuser[$user->id] ?? 0);
     $date = $completedtime ?: (int) ($lastaccessbyuser[$user->id] ?? 0);
 
+    // Somebody who cannot start yet is neither behind nor in progress.
+    $laterstart = $laterstarts[$user->id] ?? 0;
+    if ($laterstart) {
+        $state = null;
+        $progress = '—';
+        $date = $laterstart;
+    }
+
     $profileurl = new moodle_url('/user/view.php', ['id' => $user->id, 'course' => $courseid]);
     $datecell = helper::format_date($date);
+    if ($laterstart) {
+        $datecell = get_string('startslater', 'local_coursesoverview', helper::format_date($laterstart));
+    }
     if ($singlecertificates && $completedtime) {
         $datecell .= ' ' . \local_coursesoverview\certificate::single_link($courseid, $user->id);
     }
@@ -193,7 +222,9 @@ foreach ($participants as $user) {
             $user->email,
             helper::format_date((int) ($accesssincebyuser[$user->id] ?? 0), ''),
             $progress,
-            helper::format_date($date, ''),
+            $laterstart
+                ? get_string('startslater', 'local_coursesoverview', helper::format_date($laterstart, ''))
+                : helper::format_date($date, ''),
         ],
     ];
 }

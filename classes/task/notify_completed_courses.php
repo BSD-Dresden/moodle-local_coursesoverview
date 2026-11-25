@@ -119,7 +119,9 @@ class notify_completed_courses extends \core\task\scheduled_task {
                 continue;
             }
 
+            // People whose enrolment begins later still have to complete.
             $total = $completion->get_num_tracked_users();
+            $total += count(\local_coursesoverview\helper::later_starts(\context_course::instance($course->id)));
             if ($total < 1) {
                 continue;
             }

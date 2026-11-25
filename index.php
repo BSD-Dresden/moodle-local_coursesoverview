@@ -222,8 +222,11 @@ foreach ($courses as $course) {
 
     $completion = new completion_info($course);
 
-    // Number of users that show up in completion reports for this course.
-    $totalparticipants = $completion->get_num_tracked_users();
+    // Number of users that show up in completion reports for this course,
+    // plus those whose enrolment begins later: they still have to complete.
+    $activeparticipants = $completion->get_num_tracked_users();
+    $laterparticipants = count(helper::later_starts($coursecontext));
+    $totalparticipants = $activeparticipants + $laterparticipants;
 
     // A course that starts later has nobody in it yet, because enrolments
     // only begin on its start day. It is shown all the same, so that an
@@ -252,11 +255,18 @@ foreach ($courses as $course) {
 
     // Before its start a course has nobody in it, and "0 / 0" would read as
     // a course without people.
-    if ($upcoming && $totalparticipants < 1) {
+    if ($upcoming && $activeparticipants < 1) {
         $completioncell = get_string('ordersstarts', 'local_coursesoverview', helper::format_date($course->startdate));
     }
 
-    $coursestate = helper::course_state($course, $completedparticipants, $totalparticipants, $now, (bool) $donerecord);
+    $coursestate = helper::course_state(
+        $course,
+        $completedparticipants,
+        $totalparticipants,
+        $now,
+        (bool) $donerecord,
+        $laterparticipants
+    );
 
     if (!helper::state_matches($coursestate, $state)) {
         continue;

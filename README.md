@@ -17,6 +17,12 @@ aktiv, und im Besitz von `moodle/course:isincompletionreports`. Das ist
 dieselbe Menge, die Moodles Abschlussberichte verwenden — standardmäßig also
 die Teilnehmerrolle, nicht Organisatoren, Trainer oder Manager.
 
+Eine Ausnahme machen beide Seiten bewusst: Wer erst an einem späteren Tag
+beginnt (Startdatum je Person), zählt schon jetzt mit, obwohl Moodle die
+Einschreibung bis dahin nicht als aktiv führt. Sonst würde ein Kurs grün und
+als abgeschlossen gemeldet, während noch Leute anfangen müssen. Auf der
+Detailseite stehen sie ohne Farbe mit „Beginnt am …“, im Export ebenso.
+
 Wer eingeschrieben ist, aber nicht dazuzählt, erscheint auf der Detailseite
 als **Organisator** über der Tabelle: bei Gruppen über der jeweiligen Gruppe,
 sonst über dem Kurs. Organisatoren ohne Gruppenzugehörigkeit stehen oben beim

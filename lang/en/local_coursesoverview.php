@@ -451,6 +451,7 @@ $string['roleorganiser'] = 'Organiser';
 $string['roleparticipant'] = 'Participant';
 $string['settings'] = 'Settings';
 $string['settingsorders'] = 'Orders and modules';
+$string['startslater'] = 'Starts on {$a}';
 $string['statusactive'] = 'Ongoing';
 $string['statuscompleted'] = 'Completed';
 $string['statusdeleted'] = 'Deleted';

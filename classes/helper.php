@@ -133,9 +133,10 @@ class helper {
      *
      * @param stdClass $course needs visible, startdate and enddate
      * @param int|null $completed participants that completed, null if unknown
-     * @param int $total tracked participants
+     * @param int $total tracked participants, those who start later included
      * @param int $now
      * @param bool $done whether the course is marked as done
+     * @param int $later of the total, those whose enrolment has not begun yet
      * @return string state key
      */
     public static function course_state(
@@ -143,7 +144,8 @@ class helper {
         ?int $completed,
         int $total,
         int $now,
-        bool $done = false
+        bool $done = false,
+        int $later = 0
     ): string {
         if ($done) {
             return 'done';
@@ -153,7 +155,8 @@ class helper {
             return 'hidden';
         }
 
-        if ($total < 1 && $course->startdate > $now) {
+        // Nobody can be in it yet, however many are waiting for their day.
+        if ($total - $later < 1 && $course->startdate > $now) {
             return 'upcoming';
         }
 
@@ -281,6 +284,68 @@ class helper {
         });
 
         return $rows;
+    }
+
+    /**
+     * Participants whose enrolment begins on a later day.
+     *
+     * Moodle counts only enrolments that have begun, in its completion reports
+     * as in completion_info::get_num_tracked_users(). People reported with a
+     * start day of their own would then be missing until that day, and a
+     * course could look completed while some of them have not even started.
+     * These are the people with the same capability whose enrolment is
+     * active apart from not having begun yet, and who have no begun one.
+     *
+     * @param context_course $context
+     * @param int|array $groupids only these groups, 0 for everybody
+     * @return int[] user id => the day their enrolment begins
+     */
+    public static function later_starts(context_course $context, $groupids = 0): array {
+        global $DB;
+
+        $now = time();
+        $starts = $DB->get_records_sql_menu(
+            "SELECT ue.userid, MIN(ue.timestart)
+               FROM {user_enrolments} ue
+               JOIN {enrol} e ON e.id = ue.enrolid
+              WHERE e.courseid = :courseid
+                    AND e.status = :enabled
+                    AND ue.status = :active
+                    AND ue.timestart > :now1
+                    AND (ue.timeend = 0 OR ue.timeend > :now2)
+                    AND NOT EXISTS (
+                        SELECT 1
+                          FROM {user_enrolments} ue2
+                          JOIN {enrol} e2 ON e2.id = ue2.enrolid
+                         WHERE e2.courseid = e.courseid
+                               AND ue2.userid = ue.userid
+                               AND e2.status = :enabled2
+                               AND ue2.status = :active2
+                               AND ue2.timestart <= :now3
+                               AND (ue2.timeend = 0 OR ue2.timeend > :now4)
+                    )
+           GROUP BY ue.userid",
+            [
+                'courseid' => $context->instanceid,
+                'enabled' => ENROL_INSTANCE_ENABLED,
+                'active' => ENROL_USER_ACTIVE,
+                'enabled2' => ENROL_INSTANCE_ENABLED,
+                'active2' => ENROL_USER_ACTIVE,
+                'now1' => $now,
+                'now2' => $now,
+                'now3' => $now,
+                'now4' => $now,
+            ]
+        );
+        if (!$starts) {
+            return [];
+        }
+
+        // Only those who are tracked for completion, in the groups asked for.
+        [$enrolled, $params] = get_enrolled_sql($context, 'moodle/course:isincompletionreports', $groupids, false);
+        $tracked = $DB->get_fieldset_sql("SELECT je.id FROM ($enrolled) je", $params);
+
+        return array_map('intval', array_intersect_key($starts, array_flip($tracked)));
     }
 
     /**
