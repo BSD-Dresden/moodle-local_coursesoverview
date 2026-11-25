@@ -481,8 +481,8 @@ class display {
             if (count($schedule) > 1) {
                 $items = '';
                 foreach ($schedule as $time => $count) {
-                    $a = (object) ['date' => helper::format_date($time), 'count' => $count];
-                    $items .= html_writer::tag('li', get_string('orderboxscheduleentry', 'local_coursesoverview', $a));
+                    $entry = (object) ['date' => helper::format_date($time), 'count' => $count];
+                    $items .= html_writer::tag('li', get_string('orderboxscheduleentry', 'local_coursesoverview', $entry));
                 }
                 $summary = html_writer::tag('summary', get_string('orderboxschedule', 'local_coursesoverview'));
                 $out .= html_writer::tag('details', $summary . html_writer::tag('ul', $items), ['class' => 'mb-3']);
@@ -494,7 +494,7 @@ class display {
                 'sesskey' => sesskey(),
             ]);
             $button = new single_button($url, get_string('orderrelease', 'local_coursesoverview'), 'post');
-            $button->add_confirm_action(helper::counted('orderreleaseconfirm', $people, $a));
+            $button->add_confirm_action(self::schedule($schedule, 'orderreleaseconfirm', 'orderreleaseconfirmspread'));
             $buttons .= html_writer::div($OUTPUT->render($button), 'mr-2 me-2');
         }
 

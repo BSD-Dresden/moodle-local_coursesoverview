@@ -334,6 +334,8 @@ $string['orderreleaseconfirm'] = 'Die Einschreibungen öffnen sofort, und die Zu
     . 'raus statt am {$a->date} um {$a->time} Uhr. Fortfahren?';
 $string['orderreleaseconfirm_one'] = 'Die Einschreibungen öffnen sofort, und die Zugangsdaten für 1 Person gehen jetzt raus statt '
     . 'am {$a->date} um {$a->time} Uhr. Fortfahren?';
+$string['orderreleaseconfirmspread'] = 'Die Einschreibungen öffnen sofort, und die Zugangsdaten für {$a->count} Personen gehen '
+    . 'jetzt raus statt an ihren Startdaten vom {$a->first} bis {$a->last}. Fortfahren?';
 $string['orderreleased'] = 'Kurs freigeschaltet, Zugangsdaten für {$a} Personen verschickt.';
 $string['orderreleased_one'] = 'Kurs freigeschaltet, Zugangsdaten für 1 Person verschickt.';
 $string['orderreuse'] = 'Vorhandenes Konto verwenden und nur einschreiben';

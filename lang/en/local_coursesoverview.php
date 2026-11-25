@@ -328,6 +328,8 @@ $string['orderreleaseconfirm'] = 'The enrolments open at once and the credential
     . '{$a->date} at {$a->time}. Continue?';
 $string['orderreleaseconfirm_one'] = 'The enrolments open at once and the credentials for 1 person go out now instead of on '
     . '{$a->date} at {$a->time}. Continue?';
+$string['orderreleaseconfirmspread'] = 'The enrolments open at once, and the credentials for {$a->count} people go out now '
+    . 'instead of on their start dates from {$a->first} to {$a->last}. Continue?';
 $string['orderreleased'] = 'Course opened, credentials for {$a} people sent.';
 $string['orderreleased_one'] = 'Course opened, credentials for 1 person sent.';
 $string['orderreuse'] = 'Use the existing account and only enrol it';
