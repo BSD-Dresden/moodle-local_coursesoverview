@@ -645,12 +645,7 @@ if ($result) {
         );
         echo display::credentials_table($result->credentials);
     } else if ($result->held) {
-        $a = (object) [
-            'count' => $result->held,
-            'date' => helper::format_date($result->senddate),
-            'time' => userdate($result->senddate, '%H:%M'),
-        ];
-        echo $OUTPUT->notification(helper::counted('orderheld', $result->held, $a), 'info');
+        echo $OUTPUT->notification(display::schedule($result->helddates, 'orderheld', 'orderheldspread'), 'info');
     } else if ($delivery === provision::DELIVERY_DIRECT && $result->created) {
         echo $OUTPUT->notification(helper::counted('ordermailed', $result->mailed), 'info');
         if ($result->mailed < $result->created) {

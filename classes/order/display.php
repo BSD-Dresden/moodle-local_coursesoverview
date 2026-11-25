@@ -356,6 +356,33 @@ class display {
     }
 
     /**
+     * When held credentials go out, in one sentence.
+     *
+     * @param int[] $schedule send time => how many people
+     * @param string $single string for a single morning, with date, time and count
+     * @param string $spread string for several mornings, with count, days, first, firstcount, last and time
+     * @return string
+     */
+    public static function schedule(array $schedule, string $single, string $spread): string {
+        ksort($schedule);
+        $count = array_sum($schedule);
+        $first = array_key_first($schedule);
+        $last = array_key_last($schedule);
+
+        $a = (object) [
+            'count' => $count,
+            'date' => helper::format_date($first),
+            'time' => userdate($first, '%H:%M'),
+            'days' => count($schedule),
+            'first' => helper::format_date($first),
+            'firstcount' => $schedule[$first],
+            'last' => helper::format_date($last),
+        ];
+
+        return helper::counted(count($schedule) > 1 ? $spread : $single, $count, $a);
+    }
+
+    /**
      * Whether anybody in the list has a start day of their own.
      *
      * @param participant[] $people
@@ -446,14 +473,20 @@ class display {
         $out .= html_writer::tag('p', get_string('orderboxinfo', 'local_coursesoverview', $a));
 
         $buttons = '';
-        [$people, $senddate] = credentials::waiting((int) $order->id);
-        if ($people) {
-            $a = (object) [
-                'count' => $people,
-                'date' => helper::format_date($senddate),
-                'time' => userdate($senddate, '%H:%M'),
-            ];
-            $out .= html_writer::tag('p', helper::counted('orderboxwaiting', $people, $a));
+        $schedule = credentials::schedule((int) $order->id);
+        if ($schedule) {
+            $out .= html_writer::tag('p', self::schedule($schedule, 'orderboxwaiting', 'orderboxwaitingspread'));
+
+            // People reported with days of their own wait for many mornings, each worth checking.
+            if (count($schedule) > 1) {
+                $items = '';
+                foreach ($schedule as $time => $count) {
+                    $a = (object) ['date' => helper::format_date($time), 'count' => $count];
+                    $items .= html_writer::tag('li', get_string('orderboxscheduleentry', 'local_coursesoverview', $a));
+                }
+                $summary = html_writer::tag('summary', get_string('orderboxschedule', 'local_coursesoverview'));
+                $out .= html_writer::tag('details', $summary . html_writer::tag('ul', $items), ['class' => 'mb-3']);
+            }
 
             $url = new moodle_url('/local/coursesoverview/order.php', [
                 'action' => 'release',

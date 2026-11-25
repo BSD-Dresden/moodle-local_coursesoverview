@@ -186,8 +186,12 @@ $string['orderalreadyincourse'] = '{$a} is already enrolled in this course.';
 $string['orderback'] = 'Back';
 $string['orderbox'] = 'Order';
 $string['orderboxinfo'] = '{$a->company}, order number {$a->abnr}, created {$a->created}.';
+$string['orderboxschedule'] = 'All dates';
+$string['orderboxscheduleentry'] = '{$a->date}: {$a->count}';
 $string['orderboxwaiting'] = 'Credentials for {$a->count} people are waiting for {$a->date}, {$a->time}.';
 $string['orderboxwaiting_one'] = 'Credentials for 1 person are waiting for {$a->date}, {$a->time}.';
+$string['orderboxwaitingspread'] = 'Credentials for {$a->count} people are waiting, spread over {$a->days} days: next '
+    . '{$a->firstcount} on {$a->first}, last on {$a->last}, each at {$a->time}.';
 $string['ordercheck'] = 'Check against Moodle';
 $string['ordercheck_help'] = 'Every line has now been checked against the existing accounts. Red lines stop the order. Roles can '
     . 'still be changed here, and lines that are not meant to be created can be left out; the order takes both into account '
@@ -247,10 +251,13 @@ $string['ordergroupsdone_one'] = '1 person put into a group.';
 $string['ordergroupsdone_onegroup'] = '{$a->members} people put into one group.';
 $string['ordergroupsline'] = 'Groups: {$a}';
 $string['orderhasheader'] = 'First line names the columns';
-$string['orderheld'] = 'The credentials for {$a->count} people go out on {$a->date} at {$a->time}. Until then no mail is sent, and '
-    . 'the course only opens for them on its start day.';
-$string['orderheld_one'] = 'The credentials for 1 person go out on {$a->date} at {$a->time}. Until then no mail is sent, and the '
-    . 'course only opens for them on its start day.';
+$string['orderheld'] = 'The credentials for {$a->count} people go out on {$a->date} at {$a->time}. Until then no mail is '
+    . 'sent, and the course only opens for them on that day.';
+$string['orderheld_one'] = 'The credentials for 1 person go out on {$a->date} at {$a->time}. Until then no mail is sent, '
+    . 'and the course only opens for them on that day.';
+$string['orderheldspread'] = 'The credentials for {$a->count} people go out on each person\'s start date at {$a->time}, '
+    . 'spread over {$a->days} days from {$a->first} to {$a->last}. Until then no mail is sent, and the course only opens '
+    . 'for each person on their start date. All dates are listed in the order box on the completion status.';
 $string['orderinvalidemail'] = '"{$a}" is not an address.';
 $string['orderinvalidstart'] = 'Start date "{$a}" not readable, expected something like 02.12.2026.';
 $string['orderlist'] = 'Participant list';

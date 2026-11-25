@@ -239,25 +239,32 @@ class credentials {
     }
 
     /**
-     * The people of an order whose credentials are still waiting.
+     * When the credentials of an order that are still waiting go out.
      *
      * @param int $orderid
-     * @return array count and the earliest send time, zero when nobody is waiting
+     * @return int[] send time => how many people, earliest first, empty when nobody is waiting
      */
-    public static function waiting(int $orderid): array {
+    public static function schedule(int $orderid): array {
         global $DB;
 
-        $record = $DB->get_record_sql(
-            "SELECT COUNT(id) AS people, MIN(senddate) AS senddate
+        $records = $DB->get_records_sql(
+            "SELECT senddate, COUNT(id) AS people
                FROM {local_coursesoverview_orderuser}
               WHERE orderid = :orderid
                     AND senddate > 0
                     AND timesent = 0
-                    AND reused = 0",
+                    AND reused = 0
+           GROUP BY senddate
+           ORDER BY senddate",
             ['orderid' => $orderid]
         );
 
-        return [(int) $record->people, (int) $record->senddate];
+        $schedule = [];
+        foreach ($records as $record) {
+            $schedule[(int) $record->senddate] = (int) $record->people;
+        }
+
+        return $schedule;
     }
 
     /**

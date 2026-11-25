@@ -216,6 +216,7 @@ class provision {
             'mailed' => 0,
             'held' => 0,
             'senddate' => 0,
+            'helddates' => [],
             'groups' => 0,
             'groupnames' => [],
             'grouped' => 0,
@@ -274,10 +275,11 @@ class provision {
 
         self::assign_groups($course, $checks, $result);
 
-        // With several start days the message names the first morning.
-        if ($batch->held) {
+        // Each start day has its own morning, and the message names them all.
+        if ($batch->held && $result->created > $created) {
             $result->held += $result->created - $created;
             $result->senddate = $result->senddate ? min($result->senddate, $batch->senddate) : $batch->senddate;
+            $result->helddates[$batch->senddate] = ($result->helddates[$batch->senddate] ?? 0) + $result->created - $created;
         }
 
         return true;

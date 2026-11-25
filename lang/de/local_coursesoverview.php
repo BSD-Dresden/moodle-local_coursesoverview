@@ -190,8 +190,12 @@ $string['orderalreadyincourse'] = '{$a} ist bereits in diesem Kurs eingeschriebe
 $string['orderback'] = 'Zurück';
 $string['orderbox'] = 'Auftrag';
 $string['orderboxinfo'] = '{$a->company}, AB {$a->abnr}, angelegt am {$a->created}.';
+$string['orderboxschedule'] = 'Alle Termine';
+$string['orderboxscheduleentry'] = '{$a->date}: {$a->count}';
 $string['orderboxwaiting'] = 'Zugangsdaten für {$a->count} Personen warten auf den {$a->date}, {$a->time} Uhr.';
 $string['orderboxwaiting_one'] = 'Zugangsdaten für 1 Person warten auf den {$a->date}, {$a->time} Uhr.';
+$string['orderboxwaitingspread'] = 'Zugangsdaten für {$a->count} Personen warten, verteilt auf {$a->days} Tage: als '
+    . 'Nächstes {$a->firstcount} am {$a->first}, zuletzt am {$a->last}, jeweils {$a->time} Uhr.';
 $string['ordercheck'] = 'Gegen Moodle prüfen';
 $string['ordercheck_help'] = 'Jede Zeile ist jetzt mit den vorhandenen Konten abgeglichen. Rote Zeilen halten den Auftrag auf. '
     . 'Rollen lassen sich hier noch ändern, und Zeilen, die nicht angelegt werden sollen, lassen sich auslassen; beides gilt beim '
@@ -252,10 +256,13 @@ $string['ordergroupsdone_one'] = '1 Person in eine Gruppe eingeteilt.';
 $string['ordergroupsdone_onegroup'] = '{$a->members} Personen in eine Gruppe eingeteilt.';
 $string['ordergroupsline'] = 'Gruppen: {$a}';
 $string['orderhasheader'] = 'Erste Zeile benennt die Spalten';
-$string['orderheld'] = 'Die Zugangsdaten für {$a->count} Personen gehen am {$a->date} um {$a->time} Uhr raus. Bis dahin geht keine '
-    . 'Mail raus, und der Kurs öffnet für sie erst am Kursbeginn.';
-$string['orderheld_one'] = 'Die Zugangsdaten für 1 Person gehen am {$a->date} um {$a->time} Uhr raus. Bis dahin geht keine Mail '
-    . 'raus, und der Kurs öffnet für sie erst am Kursbeginn.';
+$string['orderheld'] = 'Die Zugangsdaten für {$a->count} Personen gehen am {$a->date} um {$a->time} Uhr raus. Bis dahin '
+    . 'geht keine Mail raus, und der Kurs öffnet für sie erst an diesem Tag.';
+$string['orderheld_one'] = 'Die Zugangsdaten für 1 Person gehen am {$a->date} um {$a->time} Uhr raus. Bis dahin geht keine '
+    . 'Mail raus, und der Kurs öffnet für sie erst an diesem Tag.';
+$string['orderheldspread'] = 'Die Zugangsdaten für {$a->count} Personen gehen jeweils an ihrem Startdatum um {$a->time} '
+    . 'Uhr raus, verteilt auf {$a->days} Tage vom {$a->first} bis {$a->last}. Bis dahin geht keine Mail raus, und der Kurs '
+    . 'öffnet für jede Person erst an ihrem Startdatum. Alle Termine stehen im Auftragskasten auf dem Abschlussstatus.';
 $string['orderinvalidemail'] = '„{$a}“ ist keine Adresse.';
 $string['orderinvalidstart'] = 'Startdatum „{$a}“ nicht lesbar, erwartet wird etwa 02.12.2026.';
 $string['orderlist'] = 'Teilnehmerliste';
