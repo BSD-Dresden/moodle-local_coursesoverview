@@ -287,6 +287,18 @@ class helper {
     }
 
     /**
+     * Whether the current user only looks after a course, without taking part or editing it.
+     *
+     * @param context_course $context
+     * @return bool
+     */
+    public static function only_organiser(context_course $context): bool {
+        return has_capability('local/coursesoverview:view', $context)
+            && !has_capability('moodle/course:isincompletionreports', $context)
+            && !has_capability('moodle/course:update', $context);
+    }
+
+    /**
      * Participants whose enrolment begins on a later day.
      *
      * Moodle counts only enrolments that have begun, in its completion reports

@@ -31,6 +31,16 @@ Kurs, weil sie ihn als Ganzes betreuen.
 Im **Excel-Export stehen sie nicht**. Er wird aus den Teilnehmerzeilen gebaut,
 und dort kommen Organisatoren gar nicht erst vor.
 
+## Kursinhalt für Organisatoren
+
+Wer einen Kurs nur betreut (`local/coursesoverview:view` im Kurs, aber selbst
+nicht Teilnehmer und ohne Bearbeitungsrecht), sieht auf der Kursseite nur den
+Fortschrittsblock, die Abschnitte und der Kursindex links sind ausgeblendet.
+Moodle kann Kursinhalt nicht nach Rolle verbergen, deshalb setzt das Plugin
+dafür ein Stück CSS in den Kopf der Seite (`hook_callbacks`). Das ist
+Ausblenden, kein Sperren: Wer die Adresse einer Aktivität kennt, kommt weiter
+hinein. Organisatoren, die selbst teilnehmen, sehen den Inhalt wie gewohnt.
+
 ## Profillinks
 
 Teilnehmernamen führen ins Kursprofil, so wie in Moodles eigenen Tabellen über

@@ -29,4 +29,8 @@ $callbacks = [
         'hook' => \core_course\hook\before_course_deleted::class,
         'callback' => [\local_coursesoverview\hook_callbacks::class, 'before_course_deleted'],
     ],
+    [
+        'hook' => \core\hook\output\before_standard_head_html_generation::class,
+        'callback' => [\local_coursesoverview\hook_callbacks::class, 'before_standard_head_html_generation'],
+    ],
 ];
